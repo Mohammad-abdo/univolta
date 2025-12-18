@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { figmaAssets } from "@/lib/figma-assets";
 import { getImageUrl, getImageUrlOrFallback } from "@/lib/image-utils";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, ChevronDown } from "lucide-react";
 import { t } from "@/lib/i18n";
@@ -27,6 +27,7 @@ type University = {
   about?: string | null;
   image1?: string | null;
   image2?: string | null;
+  bannerUrl?: string | null;
   majors?: string[];
 };
 
@@ -37,7 +38,7 @@ type Meta = {
   pages: number;
 };
 
-export default function UniversitiesPage() {
+function UniversitiesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [universities, setUniversities] = useState<University[]>([]);
@@ -70,8 +71,10 @@ export default function UniversitiesPage() {
       
       if (uniRes.ok) {
         const data = await uniRes.json();
-        const countries = [...new Set(data.data?.map((u: University) => u.country) || [])].sort();
-        const languages = [...new Set(data.data?.map((u: University) => u.language) || [])].sort();
+        const countryValues = (data.data || []).map((u: University) => u.country).filter((c: any): c is string => typeof c === 'string') as string[];
+        const languageValues = (data.data || []).map((u: University) => u.language).filter((l: any): l is string => typeof l === 'string') as string[];
+        const countries: string[] = [...new Set(countryValues)].sort();
+        const languages: string[] = [...new Set(languageValues)].sort();
         setAvailableCountries(countries);
         setAvailableLanguages(languages);
       }
@@ -473,5 +476,21 @@ export default function UniversitiesPage() {
       <Footer />
       <MobileBottomNav />
     </div>
+  );
+}
+
+export default function UniversitiesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <div className="flex items-center justify-center h-64">
+          <p className="font-montserrat-regular text-[18px] text-[#8b8c9a]">{t("loadingUniversities")}</p>
+        </div>
+        <Footer />
+      </div>
+    }>
+      <UniversitiesContent />
+    </Suspense>
   );
 }

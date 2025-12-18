@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useParams } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -66,7 +66,7 @@ const faculties = [
   { name: "Faculty of Design & Architecture", icon: Compass },
 ];
 
-export default function ProgramsPage() {
+function ProgramsContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const slug = params?.slug as string;
@@ -429,5 +429,21 @@ export default function ProgramsPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function ProgramsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">{t("loading")}</div>
+        </div>
+        <Footer />
+      </div>
+    }>
+      <ProgramsContent />
+    </Suspense>
   );
 }

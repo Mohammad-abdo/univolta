@@ -74,9 +74,9 @@ export default function PartnerStudentsPage() {
         params.append("isBlocked", blockedFilter === "blocked" ? "true" : "false");
       }
 
-      const data = await apiGet(`/partner/applications?${params.toString()}`);
-      setApplications(data.applications || []);
-      setTotalPages(data.pagination?.totalPages || 1);
+      const data = await apiGet(`/partner/applications?${params.toString()}`) as any;
+      setApplications(data?.applications || []);
+      setTotalPages(data?.pagination?.totalPages || 1);
     } catch (error: any) {
       showToast.error("Failed to load applications");
     } finally {
@@ -284,7 +284,7 @@ export default function PartnerStudentsPage() {
             {applications.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
-                  {t("noApplications")}
+                  {t("noApplicationsFound")}
                 </td>
               </tr>
             ) : (

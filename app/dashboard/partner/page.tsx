@@ -65,14 +65,14 @@ export default function PartnerDashboardPage() {
       const stats = await apiGet<Stats>("/partner/dashboard/stats");
       
       // Fetch reports data for charts
-      const reports = await apiGet("/partner/reports");
+      const reports = await apiGet("/partner/reports") as any;
       
       // Fetch recent applications
-      const applicationsData = await apiGet("/partner/applications?page=1&limit=5");
+      const applicationsData = await apiGet("/partner/applications?page=1&limit=5") as any;
       
       // Fetch programs with application counts
       const programsData = await apiGet("/partner/programs");
-      const topPrograms = (programsData || []).slice(0, 5).map((p: any) => ({
+      const topPrograms = (Array.isArray(programsData) ? programsData : []).slice(0, 5).map((p: any) => ({
         id: p.id,
         name: p.name,
         applications: p._count?.applications || 0,
@@ -80,20 +80,20 @@ export default function PartnerDashboardPage() {
 
       setData({
         stats,
-        applicationsByStatus: reports.applicationsByStatus || {
+        applicationsByStatus: reports?.applicationsByStatus || {
           PENDING: 0,
           REVIEW: 0,
           APPROVED: 0,
           REJECTED: 0,
         },
-        paymentsByStatus: reports.paymentsByStatus || {
+        paymentsByStatus: reports?.paymentsByStatus || {
           pending: 0,
           completed: 0,
           failed: 0,
         },
-        revenueByMonth: reports.revenueByMonth || [],
-        applicationsByMonth: reports.applicationsByMonth || [],
-        recentApplications: applicationsData.applications || [],
+        revenueByMonth: reports?.revenueByMonth || [],
+        applicationsByMonth: reports?.applicationsByMonth || [],
+        recentApplications: applicationsData?.applications || [],
         topPrograms,
       });
     } catch (error) {

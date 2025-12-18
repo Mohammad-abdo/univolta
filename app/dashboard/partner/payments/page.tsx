@@ -58,12 +58,12 @@ export default function PartnerPaymentsPage() {
         params.append("status", statusFilter);
       }
 
-      const data = await apiGet(`/partner/payments?${params.toString()}`);
-      setPayments(data.payments || []);
-      setTotalPages(data.pagination?.totalPages || 1);
+      const data = await apiGet(`/partner/payments?${params.toString()}`) as any;
+      setPayments(data?.payments || []);
+      setTotalPages(data?.pagination?.totalPages || 1);
 
       // Calculate stats
-      const allPayments = data.payments || [];
+      const allPayments = data?.payments || [];
       setStats({
         total: allPayments.length,
         completed: allPayments.filter((p: Payment) => p.paymentStatus === "completed").length,

@@ -80,14 +80,14 @@ export default function UniversityProfilePage() {
     try {
       setLoading(true);
       // Get user's university info
-      const userData = await apiGet("/auth/me");
-      if (!userData.universityId) {
+      const userData = await apiGet("/auth/me") as any;
+      if (!userData?.universityId) {
         showToast.error("No university associated with your account");
         setError("No university associated with your account");
         return;
       }
 
-      setUniversityId(userData.universityId);
+      setUniversityId(userData?.universityId);
       const university = await apiGet<University>(`/partner/university`);
       
       setFormData({

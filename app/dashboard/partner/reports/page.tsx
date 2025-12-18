@@ -50,7 +50,7 @@ export default function ReportsPage() {
       if (dateRange !== "all") {
         params.append("dateRange", dateRange);
       }
-      const data = await apiGet(`/partner/reports?${params.toString()}`);
+      const data = await apiGet(`/partner/reports?${params.toString()}`) as ReportData | null;
       setReportData(data);
     } catch (error) {
       console.error("Error fetching reports:", error);

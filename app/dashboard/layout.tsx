@@ -337,6 +337,7 @@ export default function DashboardLayout({
   // Filter menu items based on user permissions
   const menuItems = getMenuItems(isPartner, userRole || undefined).filter((item) => {
     if (!item.permission) return true; // Dashboard is always accessible
+    if (!userRole) return false; // No access if no user role
     return canAccess(
       userRole,
       item.permission.resource as any,

@@ -50,8 +50,8 @@ export default function PartnerProgramsPage() {
         params.append("degree", degreeFilter);
       }
 
-      const data = await apiGet(`/partner/programs?${params.toString()}`);
-      setPrograms(data || []);
+      const data = await apiGet(`/partner/programs?${params.toString()}`) as any;
+      setPrograms(Array.isArray(data) ? data : []);
     } catch (error: any) {
       showToast.error("Failed to load programs");
     } finally {

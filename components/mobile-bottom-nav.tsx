@@ -143,20 +143,23 @@ export function MobileBottomNav() {
           <div className={`fixed top-0 ${currentLang === "ar" ? "right-0" : "left-0"} w-full max-w-sm h-full bg-white shadow-2xl z-50 md:hidden transform transition-transform duration-300 ease-in-out overflow-y-auto`}>
             <div className="pt-16 px-4 py-4 space-y-1">
               {/* Navigation Items */}
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 py-3.5 px-4 rounded-xl transition-all ${
-                    item.active
-                      ? "text-[#5260ce] font-montserrat-bold bg-[rgba(82,96,206,0.1)]"
-                      : "text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100"
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <span className="text-base">{item.label}</span>
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-3 py-3.5 px-4 rounded-xl transition-all ${
+                      isActive
+                        ? "text-[#5260ce] font-montserrat-bold bg-[rgba(82,96,206,0.1)]"
+                        : "text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100"
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <span className="text-base">{item.label}</span>
+                  </Link>
+                );
+              })}
               
               {/* Divider */}
               <div className="my-4 border-t border-gray-200"></div>

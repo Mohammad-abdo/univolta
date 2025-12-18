@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
@@ -20,9 +20,8 @@ interface Application {
   paymentStatus?: string;
 }
 
-export default function ApplicationSuccessPage() {
+function ApplicationSuccessContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [application, setApplication] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const applicationId = searchParams.get("id");
@@ -158,6 +157,20 @@ export default function ApplicationSuccessPage() {
       <Footer />
       <MobileBottomNav />
     </div>
+  );
+}
+
+export default function ApplicationSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <div className="flex items-center justify-center h-64">Loading...</div>
+        <Footer />
+      </div>
+    }>
+      <ApplicationSuccessContent />
+    </Suspense>
   );
 }
 

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { t, getLanguage } from "@/lib/i18n";
+import { showToast } from "@/lib/toast";
 
 interface Application {
   id: string;

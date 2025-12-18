@@ -170,11 +170,12 @@ export default function StudentDetailPage() {
 
     let reason = blockReason;
     if (isBlocked && !reason) {
-      reason = prompt("Please provide a reason for blocking this student:");
-      if (!reason) {
+      const promptResult = prompt("Please provide a reason for blocking this student:");
+      if (!promptResult) {
         showToast.error("Blocking reason is required");
         return;
       }
+      reason = promptResult;
     }
 
     setBlocking(true);

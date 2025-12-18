@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -32,7 +32,7 @@ import { t } from "@/lib/i18n";
 
 // Steps will be defined inside component to use translations
 
-export default function UniversityRegisterPage() {
+function UniversityRegisterContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -1379,5 +1379,21 @@ export default function UniversityRegisterPage() {
       <Footer />
       <MobileBottomNav />
     </div>
+  );
+}
+
+export default function UniversityRegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="font-montserrat-regular text-[18px] text-[#8b8c9a]">
+            Loading...
+          </p>
+        </div>
+      </div>
+    }>
+      <UniversityRegisterContent />
+    </Suspense>
   );
 }
