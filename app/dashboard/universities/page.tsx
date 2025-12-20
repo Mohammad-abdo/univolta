@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Eye } from "lucide-react";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import { canAccess, type UserRole } from "@/lib/permissions";
@@ -182,6 +182,17 @@ export default function UniversitiesPage() {
             header: "Actions",
             render: (university) => (
               <div className="flex items-center justify-end gap-2 flex-wrap">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="text-[#5260ce] hover:text-[#4350b0] hover:bg-[rgba(82,96,206,0.1)] px-2 md:px-3"
+                >
+                  <Link href={`/dashboard/universities/${university.id}`}>
+                    <Eye className="w-4 h-4 md:mr-1" />
+                    <span className="hidden md:inline">View</span>
+                  </Link>
+                </Button>
                 {userRole && canAccess(userRole, "universities", "update") && (
                   <Button
                     variant="ghost"

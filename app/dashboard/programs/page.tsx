@@ -5,7 +5,7 @@ import Link from "next/link";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Eye } from "lucide-react";
 import { canAccess, type UserRole } from "@/lib/permissions";
 import { API_BASE_URL } from "@/lib/constants";
 import { DataTable } from "@/components/ui/data-table";
@@ -127,6 +127,15 @@ export default function ProgramsPage() {
                   header: "Actions",
                   render: (program: Program) => (
                     <div className="flex items-center gap-2">
+                      <Link href={`/dashboard/programs/${program.id}`}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-[#5260ce] hover:text-[#4350b0]"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </Link>
                       {userRole && canAccess(userRole, "programs", "update") && (
                         <Link href={`/dashboard/programs/${program.id}/edit`}>
                           <Button
