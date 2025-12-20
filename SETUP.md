@@ -50,13 +50,13 @@ Open two terminals:
    ```bash
    npm run dev
    ```
-   → `http://localhost:4000/api/v1`
+   → `https://univolta.developteam.site/api/v1`
 
 2. **Next.js app** (project root):
    ```bash
    npm run dev
    ```
-   → Dashboard login at `http://localhost:3000/dashboard/login`
+   → Dashboard login at `https://univolta.developteam.site/dashboard/login`
 
 ## Default Admin Credentials
 

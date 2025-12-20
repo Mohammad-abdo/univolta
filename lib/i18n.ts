@@ -33,7 +33,7 @@ export async function fetchTranslations(lang: Language): Promise<Record<string, 
   }
 
   try {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000/api/v1";
+    const { API_BASE_URL } = await import("@/lib/constants");
     const response = await fetch(`${API_BASE_URL}/translations/${lang}`);
     
     if (response.ok) {

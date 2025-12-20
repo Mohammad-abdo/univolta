@@ -12,8 +12,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, ChevronDown } from "lucide-react";
 import { t } from "@/lib/i18n";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000/api/v1";
+import { API_BASE_URL } from "@/lib/constants";
 
 type University = {
   id: string;

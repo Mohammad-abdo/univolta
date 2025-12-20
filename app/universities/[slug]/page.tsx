@@ -10,9 +10,7 @@ import { Check, MapPin, DollarSign, Search } from "lucide-react";
 import { getLanguage, t, tServer, type Language } from "@/lib/i18n";
 import { cookies } from "next/headers";
 import { getImageUrl, getImageUrlOrFallback } from "@/lib/image-utils";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000/api/v1";
+import { API_BASE_URL } from "@/lib/constants";
 
 async function fetchUniversity(slug: string) {
   try {

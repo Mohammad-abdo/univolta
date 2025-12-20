@@ -12,9 +12,7 @@ import { ProgramRegisterButton } from "@/components/program-register-button";
 import { tServer } from "@/lib/i18n";
 import { cookies } from "next/headers";
 import type { Language } from "@/lib/i18n";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000/api/v1";
+import { API_BASE_URL } from "@/lib/constants";
 
 async function fetchProgram(slug: string) {
   try {
