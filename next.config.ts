@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         port: '4000',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'univolta.developteam.site',
+        pathname: '/uploads/**',
+      },
     ],
     unoptimized: false, // Keep optimization but allow localhost
   },
