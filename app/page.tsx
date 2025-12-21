@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white pb-16 md:pb-0">
       <Navbar />
-      <main className="pt-0 md:pt-[100px] pb-16 md:pb-0">
+      <main className="pt-0 pb-16 md:pb-0">
         <HeroSection />
         <WhyUsSection />
         <UniversitiesSection />
