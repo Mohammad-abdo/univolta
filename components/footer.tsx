@@ -117,7 +117,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-gray-200 pt-4 md:pt-8 flex flex-col md:flex-row justify-center items-center gap-2 md:gap-2">
           <p className="text-xs md:text-sm font-montserrat-regular text-[#65666f] text-center">
-            {t("poweredBy")} <span className="font-montserrat-bold text-[#5260ce]">Eta tech</span>
+            {t("poweredBy")} <span className="font-montserrat-bold text-[#5260ce]">Qeematech</span>
           </p>
           <div className="hidden md:block w-0.5 h-3.5 bg-gray-300"></div>
           <p className="text-xs md:text-sm font-montserrat-regular text-[#65666f] text-center">
