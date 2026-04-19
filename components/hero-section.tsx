@@ -110,8 +110,15 @@ export function HeroSection() {
               className={`object-cover ${isActive ? "slide-ken" : ""}`}
               unoptimized
             />
-            {/* gradient overlays */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/10" />
+            {/* gradient overlays — direction mirrors with RTL so text side is always white */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: isRTL
+                  ? "linear-gradient(to left, white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)"
+                  : "linear-gradient(to right, white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)",
+              }}
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-white/60 to-transparent" />
           </div>
         );
@@ -244,8 +251,11 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* ── LEFT SIDE CONTENT ── */}
-        <div className={`relative z-[5] pt-8 md:pt-[249px] pb-12 md:pb-0 ${isRTL ? "text-right" : "text-left"}`}>
+        {/* ── TEXT CONTENT — stays on the white side in both LTR & RTL ── */}
+        <div
+          className={`relative z-[5] pt-8 md:pt-[249px] pb-12 md:pb-0 ${isRTL ? "text-right" : "text-left"}`}
+          style={isRTL ? { paddingLeft: "clamp(0px, 52%, 760px)" } : { paddingRight: "clamp(0px, 42%, 640px)" }}
+        >
 
           {/* Discovery Badge */}
           <div className={`inline-flex items-center gap-2 glass-badge rounded-full px-4 py-1.5 mb-5 ${isRTL ? "flex-row-reverse" : ""}`}>
@@ -257,17 +267,17 @@ export function HeroSection() {
           </div>
 
           {/* Headline */}
-          <h1 className="font-montserrat-bold text-2xl md:text-[40px] leading-[1.25] text-[#121c67] mb-3 md:mb-4 max-w-full md:max-w-[600px]">
+          <h1 className="font-montserrat-bold text-2xl md:text-[40px] leading-[1.25] text-[#121c67] mb-3 md:mb-4">
             {t("studyAbroadMadeEasy")}
           </h1>
 
           {/* Description */}
-          <p className="font-montserrat-regular text-sm md:text-[18px] leading-[1.5] text-[#65666f] mb-5 md:mb-7 max-w-full md:max-w-[580px]">
+          <p className="font-montserrat-regular text-sm md:text-[17px] leading-[1.55] text-[#65666f] mb-5 md:mb-6">
             {t("connectWithTopUniversities")}
           </p>
 
           {/* Search Bar */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-[0px_8px_48px_0px_rgba(82,96,206,0.12)] p-4 flex flex-col gap-4 max-w-full md:max-w-[646px] border border-[#5260ce]/8">
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-[0px_8px_48px_0px_rgba(82,96,206,0.12)] p-4 flex flex-col gap-4 w-full border border-[#5260ce]/8">
             <div className={`flex flex-col sm:flex-row gap-3 md:gap-5 items-stretch sm:items-center ${isRTL ? "sm:flex-row-reverse" : ""}`}>
               <div className={`flex-1 flex items-center gap-2 md:gap-3 px-3 md:px-3.5 py-2.5 md:py-3.5 bg-gray-50 rounded-lg md:rounded-none ${isRTL ? "flex-row-reverse" : ""}`}>
                 <Search className={`w-5 h-5 md:w-6 md:h-6 text-[#8b8c9a] shrink-0 ${isRTL ? "ml-2 md:ml-3" : ""}`} />
@@ -340,7 +350,7 @@ export function HeroSection() {
           </div>
 
           {/* Student Avatars */}
-          <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-6 md:mt-8 md:absolute ${isRTL ? "md:right-[80px]" : "md:left-[80px]"} md:top-[590px] ${isRTL ? "sm:flex-row-reverse" : ""}`}>
+          <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-6 md:mt-7 ${isRTL ? "sm:flex-row-reverse" : ""}`}>
             <div className={`flex items-center ${isRTL ? "pl-0 sm:pl-[26px]" : "pr-0 sm:pr-[26px]"}`}>
               {studentAvatars.map((avatar, index) => (
                 <div

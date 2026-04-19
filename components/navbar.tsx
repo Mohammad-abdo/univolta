@@ -93,11 +93,8 @@ export function Navbar() {
 
   const navItems = [
     { href: "/", label: t("home"), active: pathname === "/" },
-    {
-      href: "/universities",
-      label: t("universities"),
-      active: pathname === "/universities",
-    },
+    { href: "/universities", label: t("universities"), active: pathname === "/universities" },
+    { href: "/about", label: t("aboutNavLink"), active: pathname === "/about" },
     { href: "/faq", label: t("faq"), active: pathname === "/faq" },
     { href: "/contact", label: t("contact"), active: pathname === "/contact" },
   ];

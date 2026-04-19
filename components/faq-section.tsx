@@ -1,272 +1,243 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { figmaAssets } from "@/lib/figma-assets";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { API_BASE_URL } from "@/lib/constants";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, MessageCircle, ChevronDown } from "lucide-react";
 import { t, getLanguage, type Language } from "@/lib/i18n";
 
-type FAQ = {
-  id: string;
-  question: string;
-  answer: string;
-};
+type FAQ = { id: string; question: string; answer: string };
 
-interface FAQSectionProps {
-  showIllustration?: boolean;
+// ── Single accordion item ───────────────────────────────────────────────────
+function FAQItem({
+  faq,
+  index,
+  isOpen,
+  isRTL,
+  onToggle,
+}: {
+  faq: FAQ;
+  index: number;
+  isOpen: boolean;
+  isRTL: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border-2 overflow-hidden transition-all duration-300 ${
+        isOpen
+          ? "border-[#5260ce] shadow-[0_8px_32px_rgba(82,96,206,0.15)]"
+          : "border-gray-100 bg-white shadow-sm hover:border-[#5260ce]/30 hover:shadow-md"
+      }`}
+    >
+      <button
+        className={`w-full flex items-center gap-4 p-5 md:p-6 text-${isRTL ? "right" : "left"} transition-colors duration-200 ${
+          isOpen ? "bg-[#5260ce]" : "bg-white hover:bg-gray-50/50"
+        }`}
+        onClick={onToggle}
+        aria-expanded={isOpen}
+      >
+        {/* Number badge */}
+        <span
+          className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-montserrat-bold transition-colors ${
+            isOpen ? "bg-white/20 text-white" : "bg-[#5260ce]/10 text-[#5260ce]"
+          }`}
+        >
+          {index + 1}
+        </span>
+
+        {/* Question */}
+        <span
+          className={`flex-1 font-montserrat-bold text-base md:text-[17px] leading-snug ${
+            isOpen ? "text-white" : "text-[#121c67]"
+          } ${isRTL ? "text-right" : "text-left"}`}
+        >
+          {faq.question}
+        </span>
+
+        {/* Icon */}
+        <span
+          className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${
+            isOpen ? "bg-white/20 rotate-180" : "bg-[#5260ce]/10"
+          }`}
+        >
+          <ChevronDown
+            className={`w-4 h-4 transition-colors ${isOpen ? "text-white" : "text-[#5260ce]"}`}
+          />
+        </span>
+      </button>
+
+      {/* Answer */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ${isOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"}`}
+      >
+        <div className={`px-5 md:px-6 py-4 md:py-5 bg-white ${isRTL ? "text-right" : "text-left"}`}>
+          <p className="font-montserrat-regular text-[15px] md:text-base text-[#4a4b56] leading-relaxed">
+            {faq.answer}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-export function FAQSection({ showIllustration = false }: FAQSectionProps) {
+// ── Contact card ─────────────────────────────────────────────────────────────
+function ContactCard({ isRTL }: { isRTL: boolean }) {
+  return (
+    <ScrollReveal direction="up" delay={200}>
+      <div className="mt-8 rounded-2xl bg-gradient-to-br from-[#5260ce] to-[#121c67] p-7 md:p-8 text-center shadow-[0_12px_48px_rgba(82,96,206,0.25)]">
+        <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center mx-auto mb-4">
+          <MessageCircle className="w-6 h-6 text-white" />
+        </div>
+        <h3 className="font-montserrat-bold text-white text-lg md:text-xl mb-2">
+          {t("faqContactPrompt")}
+        </h3>
+        <p className="font-montserrat-regular text-white/75 text-sm md:text-base mb-5 leading-relaxed">
+          {t("faqContactSub")}
+        </p>
+        <Button
+          asChild
+          className="bg-white text-[#5260ce] hover:bg-gray-100 font-montserrat-semibold h-[44px] px-7 rounded-xl transition-all hover:-translate-y-0.5"
+        >
+          <Link href="/contact" className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+            <MessageCircle className="w-4 h-4" />
+            {t("contact")}
+          </Link>
+        </Button>
+      </div>
+    </ScrollReveal>
+  );
+}
+
+// ── Main section ──────────────────────────────────────────────────────────────
+export function FAQSection() {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
   const [openIndex, setOpenIndex] = useState<number | null>(0);
-  const [currentLang, setCurrentLang] = useState<Language>(getLanguage());
+  const [lang, setLang] = useState<Language>(getLanguage());
 
   useEffect(() => {
-    fetchFAQs();
+    const id = setInterval(() => setLang(getLanguage()), 300);
+    return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const lang = getLanguage();
-      if (lang !== currentLang) {
-        setCurrentLang(lang);
-      }
-    }, 100);
-    return () => clearInterval(interval);
-  }, [currentLang]);
-
-  const fetchFAQs = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/public/faqs`);
-      if (response.ok) {
-        const data = await response.json();
-        // Handle both { data: [...] } and raw array responses
-        const faqsData = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
-        setFaqs(faqsData);
-        // Set first FAQ as open if available
-        if (faqsData.length > 0) {
-          setOpenIndex(0);
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/public/faqs`);
+        if (res.ok) {
+          const data = await res.json();
+          const list: FAQ[] = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
+          setFaqs(list);
+          setOpenIndex(list.length > 0 ? 0 : null);
+        } else {
+          throw new Error("bad response");
         }
+      } catch {
+        setFaqs(
+          ["1", "2", "3", "4", "5", "6", "7"].map((n) => ({
+            id: n,
+            question: t(`faq${n}Question`),
+            answer: t(`faq${n}Answer`),
+          }))
+        );
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching FAQs:", error);
-      // Use fallback FAQs
-      setFaqs([
-        {
-          id: "1",
-          question: t("faq1Question"),
-          answer: t("faq1Answer"),
-        },
-        {
-          id: "2",
-          question: t("faq2Question"),
-          answer: t("faq2Answer"),
-        },
-        {
-          id: "3",
-          question: t("faq3Question"),
-          answer: t("faq3Answer"),
-        },
-        {
-          id: "4",
-          question: t("faq4Question"),
-          answer: t("faq4Answer"),
-        },
-        {
-          id: "5",
-          question: t("faq5Question"),
-          answer: t("faq5Answer"),
-        },
-        {
-          id: "6",
-          question: t("faq6Question"),
-          answer: t("faq6Answer"),
-        },
-        {
-          id: "7",
-          question: t("faq7Question"),
-          answer: t("faq7Answer"),
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const ctaIllustration = showIllustration ? figmaAssets.faqCtaIllustration : figmaAssets.ctaBannerImage;
+    })();
+  }, []);
+
+  const isRTL = lang === "ar";
 
   return (
-    <section
-      className={`py-20 bg-white relative ${showIllustration ? "" : "overflow-hidden"}`}
-    >
-      <div className="max-w-[1440px] mx-auto px-5">
-        {(() => {
-          const currentLang = getLanguage();
-          const isRTL = currentLang === "ar";
-          return (
-            <div className={`grid lg:grid-cols-2 gap-12 ${isRTL ? "lg:grid-cols-2" : ""}`}>
-              {/* Left Content */}
-              <div
-                className={`space-y-6 ${showIllustration ? "relative pb-24" : ""} ${isRTL ? "lg:order-2" : ""}`}
-              >
-            <div>
-              <p className="text-base font-montserrat-regular text-[#5260ce] mb-2">{t("faq")}</p>
-              <div className="relative w-[86px] h-[5px] mb-4 inline-block">
-                <Image
-                  src={figmaAssets.vector5}
-                  alt=""
-                  fill
-                  className="object-contain"
-                  unoptimized
-                />
-              </div>
-            </div>
-            <h2 className="text-2xl md:text-[34px] font-montserrat-bold text-[#121c67]">
+    <section className="py-14 md:py-20 bg-[#f9fafe]">
+      <div className="max-w-[1200px] mx-auto px-4 md:px-5">
+
+        {/* ── Section header ── */}
+        <ScrollReveal direction="up">
+          <div className={`text-center mb-10 md:mb-14 ${isRTL ? "rtl" : ""}`}>
+            <Badge className="mb-4 bg-[rgba(82,96,206,0.1)] text-[#5260ce] border border-[#5260ce]/20 font-montserrat-semibold px-4 py-1.5">
+              {t("faq")}
+            </Badge>
+            <h2 className="font-montserrat-bold text-2xl md:text-[36px] text-[#121c67] leading-tight mb-4">
               {t("everythingYouNeedToKnow")}
             </h2>
-            <p className="text-base md:text-[18px] font-montserrat-regular text-[#7c7b7c] leading-relaxed max-w-full md:max-w-[447px]">
+            <p className="font-montserrat-regular text-[#65666f] text-base md:text-lg max-w-[580px] mx-auto leading-relaxed">
               {t("faqDescription")}
             </p>
-            <Button 
-              size="lg" 
-              className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm md:text-base h-[48px] md:h-[52px] px-4 md:px-6 rounded-lg md:rounded-xl w-full sm:w-auto"
-              asChild
-            >
-              <Link href="/contact">{t("contact")}</Link>
-            </Button>
+          </div>
+        </ScrollReveal>
 
-            {showIllustration && (() => {
-              const currentLang = getLanguage();
-              const isRTL = currentLang === "ar";
-              return (
-                <div className={`hidden xl:block absolute ${isRTL ? "-right-[180px]" : "-left-[180px]"} top-[140px] w-[520px] h-[500px]`}>
-                  <Image
-                    src={figmaAssets.faqIllustrationStudent}
-                    alt="Student exploring FAQ answers"
-                    fill
-                    className="object-contain"
-                    unoptimized
+        {/* ── Two-column layout ── */}
+        <div className={`grid lg:grid-cols-[1fr_420px] gap-8 md:gap-12 ${isRTL ? "lg:grid-cols-[420px_1fr] rtl" : ""}`}>
+
+          {/* Accordion */}
+          <div className={`space-y-3 ${isRTL ? "lg:order-2" : ""}`}>
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((n) => (
+                  <div key={n} className="h-16 rounded-2xl bg-gray-100 animate-pulse" />
+                ))}
+              </div>
+            ) : faqs.length === 0 ? (
+              <div className="text-center py-12 text-[#65666f]">{t("noFaqsAvailable")}</div>
+            ) : (
+              faqs.map((faq, i) => (
+                <ScrollReveal key={faq.id || i} direction="up" delay={i * 50}>
+                  <FAQItem
+                    faq={faq}
+                    index={i}
+                    isOpen={openIndex === i}
+                    isRTL={isRTL}
+                    onToggle={() => setOpenIndex(openIndex === i ? null : i)}
                   />
-                </div>
-              );
-            })()}
+                </ScrollReveal>
+              ))
+            )}
           </div>
 
-              {/* Right Content - FAQ Items */}
-              {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-gray-500">{t("loadingFaqs")}</p>
-            </div>
-          ) : (
-            <div className="space-y-[30px]">
-              {faqs.length === 0 ? (
-                <p className="text-gray-500">{t("noFaqsAvailable")}</p>
-              ) : (
-                faqs.map((faq, index) => {
-                  const isOpen = openIndex === index && faq.answer;
-                  return (
-                    <div
-                      key={faq.id || index}
-                      className={`bg-white border-[3px] md:border-[5px] rounded-lg md:rounded-xl overflow-hidden transition-all ${
-                        isOpen 
-                          ? "border-[#5260ce]" 
-                          : "border-white"
-                      }`}
-                    >
-                      <button
-                        className={`w-full p-3 md:p-5 flex items-center justify-between text-left ${isOpen ? 'bg-[#5260ce]' : 'bg-white'}`}
-                        onClick={() => setOpenIndex(isOpen ? null : index)}
-                      >
-                        <span className={`font-montserrat-bold text-base md:text-[18px] ${isOpen ? 'text-white' : 'text-[#121c67]'} pr-2 md:pr-4 flex-1`}>
-                          {faq.question}
-                        </span>
-                        {faq.answer && (
-                          <div className="w-5 h-5 md:w-6 md:h-6 shrink-0 flex items-center justify-center">
-                            {isOpen ? (
-                              <Minus className="w-4 h-4 md:w-5 md:h-5 text-white" />
-                            ) : (
-                              <Plus className="w-4 h-4 md:w-5 md:h-5 text-[#121c67]" />
-                            )}
-                          </div>
-                        )}
-                      </button>
-                      {isOpen && faq.answer && (
-                        <div className="px-3 md:px-5 pb-3 md:pb-5">
-                          <p className="text-sm md:text-[18px] font-montserrat-light text-[#121c67] leading-relaxed">{faq.answer}</p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-              </div>
-            )}
-            </div>
-          );
-        })()}
-
-        {/* CTA Banner */}
-        <div className="mt-20 relative rounded-2xl overflow-hidden bg-gradient-to-b from-[#5260ce] to-[#75d3f7] text-white">
-          <div 
-            className="absolute inset-0 opacity-20"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-            }}
-          ></div>
-          <div className="relative max-w-[1280px] mx-auto px-5 py-16">
-            {showIllustration && (() => {
-              const currentLang = getLanguage();
-              const isRTL = currentLang === "ar";
-              return (
-                <div className={`pointer-events-none absolute ${isRTL ? "right-[60px]" : "left-[60px]"} top-[40px] w-[360px] h-[360px] opacity-60`}>
-                  <Image
-                    src={figmaAssets.faqCtaVector}
-                    alt=""
-                  fill
-                  className="object-contain"
-                  aria-hidden="true"
-                  unoptimized
-                />
-              </div>
-            )})()}
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div className="space-y-6">
-                <div className="relative w-[80px] h-[5px] inline-block">
-                  <Image
-                    src={figmaAssets.vector5}
-                    alt=""
-                    fill
-                    className="object-contain"
-                    unoptimized
-                  />
+          {/* Sidebar */}
+          <div className={`space-y-4 ${isRTL ? "lg:order-1" : ""}`}>
+            {/* Summary card */}
+            <ScrollReveal direction={isRTL ? "right" : "left"}>
+              <div className={`rounded-2xl bg-white border border-gray-100 p-7 shadow-sm ${isRTL ? "text-right" : "text-left"}`}>
+                <div className="w-12 h-12 rounded-2xl bg-[#5260ce]/10 flex items-center justify-center mb-5">
+                  <Plus className="w-6 h-6 text-[#5260ce]" />
                 </div>
-                <h2 className="text-[34px] font-montserrat-bold text-white">
-                  {t("startUniversityJourney")}
-                </h2>
-                <p className="text-lg font-montserrat-light text-white/90 leading-relaxed max-w-[451px]">
-                  {t("startJourneyDescription")}
+                <h3 className="font-montserrat-bold text-[#121c67] text-lg mb-2">
+                  {t("everythingYouNeedToKnow")}
+                </h3>
+                <p className="font-montserrat-regular text-[#65666f] text-sm md:text-[15px] leading-relaxed">
+                  {t("faqDescription")}
                 </p>
-                <Button 
-                  size="lg" 
-                  className="bg-white text-[#5260ce] hover:bg-gray-100 font-montserrat-semibold text-base h-[52px] px-8 rounded-xl"
-                  asChild
-                >
-                  <Link href="/universities">{t("browseUniversitiesButton")}</Link>
-                </Button>
               </div>
-              <div className="hidden lg:block relative w-full h-[478px]">
-                <Image
-                  src={ctaIllustration}
-                  alt="Students"
-                  fill
-                  className="object-contain"
-                  unoptimized
-                />
+            </ScrollReveal>
+
+            {/* CTA card */}
+            <ContactCard isRTL={isRTL} />
+
+            {/* CTA banner — start journey */}
+            <ScrollReveal direction={isRTL ? "right" : "left"} delay={300}>
+              <div className="rounded-2xl overflow-hidden border border-[#5260ce]/15">
+                <div className="bg-gradient-to-br from-[#f0f4ff] to-[#e8edff] p-7 md:p-8">
+                  <h3 className={`font-montserrat-bold text-[#121c67] text-lg mb-2 ${isRTL ? "text-right" : "text-left"}`}>
+                    {t("startUniversityJourney")}
+                  </h3>
+                  <p className={`font-montserrat-regular text-[#65666f] text-sm mb-5 leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
+                    {t("startJourneyDescription")}
+                  </p>
+                  <Button
+                    asChild
+                    className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold h-[44px] rounded-xl transition-all hover:-translate-y-0.5 shadow-[0_4px_16px_rgba(82,96,206,0.3)]"
+                  >
+                    <Link href="/universities">{t("browseUniversitiesButton")}</Link>
+                  </Button>
+                </div>
               </div>
-            </div>
+            </ScrollReveal>
           </div>
         </div>
       </div>
