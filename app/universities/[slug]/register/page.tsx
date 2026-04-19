@@ -20,6 +20,7 @@ import {
   CreditCard,
   AlertCircle,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   apiPost,
   apiPut,
@@ -445,45 +446,48 @@ function UniversityRegisterContent() {
     }
   };
 
-  // Show loading while checking auth
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#f9fafe] flex items-center justify-center">
         <div className="text-center">
-          <p className="font-montserrat-regular text-[18px] text-[#8b8c9a]">
-            Loading...
-          </p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5260ce] mx-auto mb-4" />
+          <p className="font-montserrat-regular text-sm text-[#8b8c9a]">Loading application form…</p>
         </div>
       </div>
     );
   }
 
-  // Allow anonymous registration - no need to check authentication
-
   return (
-    <div className="min-h-screen bg-white pb-16 md:pb-0">
+    <div className="min-h-screen bg-[#f9fafe] pb-16 md:pb-0">
       <Navbar />
       <main className="pt-0 md:pt-[100px] pb-4 md:pb-20">
         <div className="max-w-[1440px] mx-auto px-4 md:px-5">
           {/* Hero Banner */}
-          <div className="relative h-[200px] md:h-[350px] rounded-[16px] md:rounded-[24px] overflow-hidden mb-6 md:mb-10">
-            <div className="absolute inset-0">
-              <Image
-                src="/80871096_078_230602_3d_studies_14_poster 1.png"
-                alt="University registration"
-                fill
-                className="object-cover"
-                unoptimized
-              />
-              <div className="absolute inset-0 bg-[rgba(18,28,103,0.4)]" />
+          <div className="relative h-[200px] md:h-[320px] rounded-[20px] md:rounded-[28px] overflow-hidden mb-6 md:mb-10 animate-hero-reveal">
+            <Image
+              src="/80871096_078_230602_3d_studies_14_poster 1.png"
+              alt="University registration"
+              fill
+              className="object-cover"
+              unoptimized
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#121c67]/80 via-[#5260ce]/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+              <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-xs mb-3 px-3 py-1">
+                Secure Application
+              </Badge>
+              <h2 className="font-montserrat-bold text-xl md:text-[38px] leading-tight text-white drop-shadow-lg animate-fade-up">
+                University Registration
+              </h2>
+              <p className="text-white/70 text-sm md:text-base mt-2 font-montserrat-regular animate-fade-up-d100">
+                Complete your application in 4 simple steps
+              </p>
             </div>
-            <h2 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-montserrat-bold text-xl md:text-[34px] leading-[1.4] text-white px-4 text-center">
-              University registration
-            </h2>
           </div>
 
-          {/* Main Container with Light Blue Background */}
-          <div className="bg-[rgba(232,234,246,0.3)] rounded-[16px] md:rounded-[24px]">
+          {/* Main Container */}
+          <div className="bg-white/70 backdrop-blur-sm rounded-[20px] md:rounded-[28px] border border-gray-100 shadow-sm">
             <div className="grid lg:grid-cols-4 gap-4 md:gap-8">
               {/* Left Sidebar */}
               <div className="lg:col-span-1">
@@ -632,7 +636,7 @@ function UniversityRegisterContent() {
 
               {/* Main Content */}
               <div className="lg:col-span-3">
-                <div className="bg-white rounded-xl p-4 md:p-8 shadow-md">
+                <div className="bg-white rounded-2xl p-5 md:p-8 shadow-sm border border-gray-100">
                   {error && (
                     <div className="mb-4 p-3 md:p-4 bg-red-50 border-l-4 border-red-500 rounded-lg flex items-start gap-2 md:gap-3">
                       <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-red-600 shrink-0 mt-0.5" />
@@ -647,257 +651,78 @@ function UniversityRegisterContent() {
 
                   {/* Step 1: Student Data */}
                   {currentStep === 1 && (
-                    <div>
-                      <p className="font-montserrat-regular text-xs md:text-[14px] text-[#8b8c9a] mb-1">
-                        Registration Form
+                    <div className="animate-card-enter">
+                      <p className="font-montserrat-regular text-xs md:text-sm text-[#5260ce] mb-1 uppercase tracking-wider">
+                        Step 1 of 4
                       </p>
-                      <h3 className="font-montserrat-bold text-xl md:text-[28px] text-[#121c67] mb-2 flex items-center gap-2">
-                        <User className="w-5 h-5 md:w-6 md:h-6" />
+                      <h3 className="font-montserrat-bold text-xl md:text-[26px] text-[#121c67] mb-2 flex items-center gap-2 section-title-accent pb-1">
+                        <User className="w-5 h-5 md:w-6 md:h-6 text-[#5260ce]" />
                         Student Data
                       </h3>
-                      <p className="text-sm md:text-base text-[#65666f] mb-4 md:mb-6">
-                        Please enter your personal and academic information
-                        accurately for your application to be processed
-                        correctly.
+                      <p className="text-sm text-[#65666f] mb-5 font-montserrat-regular">
+                        Please enter your personal and academic information accurately.
                       </p>
-                      <div className="grid md:grid-cols-2 gap-3 md:gap-4">
-                        <div>
-                          <label className="block font-montserrat-semibold text-sm mb-2">
-                            Full Name <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.fullName}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                fullName: e.target.value,
-                              })
-                            }
-                            required
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-montserrat-semibold text-sm mb-2">
-                            Email <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                email: e.target.value,
-                              })
-                            }
-                            required
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-montserrat-semibold text-sm mb-2">
-                            Personal address
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.personalAddress}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                personalAddress: e.target.value,
-                              })
-                            }
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-montserrat-semibold text-sm mb-2">
-                            Country <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.country}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                country: e.target.value,
-                              })
-                            }
-                            required
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-montserrat-semibold text-sm mb-2">
-                            Date of Birth
-                          </label>
-                          <input
-                            type="date"
-                            value={formData.dateOfBirth}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                dateOfBirth: e.target.value,
-                              })
-                            }
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-montserrat-semibold text-sm mb-2">
-                            Academic qualification
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.academicQualification}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                academicQualification: e.target.value,
-                              })
-                            }
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-montserrat-semibold text-sm mb-2">
-                            Identity or passport number
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.identityNumber}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                identityNumber: e.target.value,
-                              })
-                            }
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-montserrat-semibold text-sm mb-2">
-                            Phone
-                          </label>
-                          <input
-                            type="tel"
-                            value={formData.phone}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                phone: e.target.value,
-                              })
-                            }
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                          />
-                        </div>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {[
+                          { label: "Full Name",                 key: "fullName",              type: "text",  required: true },
+                          { label: "Email",                     key: "email",                 type: "email", required: true },
+                          { label: "Personal Address",          key: "personalAddress",       type: "text",  required: false },
+                          { label: "Country",                   key: "country",               type: "text",  required: true },
+                          { label: "Date of Birth",             key: "dateOfBirth",           type: "date",  required: false },
+                          { label: "Academic Qualification",    key: "academicQualification", type: "text",  required: false },
+                          { label: "Identity / Passport No.",   key: "identityNumber",        type: "text",  required: false },
+                          { label: "Phone",                     key: "phone",                 type: "tel",   required: false },
+                        ].map(({ label, key, type, required }) => (
+                          <div key={key}>
+                            <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">
+                              {label} {required && <span className="text-red-500">*</span>}
+                            </label>
+                            <input
+                              type={type}
+                              value={(formData as any)[key]}
+                              onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                              required={required}
+                              className="input-enhanced"
+                            />
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
 
                   {/* Step 2: Additional Services */}
                   {currentStep === 2 && (
-                    <div>
-                      <p className="font-montserrat-regular text-xs md:text-[14px] text-[#8b8c9a] mb-1">
-                        Registration Form
+                    <div className="animate-card-enter">
+                      <p className="font-montserrat-regular text-xs md:text-sm text-[#5260ce] mb-1 uppercase tracking-wider">
+                        Step 2 of 4
                       </p>
-                      <h3 className="font-montserrat-bold text-xl md:text-[28px] text-[#121c67] mb-2 flex items-center gap-2">
-                        <Star className="w-5 h-5 md:w-6 md:h-6" />
+                      <h3 className="font-montserrat-bold text-xl md:text-[26px] text-[#121c67] mb-2 flex items-center gap-2 section-title-accent pb-1">
+                        <Star className="w-5 h-5 md:w-6 md:h-6 text-[#5260ce]" />
                         Additional Services
                       </h3>
-                      <p className="text-sm md:text-base text-[#65666f] mb-4 md:mb-6">
-                        Do you need support services during your studies? Choose
-                        what suits you.
+                      <p className="text-sm text-[#65666f] mb-5 font-montserrat-regular">
+                        Select support services to enhance your study experience.
                       </p>
-                      <div className="space-y-4 md:space-y-6">
+                      <div className="space-y-5">
                         <div>
                           <label className="block font-montserrat-semibold text-sm mb-3">
                             Type of request
                           </label>
-                          <div className="space-y-3">
-                            <label className="flex items-center gap-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-[#5260ce] transition-colors">
-                              <input
-                                type="radio"
-                                name="requestType"
-                                value="admission_only"
-                                checked={
-                                  formData.requestType === "admission_only"
-                                }
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    requestType: e.target.value as any,
-                                  })
-                                }
-                                className="w-4 h-4 text-[#5260ce]"
-                              />
-                              <span className="font-montserrat-regular">
-                                University Admission Only
-                              </span>
-                            </label>
-                            <label className="flex items-center gap-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-[#5260ce] transition-colors">
-                              <input
-                                type="radio"
-                                name="requestType"
-                                value="admission_accommodation"
-                                checked={
-                                  formData.requestType ===
-                                  "admission_accommodation"
-                                }
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    requestType: e.target.value as any,
-                                  })
-                                }
-                                className="w-4 h-4 text-[#5260ce]"
-                              />
-                              <span className="font-montserrat-regular">
-                                Admission + Student Accommodation
-                              </span>
-                            </label>
-                            <label className="flex items-center gap-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-[#5260ce] transition-colors">
-                              <input
-                                type="radio"
-                                name="requestType"
-                                value="admission_transfer"
-                                checked={
-                                  formData.requestType === "admission_transfer"
-                                }
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    requestType: e.target.value as any,
-                                  })
-                                }
-                                className="w-4 h-4 text-[#5260ce]"
-                              />
-                              <span className="font-montserrat-regular">
-                                Admission + Airport Transfer
-                              </span>
-                            </label>
-                            <label className="flex items-center gap-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-[#5260ce] transition-colors">
-                              <input
-                                type="radio"
-                                name="requestType"
-                                value="admission_accommodation_transfer"
-                                checked={
-                                  formData.requestType ===
-                                  "admission_accommodation_transfer"
-                                }
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    requestType: e.target.value as any,
-                                  })
-                                }
-                                className="w-4 h-4 text-[#5260ce]"
-                              />
-                              <span className="font-montserrat-regular">
-                                Admission + Accommodation + Airport Transfer
-                              </span>
-                            </label>
+                          <div className="grid md:grid-cols-2 gap-3">
+                            {[
+                              { value: "admission_only",                      label: "University Admission Only",                         desc: "$100 fee" },
+                              { value: "admission_accommodation",             label: "Admission + Student Accommodation",                  desc: "$115 fee" },
+                              { value: "admission_transfer",                  label: "Admission + Airport Transfer",                       desc: "$115 fee" },
+                              { value: "admission_accommodation_transfer",    label: "Admission + Accommodation + Airport Transfer",        desc: "$130 fee" },
+                            ].map(({ value, label, desc }) => (
+                              <label key={value} className={`flex items-start gap-3 cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 ${formData.requestType === value ? "border-[#5260ce] bg-[rgba(82,96,206,0.05)]" : "border-gray-200 hover:border-[#5260ce]/40"}`}>
+                                <input type="radio" name="requestType" value={value} checked={formData.requestType === value} onChange={(e) => setFormData({ ...formData, requestType: e.target.value as any })} className="w-4 h-4 mt-0.5 text-[#5260ce] shrink-0" />
+                                <div>
+                                  <p className="font-montserrat-semibold text-sm text-[#121c67]">{label}</p>
+                                  <p className="text-xs text-[#5260ce] mt-0.5">{desc}</p>
+                                </div>
+                              </label>
+                            ))}
                           </div>
                         </div>
                         <div>
@@ -912,7 +737,7 @@ function UniversityRegisterContent() {
                                 universityCity: e.target.value,
                               })
                             }
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                            className="input-enhanced"
                           >
                             <option value="">Select the required city</option>
                             <option value="New York">New York</option>
@@ -936,7 +761,7 @@ function UniversityRegisterContent() {
                                 })
                               }
                               placeholder="Specify the expected arrival date"
-                              className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-10"
+                              className="input-enhanced pr-10"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                               📅
@@ -957,7 +782,7 @@ function UniversityRegisterContent() {
                             }
                             placeholder="...write your notes here"
                             rows={4}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                            className="input-enhanced"
                           />
                         </div>
                       </div>
@@ -966,18 +791,16 @@ function UniversityRegisterContent() {
 
                   {/* Step 3: Upload Documents */}
                   {currentStep === 3 && (
-                    <div>
-                      <p className="font-montserrat-regular text-xs md:text-[14px] text-[#8b8c9a] mb-1">
-                        Registration Form
+                    <div className="animate-card-enter">
+                      <p className="font-montserrat-regular text-xs md:text-sm text-[#5260ce] mb-1 uppercase tracking-wider">
+                        Step 3 of 4
                       </p>
-                      <h3 className="font-montserrat-bold text-xl md:text-[28px] text-[#121c67] mb-2 flex items-center gap-2">
-                        <FileText className="w-5 h-5 md:w-6 md:h-6" />
+                      <h3 className="font-montserrat-bold text-xl md:text-[26px] text-[#121c67] mb-2 flex items-center gap-2 section-title-accent pb-1">
+                        <FileText className="w-5 h-5 md:w-6 md:h-6 text-[#5260ce]" />
                         Upload Documents
                       </h3>
-                      <p className="text-sm md:text-base text-[#65666f] mb-4 md:mb-6">
-                        Please enter your personal and academic information
-                        accurately for your application to be processed
-                        correctly.
+                      <p className="text-sm text-[#65666f] mb-5 font-montserrat-regular">
+                        Upload your required documents to complete the application.
                       </p>
                       <div className="space-y-4 md:space-y-6">
                         {[
@@ -1000,8 +823,11 @@ function UniversityRegisterContent() {
                               {label}
                             </label>
                             {formData.documents[type] ? (
-                              <div className="flex items-center gap-2 p-4 border border-gray-300 rounded-lg bg-gray-50">
-                                <span className="flex-1 text-sm">
+                              <div className="flex items-center gap-3 p-4 border border-green-200 rounded-xl bg-green-50">
+                                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                                  <Check className="w-4 h-4 text-green-600" />
+                                </div>
+                                <span className="flex-1 text-sm font-montserrat-regular text-green-800 truncate">
                                   {formData.documents[type].file.name}
                                 </span>
                                 <button
@@ -1009,26 +835,23 @@ function UniversityRegisterContent() {
                                   onClick={() => {
                                     const newDocs = { ...formData.documents };
                                     delete newDocs[type];
-                                    setFormData({
-                                      ...formData,
-                                      documents: newDocs,
-                                    });
+                                    setFormData({ ...formData, documents: newDocs });
                                   }}
-                                  className="text-red-600 hover:text-red-700"
+                                  className="text-gray-400 hover:text-red-500 transition-colors"
                                 >
                                   <X className="w-5 h-5" />
                                 </button>
                               </div>
                             ) : (
-                              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#5260ce] transition-colors bg-gray-50">
-                                <div className="text-center">
-                                  <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                                  <p className="text-sm text-gray-600">
-                                    {uploading === type
-                                      ? "Uploading..."
-                                      : "Drag the file here or browse files on your device"}
-                                  </p>
-                                </div>
+                              <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-[#5260ce]/30 rounded-xl cursor-pointer hover:border-[#5260ce] hover:bg-[rgba(82,96,206,0.03)] transition-all bg-[#f9fafe]">
+                                {uploading === type ? (
+                                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5260ce]" />
+                                ) : (
+                                  <>
+                                    <Upload className="w-7 h-7 text-[#5260ce]/60 mb-2" />
+                                    <p className="text-xs text-[#65666f] font-montserrat-regular text-center px-3">Click or drag to upload</p>
+                                  </>
+                                )}
                                 <input
                                   type="file"
                                   className="hidden"
@@ -1056,7 +879,7 @@ function UniversityRegisterContent() {
                             }
                             placeholder="User feedback..."
                             rows={4}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                            className="input-enhanced"
                           />
                         </div>
                       </div>
@@ -1065,22 +888,20 @@ function UniversityRegisterContent() {
 
                   {/* Step 4: Payment */}
                   {currentStep === 4 && (
-                    <div>
-                      <p className="font-montserrat-regular text-xs md:text-[14px] text-[#8b8c9a] mb-1">
-                        Registration Form
+                    <div className="animate-card-enter">
+                      <p className="font-montserrat-regular text-xs md:text-sm text-[#5260ce] mb-1 uppercase tracking-wider">
+                        Step 4 of 4
                       </p>
-                      <h3 className="font-montserrat-bold text-xl md:text-[28px] text-[#121c67] mb-2 flex items-center gap-2">
-                        <Shield className="w-5 h-5 md:w-6 md:h-6" />
-                        Payment
+                      <h3 className="font-montserrat-bold text-xl md:text-[26px] text-[#121c67] mb-2 flex items-center gap-2 section-title-accent pb-1">
+                        <Shield className="w-5 h-5 md:w-6 md:h-6 text-[#5260ce]" />
+                        Secure Payment
                       </h3>
-                      <p className="text-sm md:text-base text-[#65666f] mb-4 md:mb-6">
-                        Pay the application fee using the method that suits you
-                        to confirm the request. The payment status will be
-                        updated automatically.
+                      <p className="text-sm text-[#65666f] mb-5 font-montserrat-regular">
+                        Complete your application by paying the registration fee securely.
                       </p>
 
                       {/* Application Summary */}
-                      <div className="bg-[#F0F4FF] rounded-lg p-4 md:p-6 mb-4 md:mb-6 border border-[#E0E6F1]">
+                      <div className="bg-gradient-to-br from-[#f0f4ff] to-[#e8eaf6] rounded-2xl p-5 md:p-6 mb-5 border border-[#5260ce]/10">
                         <h4 className="font-montserrat-semibold text-sm md:text-base text-[#5260ce] mb-3 md:mb-4">
                           Application Summary
                         </h4>
@@ -1229,95 +1050,34 @@ function UniversityRegisterContent() {
                         </div>
 
                         {formData.paymentMethod === "credit_card" && (
-                          <div className="grid md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block font-montserrat-semibold text-sm mb-2">
-                                Card number
-                              </label>
-                              <input
-                                type="text"
-                                value={formData.cardNumber}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    cardNumber: e.target.value,
-                                  })
-                                }
-                                placeholder="Card Number"
-                                className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                              />
-                            </div>
-                            <div>
-                              <label className="block font-montserrat-semibold text-sm mb-2">
-                                Card holder name
-                              </label>
-                              <input
-                                type="text"
-                                value={formData.cardholderName}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    cardholderName: e.target.value,
-                                  })
-                                }
-                                placeholder="Cardholder Name"
-                                className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                              />
-                            </div>
-                            <div>
-                              <label className="block font-montserrat-semibold text-sm mb-2">
-                                Expiration date
-                              </label>
-                              <input
-                                type="text"
-                                value={formData.expiryDate}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    expiryDate: e.target.value,
-                                  })
-                                }
-                                placeholder="Expiry Date"
-                                className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                              />
-                            </div>
-                            <div>
-                              <label className="block font-montserrat-semibold text-sm mb-2">
-                                CVV
-                              </label>
-                              <input
-                                type="text"
-                                value={formData.cvv}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    cvv: e.target.value,
-                                  })
-                                }
-                                placeholder="CVV"
-                                className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                              />
+                          <div className="bg-[#f9fafe] rounded-xl p-4 border border-gray-100 space-y-4">
+                            <div className="grid md:grid-cols-2 gap-4">
+                              <div className="md:col-span-2">
+                                <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">Card Number</label>
+                                <input type="text" value={formData.cardNumber} onChange={(e) => setFormData({ ...formData, cardNumber: e.target.value })} placeholder="1234 5678 9012 3456" className="input-enhanced" />
+                              </div>
+                              <div>
+                                <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">Cardholder Name</label>
+                                <input type="text" value={formData.cardholderName} onChange={(e) => setFormData({ ...formData, cardholderName: e.target.value })} placeholder="John Doe" className="input-enhanced" />
+                              </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">Expiry</label>
+                                  <input type="text" value={formData.expiryDate} onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })} placeholder="MM/YY" className="input-enhanced" />
+                                </div>
+                                <div>
+                                  <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">CVV</label>
+                                  <input type="text" value={formData.cvv} onChange={(e) => setFormData({ ...formData, cvv: e.target.value })} placeholder="123" className="input-enhanced" />
+                                </div>
+                              </div>
                             </div>
                           </div>
                         )}
 
                         {formData.paymentMethod === "paypal" && (
-                          <div>
-                            <label className="block font-montserrat-semibold text-sm mb-2">
-                              PayPal account email
-                            </label>
-                            <input
-                              type="email"
-                              value={formData.paypalEmail}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  paypalEmail: e.target.value,
-                                })
-                              }
-                              placeholder="user.uers@gmail.com"
-                              className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                            />
+                          <div className="bg-[#f9fafe] rounded-xl p-4 border border-gray-100">
+                            <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">PayPal Email</label>
+                            <input type="email" value={formData.paypalEmail} onChange={(e) => setFormData({ ...formData, paypalEmail: e.target.value })} placeholder="your@paypal.com" className="input-enhanced" />
                           </div>
                         )}
                       </div>
@@ -1325,50 +1085,25 @@ function UniversityRegisterContent() {
                   )}
 
                   {/* Navigation Buttons */}
-                  <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6 md:mt-8">
-                    {currentStep > 1 && (
-                      <Button
-                        type="button"
-                        onClick={handlePrevious}
-                        variant="outline"
-                        className="bg-[#75d3f7] text-white hover:bg-[#5fb8d9] border-none text-sm md:text-base w-full sm:w-auto"
-                      >
-                        Previous
+                  <div className="flex justify-between gap-3 mt-8 pt-6 border-t border-gray-100">
+                    {currentStep > 1 ? (
+                      <Button type="button" onClick={handlePrevious} variant="outline" className="border-[#5260ce] text-[#5260ce] hover:bg-[#5260ce] hover:text-white px-6 h-11 rounded-xl font-montserrat-semibold transition-all">
+                        ← Previous
+                      </Button>
+                    ) : <div />}
+                    {currentStep < 4 ? (
+                      <Button type="button" onClick={handleNext} disabled={loading} className="bg-[#5260ce] hover:bg-[#4350b0] text-white px-8 h-11 rounded-xl font-montserrat-semibold shadow-[0_4px_16px_rgba(82,96,206,0.3)] hover:shadow-[0_6px_20px_rgba(82,96,206,0.4)] transition-all ml-auto">
+                        {loading ? (
+                          <span className="flex items-center gap-2"><span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />Processing…</span>
+                        ) : "Continue →"}
+                      </Button>
+                    ) : (
+                      <Button type="button" onClick={handlePayment} disabled={loading} className="bg-gradient-to-r from-[#5260ce] to-[#4350b0] text-white px-8 h-11 rounded-xl font-montserrat-semibold shadow-[0_4px_16px_rgba(82,96,206,0.3)] transition-all ml-auto">
+                        {loading ? (
+                          <span className="flex items-center gap-2"><span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />{t("processing")}</span>
+                        ) : `🔒 ${t("confirmOrder")}`}
                       </Button>
                     )}
-                    <div className={currentStep > 1 ? "sm:ml-auto w-full sm:w-auto" : "sm:ml-auto w-full sm:w-auto"}>
-                      {currentStep < 4 ? (
-                        <Button
-                          type="button"
-                          onClick={handleNext}
-                          disabled={loading}
-                          className="bg-[#5260ce] hover:bg-[#4350b0] text-white text-sm md:text-base w-full sm:w-auto"
-                        >
-                          {loading ? "Processing..." : "Next"}
-                        </Button>
-                      ) : (
-                        <div className="flex flex-col sm:flex-row gap-3 w-full">
-                          {currentStep > 1 && (
-                            <Button
-                              type="button"
-                              onClick={handlePrevious}
-                              variant="outline"
-                              className="bg-[#75d3f7] text-white hover:bg-[#5fb8d9] border-none text-sm md:text-base w-full sm:w-auto"
-                            >
-                              Previous
-                            </Button>
-                          )}
-                          <Button
-                            type="button"
-                            onClick={handlePayment}
-                            disabled={loading}
-                            className="bg-[#5260ce] hover:bg-[#4350b0] text-white text-sm md:text-base w-full sm:w-auto"
-                          >
-                            {loading ? t("processing") : t("confirmOrder")}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
               </div>
@@ -1385,11 +1120,10 @@ function UniversityRegisterContent() {
 export default function UniversityRegisterPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#f9fafe] flex items-center justify-center">
         <div className="text-center">
-          <p className="font-montserrat-regular text-[18px] text-[#8b8c9a]">
-            Loading...
-          </p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5260ce] mx-auto mb-4" />
+          <p className="font-montserrat-regular text-sm text-[#8b8c9a]">Loading registration…</p>
         </div>
       </div>
     }>

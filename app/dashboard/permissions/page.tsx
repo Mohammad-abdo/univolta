@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect } from "react";
 import { canAccess, getRolePermissions, type UserRole, type Resource, type Action } from "@/lib/permissions";
 import { API_BASE_URL } from "@/lib/constants";

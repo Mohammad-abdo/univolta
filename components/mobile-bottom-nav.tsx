@@ -87,8 +87,8 @@ export function MobileBottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg md:hidden">
-        <div className={`flex items-center justify-around h-16 px-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-gray-100 shadow-[0_-4px_24px_rgba(82,96,206,0.10)] md:hidden">
+        <div className={`flex items-center justify-around h-[62px] px-2 ${isRTL ? "flex-row-reverse" : ""}`}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -96,35 +96,35 @@ export function MobileBottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors ${
-                  isActive
-                    ? "text-[#5260ce]"
-                    : "text-gray-500 hover:text-[#5260ce]"
+                className={`relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all duration-200 ${
+                  isActive ? "text-[#5260ce]" : "text-gray-400 hover:text-[#5260ce]"
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? "scale-110" : ""} transition-transform`} />
-                <span className={`text-xs font-montserrat-${isActive ? "semibold" : "regular"} ${isActive ? "text-[#5260ce]" : "text-gray-500"}`}>
+                {/* Active indicator dot */}
+                {isActive && (
+                  <span className="absolute top-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#5260ce]" />
+                )}
+                <div className={`transition-all duration-200 ${isActive ? "scale-110 -translate-y-0.5" : ""}`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className={`text-[10px] font-montserrat-${isActive ? "semibold" : "regular"}`}>
                   {item.label}
                 </span>
               </Link>
             );
           })}
-          {/* Menu Icon */}
+          {/* Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors ${
-              isMenuOpen
-                ? "text-[#5260ce]"
-                : "text-gray-500 hover:text-[#5260ce]"
+            className={`relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all duration-200 ${
+              isMenuOpen ? "text-[#5260ce]" : "text-gray-400 hover:text-[#5260ce]"
             }`}
             aria-label="Menu"
           >
-            {isMenuOpen ? (
-              <X className="w-5 h-5 transition-transform" />
-            ) : (
-              <Menu className="w-5 h-5 transition-transform" />
-            )}
-            <span className={`text-xs font-montserrat-${isMenuOpen ? "semibold" : "regular"} ${isMenuOpen ? "text-[#5260ce]" : "text-gray-500"}`}>
+            <div className={`transition-all duration-200 ${isMenuOpen ? "scale-110 -translate-y-0.5" : ""}`}>
+              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </div>
+            <span className={`text-[10px] font-montserrat-${isMenuOpen ? "semibold" : "regular"}`}>
               {t("menu") || "Menu"}
             </span>
           </button>
@@ -140,7 +140,7 @@ export function MobileBottomNav() {
             onClick={() => setIsMenuOpen(false)}
           />
           {/* Menu Panel */}
-          <div className={`fixed top-0 ${currentLang === "ar" ? "right-0" : "left-0"} w-full max-w-sm h-full bg-white shadow-2xl z-50 md:hidden transform transition-transform duration-300 ease-in-out overflow-y-auto`}>
+          <div className={`fixed top-0 ${currentLang === "ar" ? "right-0" : "left-0"} w-full max-w-sm h-full bg-white/98 backdrop-blur-xl shadow-2xl z-50 md:hidden overflow-y-auto ${currentLang === "ar" ? "animate-slide-right" : "animate-slide-left"}`}>
             <div className="pt-16 px-4 py-4 space-y-1">
               {/* Navigation Items */}
               {navItems.map((item) => {

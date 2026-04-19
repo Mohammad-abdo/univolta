@@ -5,37 +5,184 @@ import { Footer } from "@/components/footer";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { figmaAssets } from "@/lib/figma-assets";
 import { getImageUrl, getImageUrlOrFallback } from "@/lib/image-utils";
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, ChevronDown } from "lucide-react";
+import { Search, MapPin, Globe, GraduationCap, ChevronLeft, ChevronRight, SlidersHorizontal, Trophy, Users, ArrowRight } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { API_BASE_URL } from "@/lib/constants";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 
 type University = {
   id: string;
   name: string;
   slug: string;
   logo?: string | null;
+  logoUrl?: string | null;
   country: string;
   city: string;
   language: string;
   description?: string | null;
   about?: string | null;
   image1?: string | null;
-  image2?: string | null;
   bannerUrl?: string | null;
+  worldRanking?: number | null;
+  studentsNumber?: string | null;
   majors?: string[];
 };
 
-type Meta = {
-  total: number;
-  page: number;
-  limit: number;
-  pages: number;
-};
+type Meta = { total: number; page: number; limit: number; pages: number };
+
+function UniversityCardSkeleton() {
+  return (
+    <Card className="overflow-hidden border-0 shadow-md">
+      <Skeleton className="h-52 w-full rounded-none" />
+      <CardContent className="pt-5 pb-3 space-y-3">
+        <div className="flex gap-2">
+          <Skeleton className="h-6 w-24 rounded-full" />
+          <Skeleton className="h-6 w-20 rounded-full" />
+        </div>
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <div className="flex gap-2 flex-wrap">
+          <Skeleton className="h-5 w-16 rounded-md" />
+          <Skeleton className="h-5 w-20 rounded-md" />
+          <Skeleton className="h-5 w-14 rounded-md" />
+        </div>
+      </CardContent>
+      <CardFooter className="pt-0 pb-5 px-5">
+        <Skeleton className="h-11 w-full rounded-xl" />
+      </CardFooter>
+    </Card>
+  );
+}
+
+/** Identical to the UniversityCard in universities-section.tsx (home page) */
+function UniversityCard({ university, index }: { university: University; index: number }) {
+  const logoSrc = university.logoUrl || university.logo;
+  const bannerSrc = university.bannerUrl || university.image1 || figmaAssets.universityLogo1;
+
+  return (
+    <ScrollReveal direction="up" delay={index * 140} threshold={0.08}>
+      <Card className="group overflow-hidden border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-400 hover:-translate-y-2 bg-white h-full flex flex-col">
+        {/* Banner image */}
+        <div className="relative h-52 overflow-hidden shrink-0">
+          <Image
+            src={getImageUrlOrFallback(bannerSrc, figmaAssets.universityLogo1)}
+            alt={university.name}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            unoptimized
+          />
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[rgba(18,28,103,0.75)] via-[rgba(18,28,103,0.25)] to-transparent" />
+
+          {/* Country badge – top-right */}
+          <div className="absolute top-3 right-3">
+            <Badge className="bg-white/90 text-[#121c67] hover:bg-white font-montserrat-semibold text-xs shadow-sm">
+              {university.country}
+            </Badge>
+          </div>
+
+          {/* World ranking badge – top-left */}
+          {university.worldRanking && (
+            <div className="absolute top-3 left-3">
+              <Badge className="bg-[#5260ce]/90 text-white hover:bg-[#5260ce] text-xs font-montserrat-semibold shadow-sm">
+                <Trophy className="w-3 h-3 mr-1" />
+                #{university.worldRanking} World
+              </Badge>
+            </div>
+          )}
+
+          {/* University logo – bottom-left */}
+          {logoSrc && (
+            <div className="absolute bottom-3 left-4">
+              <div className="w-14 h-14 rounded-xl bg-white shadow-lg p-1.5 overflow-hidden">
+                <div className="relative w-full h-full">
+                  <Image
+                    src={getImageUrl(logoSrc)}
+                    alt={`${university.name} logo`}
+                    fill
+                    className="object-contain p-0.5"
+                    unoptimized
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* University name on image – bottom */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 pt-8">
+            <h3 className={`font-montserrat-bold text-lg text-white leading-tight line-clamp-2 ${logoSrc ? "pl-16" : ""}`}>
+              {university.name}
+            </h3>
+          </div>
+        </div>
+
+        {/* Card body */}
+        <CardContent className="pt-4 pb-2 px-5 flex-1 flex flex-col gap-3">
+          {/* Location & Language badges */}
+          <div className="flex gap-2 flex-wrap">
+            <Badge variant="outline" className="border-[#75d3f7] text-[#2e2e2e] bg-[rgba(117,211,247,0.08)] text-xs font-montserrat-regular gap-1 rounded-full">
+              <MapPin className="w-3 h-3 text-[#5260ce]" />
+              {university.city}
+            </Badge>
+            <Badge variant="outline" className="border-[#5260ce]/30 text-[#2e2e2e] bg-[rgba(82,96,206,0.06)] text-xs font-montserrat-regular gap-1 rounded-full">
+              <Globe className="w-3 h-3 text-[#5260ce]" />
+              {university.language}
+            </Badge>
+            {university.studentsNumber && (
+              <Badge variant="outline" className="border-gray-200 text-[#65666f] text-xs font-montserrat-regular gap-1 rounded-full">
+                <Users className="w-3 h-3" />
+                {university.studentsNumber}
+              </Badge>
+            )}
+          </div>
+
+          {/* Description */}
+          <p className="text-sm font-montserrat-regular text-[#65666f] leading-relaxed line-clamp-2 flex-1">
+            {university.description || university.about || t("discoverWorldClassAcademics")}
+          </p>
+
+          {/* Majors */}
+          {university.majors && university.majors.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1 mb-1.5">
+                <GraduationCap className="w-3.5 h-3.5 text-[#5260ce]" />
+                <span className="text-xs font-montserrat-semibold text-[#5260ce]">{t("keyMajors")}</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {university.majors.slice(0, 5).map((major, i) => (
+                  <Badge key={i} className="bg-[rgba(82,96,206,0.1)] text-[#5260ce] hover:bg-[rgba(82,96,206,0.18)] text-xs font-montserrat-regular border-0 rounded-md h-auto py-1">
+                    {major}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+
+        {/* CTA footer */}
+        <CardFooter className="pt-3 pb-5 px-5">
+          <Button
+            className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm h-11 rounded-xl transition-all duration-300 hover:shadow-[0_8px_24px_rgba(82,96,206,0.35)] group/btn"
+            asChild
+          >
+            <Link href={`/universities/${university.slug}`} className="flex items-center justify-center gap-2">
+              {t("viewDetails")}
+              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover/btn:translate-x-1" />
+            </Link>
+          </Button>
+        </CardFooter>
+      </Card>
+    </ScrollReveal>
+  );
+}
 
 function UniversitiesContent() {
   const router = useRouter();
@@ -43,6 +190,9 @@ function UniversitiesContent() {
   const [universities, setUniversities] = useState<University[]>([]);
   const [meta, setMeta] = useState<Meta>({ total: 0, page: 1, limit: 12, pages: 1 });
   const [loading, setLoading] = useState(true);
+  const [availableCountries, setAvailableCountries] = useState<string[]>([]);
+  const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
+  const [availableSpecializations, setAvailableSpecializations] = useState<string[]>([]);
   const [filters, setFilters] = useState({
     country: searchParams.get("country") || "",
     language: searchParams.get("language") || "",
@@ -51,15 +201,13 @@ function UniversitiesContent() {
     page: parseInt(searchParams.get("page") || "1"),
   });
 
-  const [availableSpecializations, setAvailableSpecializations] = useState<string[]>([]);
-
-  const [availableCountries, setAvailableCountries] = useState<string[]>([]);
-  const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
-
   useEffect(() => {
     fetchUniversities();
-    fetchFilterOptions();
   }, [filters]);
+
+  useEffect(() => {
+    fetchFilterOptions();
+  }, []);
 
   const fetchFilterOptions = async () => {
     try {
@@ -67,26 +215,20 @@ function UniversitiesContent() {
         fetch(`${API_BASE_URL}/public/universities?limit=100`),
         fetch(`${API_BASE_URL}/programs/specializations`),
       ]);
-      
       if (uniRes.ok) {
         const data = await uniRes.json();
-        const countryValues = (data.data || []).map((u: University) => u.country).filter((c: any): c is string => typeof c === 'string') as string[];
-        const languageValues = (data.data || []).map((u: University) => u.language).filter((l: any): l is string => typeof l === 'string') as string[];
-        const countries: string[] = [...new Set(countryValues)].sort();
-        const languages: string[] = [...new Set(languageValues)].sort();
-        setAvailableCountries(countries);
-        setAvailableLanguages(languages);
+        const items: University[] = data.data || [];
+        setAvailableCountries([...new Set(items.map((u) => u.country).filter(Boolean))].sort() as string[]);
+        setAvailableLanguages([...new Set(items.map((u) => u.language).filter(Boolean))].sort() as string[]);
       }
-
       if (specRes.ok) {
         const specData = await specRes.json();
-        const specializations = [...new Set(
-          (Array.isArray(specData) ? specData : []).map((s: any) => s.specialization).filter(Boolean)
-        )].sort();
-        setAvailableSpecializations(specializations);
+        setAvailableSpecializations(
+          [...new Set((Array.isArray(specData) ? specData : []).map((s: { specialization?: string }) => s.specialization).filter(Boolean))].sort() as string[]
+        );
       }
-    } catch (error) {
-      console.error("Error fetching filter options:", error);
+    } catch {
+      /* silent */
     }
   };
 
@@ -100,15 +242,14 @@ function UniversitiesContent() {
       if (filters.search) params.append("search", filters.search);
       params.append("page", filters.page.toString());
       params.append("limit", "12");
-
       const response = await fetch(`${API_BASE_URL}/public/universities?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
         setUniversities(data.data || []);
         setMeta(data.meta || { total: 0, page: 1, limit: 12, pages: 1 });
       }
-    } catch (error) {
-      console.error("Error fetching universities:", error);
+    } catch {
+      /* silent */
     } finally {
       setLoading(false);
     }
@@ -133,340 +274,193 @@ function UniversitiesContent() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const updateURL = (newFilters: typeof filters) => {
+  const updateURL = (f: typeof filters) => {
     const params = new URLSearchParams();
-    if (newFilters.country) params.append("country", newFilters.country);
-    if (newFilters.language) params.append("language", newFilters.language);
-    if (newFilters.specialization) params.append("specialization", newFilters.specialization);
-    if (newFilters.search) params.append("search", newFilters.search);
-    if (newFilters.page > 1) params.append("page", newFilters.page.toString());
+    if (f.country) params.append("country", f.country);
+    if (f.language) params.append("language", f.language);
+    if (f.specialization) params.append("specialization", f.specialization);
+    if (f.search) params.append("search", f.search);
+    if (f.page > 1) params.append("page", f.page.toString());
     router.push(`/universities?${params.toString()}`, { scroll: false });
   };
 
   return (
-    <div className="min-h-screen bg-white pb-16 md:pb-0">
+    <div className="min-h-screen bg-[#f9fafe] pb-16 md:pb-0">
       <Navbar />
       <main className="pt-0 md:pt-[100px] pb-4 md:pb-20">
         <div className="max-w-[1440px] mx-auto px-4 md:px-5">
+
           {/* Hero Banner */}
-          <div className="relative h-[150px] md:h-[350px] rounded-[12px] md:rounded-[24px] overflow-hidden mb-4 md:mb-10">
-            <div className="absolute inset-0">
+          <ScrollReveal direction="fade">
+            <div className="relative h-[150px] md:h-[320px] rounded-[16px] md:rounded-[28px] overflow-hidden mb-5 md:mb-10 animate-hero-reveal">
               <Image
-                src={figmaAssets.heroImage}
+                src={figmaAssets.heroImage || figmaAssets.faqHeroBackground}
                 alt="Universities"
                 fill
                 className="object-cover"
                 unoptimized
               />
-              <div className="absolute inset-0 bg-[rgba(18,28,103,0.4)]" />
-            </div>
-            <h2 className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 font-montserrat-bold text-xl md:text-[34px] leading-[1.4] text-white px-4 text-center w-full">
-              {t("listOfInternationalUniversities")}
-            </h2>
-          </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-[#121c67]/70 via-[#121c67]/40 to-transparent" />
 
-          {/* Filters and Search Bar */}
-          <div className="bg-white rounded-[12px] md:rounded-[24px] shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)] p-3 md:p-6 mb-4 md:mb-10 flex flex-col md:flex-row gap-3 md:gap-5">
-            {/* Country Dropdown */}
-            <div className="flex-1 min-w-0 w-full md:w-auto">
-              <select
-                value={filters.country}
-                onChange={(e) => handleFilterChange("country", e.target.value)}
-                className="w-full bg-gray-50 border border-[#e0e6f1] rounded-lg h-[48px] md:h-[52px] px-3 md:px-3.5 py-2.5 md:py-3 font-montserrat-regular text-sm md:text-[16px] text-[#2e2e2e] focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
-              >
-                <option value="">{t("country")}</option>
-                {availableCountries.map((country) => (
-                  <option key={country} value={country}>
-                    {country}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Language Dropdown */}
-            <div className="flex-1 min-w-0 w-full md:w-auto">
-              <select
-                value={filters.language}
-                onChange={(e) => handleFilterChange("language", e.target.value)}
-                className="w-full bg-gray-50 border border-[#e0e6f1] rounded-lg h-[48px] md:h-[52px] px-3 md:px-3.5 py-2.5 md:py-3 font-montserrat-regular text-sm md:text-[16px] text-[#2e2e2e] focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
-              >
-                <option value="">{t("languageOfStudy")}</option>
-                {availableLanguages.map((language) => (
-                  <option key={language} value={language}>
-                    {language}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Field of Specialisation Dropdown */}
-            <div className="flex-1 min-w-0 w-full md:w-auto">
-              <select
-                value={filters.specialization}
-                onChange={(e) => handleFilterChange("specialization", e.target.value)}
-                className="w-full bg-gray-50 border border-[#e0e6f1] rounded-lg h-[48px] md:h-[52px] px-3 md:px-3.5 py-2.5 md:py-3 font-montserrat-regular text-sm md:text-[16px] text-[#2e2e2e] focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
-              >
-                <option value="">{t("fieldOfSpecialisation")}</option>
-                {availableSpecializations.map((spec) => (
-                  <option key={spec} value={spec}>
-                    {spec}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Search Input and Button */}
-            <div className="flex flex-col sm:flex-row gap-2 md:gap-3 rounded-xl md:rounded-2xl w-full md:w-auto">
-              <div className="bg-gray-50 border border-[#e0e6f1] rounded-lg md:rounded-xl px-3 md:px-3.5 py-2.5 md:py-3.5 flex gap-2 md:gap-3 items-center flex-1 md:w-[310px]">
-                <Search className="w-5 h-5 md:w-6 md:h-6 text-[#8b8c9a] shrink-0" />
-                <input
-                  type="text"
-                  value={filters.search}
-                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  placeholder={t("searchUniversitiesPlaceholder")}
-                  className="flex-1 font-montserrat-light text-sm md:text-[16px] leading-[1.4] text-[#2e2e2e] bg-transparent border-none outline-none placeholder:text-[#8b8c9a]"
-                />
+              <div className="absolute inset-0 flex flex-col items-start justify-center px-6 md:px-12">
+                <div className="flex items-center gap-2 mb-3 animate-fade-up">
+                  <GraduationCap className="w-5 h-5 text-[#75d3f7]" />
+                  <span className="text-white/80 text-sm font-montserrat-regular">Explore the World</span>
+                </div>
+                <h2 className="font-montserrat-bold text-xl md:text-[38px] leading-tight text-white max-w-md animate-fade-up-d100">
+                  {t("listOfInternationalUniversities")}
+                </h2>
+                {meta.total > 0 && (
+                  <p className="text-white/70 text-sm mt-2 font-montserrat-regular animate-fade-up-d200">
+                    {meta.total} universities available
+                  </p>
+                )}
               </div>
-              <Button
-                onClick={handleSearch}
-                className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm md:text-[16px] h-[48px] md:h-[52px] w-full sm:w-auto md:w-[124px] rounded-lg md:rounded-xl shrink-0"
-              >
-                {t("search")}
-              </Button>
             </div>
-          </div>
+          </ScrollReveal>
 
-          {/* Loading State */}
+          {/* Filters */}
+          <ScrollReveal direction="up" delay={100}>
+            <div className="bg-white rounded-2xl shadow-[0px_4px_40px_rgba(82,96,206,0.10)] p-4 md:p-6 mb-6 md:mb-10">
+              <div className="flex items-center gap-2 mb-3 md:hidden">
+                <SlidersHorizontal className="w-4 h-4 text-[#5260ce]" />
+                <span className="font-montserrat-semibold text-sm text-[#121c67]">Filter Universities</span>
+              </div>
+              <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+                <select
+                  value={filters.country}
+                  onChange={(e) => handleFilterChange("country", e.target.value)}
+                  className="flex-1 bg-[#f9fafe] border border-[#e0e6f1] rounded-xl h-11 md:h-12 px-3 font-montserrat-regular text-sm text-[#2e2e2e] focus:outline-none focus:ring-2 focus:ring-[#5260ce]/30 focus:border-[#5260ce] transition-all"
+                >
+                  <option value="">{t("country")}</option>
+                  {availableCountries.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+
+                <select
+                  value={filters.language}
+                  onChange={(e) => handleFilterChange("language", e.target.value)}
+                  className="flex-1 bg-[#f9fafe] border border-[#e0e6f1] rounded-xl h-11 md:h-12 px-3 font-montserrat-regular text-sm text-[#2e2e2e] focus:outline-none focus:ring-2 focus:ring-[#5260ce]/30 focus:border-[#5260ce] transition-all"
+                >
+                  <option value="">{t("languageOfStudy")}</option>
+                  {availableLanguages.map((l) => <option key={l} value={l}>{l}</option>)}
+                </select>
+
+                <select
+                  value={filters.specialization}
+                  onChange={(e) => handleFilterChange("specialization", e.target.value)}
+                  className="flex-1 bg-[#f9fafe] border border-[#e0e6f1] rounded-xl h-11 md:h-12 px-3 font-montserrat-regular text-sm text-[#2e2e2e] focus:outline-none focus:ring-2 focus:ring-[#5260ce]/30 focus:border-[#5260ce] transition-all"
+                >
+                  <option value="">{t("fieldOfSpecialisation")}</option>
+                  {availableSpecializations.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+
+                <div className="flex gap-2 md:gap-3 flex-1 md:flex-none">
+                  <div className="flex-1 md:w-72 bg-[#f9fafe] border border-[#e0e6f1] rounded-xl px-3 flex gap-2 items-center focus-within:ring-2 focus-within:ring-[#5260ce]/30 focus-within:border-[#5260ce] transition-all">
+                    <Search className="w-4 h-4 text-[#8b8c9a] shrink-0" />
+                    <input
+                      type="text"
+                      value={filters.search}
+                      onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                      placeholder={t("searchUniversitiesPlaceholder")}
+                      className="flex-1 font-montserrat-regular text-sm text-[#2e2e2e] bg-transparent border-none outline-none placeholder:text-[#8b8c9a] py-3"
+                    />
+                  </div>
+                  <Button
+                    onClick={handleSearch}
+                    className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm h-11 md:h-12 px-5 rounded-xl shrink-0"
+                  >
+                    {t("search")}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </ScrollReveal>
+
+          {/* Results count */}
+          {!loading && universities.length > 0 && (
+            <p className="font-montserrat-regular text-sm text-[#8b8c9a] mb-4">
+              Showing {universities.length} of {meta.total} universities
+            </p>
+          )}
+
+          {/* Loading Skeletons */}
           {loading && (
-            <div className="flex items-center justify-center h-64">
-              <p className="font-montserrat-regular text-[18px] text-[#8b8c9a]">{t("loadingUniversities")}</p>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mb-10">
+              {Array.from({ length: 6 }).map((_, i) => <UniversityCardSkeleton key={i} />)}
             </div>
           )}
 
-          {/* University Cards Grid */}
+          {/* Cards Grid */}
           {!loading && (
             <>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-[30px] mb-6 md:mb-10">
-                {universities.length === 0 ? (
-                  <div className="col-span-full text-center py-20">
-                    <p className="font-montserrat-regular text-[18px] text-[#8b8c9a]">
-                      {t("noUniversitiesFound")}
-                    </p>
+              {universities.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-24 text-center">
+                  <div className="w-20 h-20 rounded-full bg-[#f0f4ff] flex items-center justify-center mb-5">
+                    <GraduationCap className="w-10 h-10 text-[#5260ce]/50" />
                   </div>
-                ) : (
-                  universities.map((university) => (
-                    <div
-                      key={university.id}
-                      className="bg-white border-[3px] md:border-[5px] border-white rounded-xl overflow-hidden flex flex-col shadow-md"
-                    >
-                      {/* Image Section with Logo and Name Badge */}
-                      <div className="relative pb-[50px] md:pb-[67px]">
-                        {/* University Image */}
-                        <div className="h-[160px] md:h-[220px] -mb-[50px] md:-mb-[67px] relative rounded-xl overflow-hidden">
-                          <div className="absolute inset-0">
-                            <Image
-                              src={getImageUrlOrFallback(
-                                university.image1 || university.bannerUrl,
-                                figmaAssets.universityLogo1
-                              )}
-                              alt={university.name}
-                              fill
-                              className="object-cover"
-                              unoptimized
-                            />
-                            {university.image2 && (
-                              <Image
-                                src={getImageUrl(university.image2)}
-                                alt=""
-                                fill
-                                className="object-cover opacity-40"
-                                unoptimized
-                              />
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Logo and Name Badge */}
-                        <div className="relative flex gap-1 h-[60px] md:h-[86px] px-3 md:px-6 items-center -mt-[50px] md:-mt-[67px] rounded-br-xl">
-                          <div className="bg-[#5260ce] flex gap-1 h-[40px] md:h-[49px] items-center rounded-bl-[30px] md:rounded-bl-[40px] rounded-br-xl rounded-tl-[30px] md:rounded-tl-[40px]">
-                            {/* University Logo */}
-                            {university.logo && (
-                              <div className="relative w-[50px] h-[50px] md:w-[76px] md:h-[76px] border-[3px] md:border-[5px] border-white rounded-full overflow-hidden shrink-0">
-                                <Image
-                                  src={getImageUrl(university.logo)}
-                                  alt={university.name}
-                                  fill
-                                  className="object-contain p-1 md:p-2"
-                                  unoptimized
-                                />
-                              </div>
-                            )}
-                            {/* University Name */}
-                            <div className="px-2 md:px-4 py-3 md:py-6 h-[40px] md:h-[49px] flex items-center">
-                              <p className="font-montserrat-bold text-sm md:text-[18px] leading-[1.4] text-white line-clamp-1">
-                                {university.name}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Content Section */}
-                      <div className="flex flex-col gap-2 md:gap-[10px] px-3 md:px-5 pt-3 md:pt-4">
-                        {/* Description */}
-                        <div className="flex gap-2 md:gap-[10px] items-center justify-center px-2 md:px-5">
-                          <p className="flex-1 font-montserrat-regular text-sm md:text-[16px] leading-[1.4] text-[#2e2e2e] line-clamp-2 md:line-clamp-none">
-                            {university.description || university.about || t("discoverWorldClassAcademics")}
-                          </p>
-                        </div>
-
-                        {/* Location & Language Tags */}
-                        <div className="flex flex-col sm:flex-row gap-2 md:gap-3 px-2 md:px-5">
-                          {/* Location Tag */}
-                          <div className="bg-[rgba(117,211,247,0.1)] border border-[#75d3f7] rounded-lg px-2 py-1.5 flex gap-1 items-center">
-                            <div className="relative w-5 h-5 md:w-6 md:h-6 shrink-0">
-                              <Image
-                                src={figmaAssets.usaFlag}
-                                alt="Location"
-                                fill
-                                className="object-contain"
-                                unoptimized
-                              />
-                            </div>
-                            <p className="font-montserrat-regular text-sm md:text-[18px] leading-[1.4] text-[#2e2e2e] truncate">
-                              {university.city}, {university.country}
-                            </p>
-                          </div>
-
-                          <div className="bg-[rgba(117,211,247,0.1)] border border-[#75d3f7] rounded-lg px-2 py-1.5 flex gap-1 items-center">
-                            <div className="relative w-5 h-5 md:w-6 md:h-6 shrink-0">
-                              <Image
-                                src={figmaAssets.englishFlag}
-                                alt="Language"
-                                fill
-                                className="object-contain"
-                                unoptimized
-                              />
-                            </div>
-                            <p className="font-montserrat-regular text-sm md:text-[18px] leading-[1.4] text-[#2e2e2e] truncate">
-                              {university.language}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Key Majors Section */}
-                        {university.majors && university.majors.length > 0 && (
-                          <div className="flex flex-col gap-2 md:gap-[10px] w-full">
-                            {/* Key Majors Label */}
-                            <div className="px-2 md:px-5">
-                              <p className="font-montserrat-regular text-sm md:text-[16px] leading-[1.4] text-[#2e2e2e]">
-                                {t("keyMajors")}
-                              </p>
-                            </div>
-
-                            {/* Major Tags */}
-                            <div className="flex flex-col gap-2 md:gap-[10px]">
-                              <div className="px-2 md:px-5 flex flex-wrap gap-2 md:gap-2.5">
-                                {university.majors.slice(0, 2).map((major) => (
-                                  <div
-                                    key={major}
-                                    className="bg-[rgba(117,211,247,0.2)] rounded-md px-2 py-1.5 md:py-2 h-auto md:h-[26px] flex items-center justify-center overflow-hidden"
-                                  >
-                                    <p className="font-montserrat-regular text-xs md:text-[16px] leading-[1.4] text-[#121c67] text-center">
-                                      {major}
-                                    </p>
-                                  </div>
-                                ))}
-                              </div>
-                              {university.majors.length > 2 && (
-                                <div className="px-2 md:px-5 flex flex-wrap gap-2 md:gap-2.5">
-                                  {university.majors.slice(2, 5).map((major) => (
-                                    <div
-                                      key={major}
-                                      className="bg-[rgba(117,211,247,0.2)] rounded-md px-2 py-1.5 md:py-2 h-auto md:h-[26px] flex items-center justify-center overflow-hidden"
-                                    >
-                                      <p className="font-montserrat-regular text-xs md:text-[16px] leading-[1.4] text-[#121c67] text-center">
-                                        {major}
-                                      </p>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* View Details Button */}
-                        <div className="px-3 md:px-5 pb-4 md:pb-5 pt-2 md:pt-0">
-                          <Button
-                            className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm md:text-[16px] h-[44px] md:h-[48px] w-full rounded-xl"
-                            asChild
-                          >
-                            <Link href={`/universities/${university.slug}`}>{t("viewDetails")}</Link>
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+                  <h3 className="font-montserrat-bold text-xl text-[#121c67] mb-2">{t("noUniversitiesFound")}</h3>
+                  <p className="font-montserrat-regular text-[#65666f] text-sm mb-6">Try adjusting your filters or search term</p>
+                  <Button
+                    onClick={() => {
+                      const reset = { country: "", language: "", specialization: "", search: "", page: 1 };
+                      setFilters(reset);
+                      updateURL(reset);
+                    }}
+                    variant="outline"
+                    className="border-[#5260ce] text-[#5260ce] hover:bg-[#5260ce]/5 rounded-xl"
+                  >
+                    Clear All Filters
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mb-10">
+                  {universities.map((university, index) => (
+                    <UniversityCard key={university.id} university={university} index={index} />
+                  ))}
+                </div>
+              )}
 
               {/* Pagination */}
               {meta.pages > 1 && (
-                <div className="flex items-center justify-center gap-4">
-                  <button
-                    onClick={() => handlePageChange(Math.max(1, meta.page - 1))}
-                    disabled={meta.page === 1}
-                    className="w-[50px] h-[50px] rounded-lg border border-[#e0e6f1] flex items-center justify-center rotate-180 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                  >
-                    <Image
-                      src={figmaAssets.arrowRight}
-                      alt="Previous"
-                      width={24}
-                      height={24}
-                      unoptimized
-                    />
-                  </button>
-                  {Array.from({ length: Math.min(5, meta.pages) }, (_, i) => {
-                    let pageNum;
-                    if (meta.pages <= 5) {
-                      pageNum = i + 1;
-                    } else if (meta.page <= 3) {
-                      pageNum = i + 1;
-                    } else if (meta.page >= meta.pages - 2) {
-                      pageNum = meta.pages - 4 + i;
-                    } else {
-                      pageNum = meta.page - 2 + i;
-                    }
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => handlePageChange(pageNum)}
-                        className={`w-[50px] h-[50px] rounded-lg flex items-center justify-center font-montserrat-regular text-[18px] ${
-                          pageNum === meta.page
-                            ? "bg-[#5260ce] text-white"
-                            : "border border-[#e0e6f1] text-[#2e2e2e] hover:bg-gray-50"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                  <button
-                    onClick={() => handlePageChange(Math.min(meta.pages, meta.page + 1))}
-                    disabled={meta.page === meta.pages}
-                    className="w-[50px] h-[50px] rounded-lg border border-[#e0e6f1] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                  >
-                    <Image
-                      src={figmaAssets.arrowRight}
-                      alt="Next"
-                      width={24}
-                      height={24}
-                      unoptimized
-                    />
-                  </button>
-                </div>
+                <ScrollReveal direction="up">
+                  <div className="flex items-center justify-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => handlePageChange(Math.max(1, meta.page - 1))}
+                      disabled={meta.page === 1}
+                      className="w-10 h-10 rounded-xl border border-[#e0e6f1] flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#f0f4ff] hover:border-[#5260ce]/30 transition-all"
+                    >
+                      <ChevronLeft className="w-4 h-4 text-[#5260ce]" />
+                    </button>
+                    {Array.from({ length: Math.min(5, meta.pages) }, (_, i) => {
+                      let pageNum: number;
+                      if (meta.pages <= 5) pageNum = i + 1;
+                      else if (meta.page <= 3) pageNum = i + 1;
+                      else if (meta.page >= meta.pages - 2) pageNum = meta.pages - 4 + i;
+                      else pageNum = meta.page - 2 + i;
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center font-montserrat-regular text-sm transition-all ${
+                            pageNum === meta.page
+                              ? "bg-[#5260ce] text-white shadow-[0_4px_12px_rgba(82,96,206,0.35)]"
+                              : "border border-[#e0e6f1] text-[#2e2e2e] hover:bg-[#f0f4ff] hover:border-[#5260ce]/30"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={() => handlePageChange(Math.min(meta.pages, meta.page + 1))}
+                      disabled={meta.page === meta.pages}
+                      className="w-10 h-10 rounded-xl border border-[#e0e6f1] flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#f0f4ff] hover:border-[#5260ce]/30 transition-all"
+                    >
+                      <ChevronRight className="w-4 h-4 text-[#5260ce]" />
+                    </button>
+                  </div>
+                </ScrollReveal>
               )}
             </>
           )}
@@ -481,10 +475,13 @@ function UniversitiesContent() {
 export default function UniversitiesPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-[#f9fafe]">
         <Navbar />
         <div className="flex items-center justify-center h-64">
-          <p className="font-montserrat-regular text-[18px] text-[#8b8c9a]">{t("loadingUniversities")}</p>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#5260ce] mx-auto mb-3" />
+            <p className="font-montserrat-regular text-sm text-[#8b8c9a]">{t("loadingUniversities")}</p>
+          </div>
         </div>
         <Footer />
       </div>

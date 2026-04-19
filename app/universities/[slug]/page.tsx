@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { figmaAssets } from "@/lib/figma-assets";
 import { notFound } from "next/navigation";
-import { Check, MapPin, DollarSign, Search } from "lucide-react";
+import { Check, MapPin, DollarSign, Search, Trophy, Globe, Users, GraduationCap, Calendar, BarChart3, ArrowRight, BookOpen } from "lucide-react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { getLanguage, t, tServer, type Language } from "@/lib/i18n";
 import { cookies } from "next/headers";
 import { getImageUrl, getImageUrlOrFallback } from "@/lib/image-utils";
@@ -179,30 +181,34 @@ export default async function UniversityDetailPage({
       <Navbar />
       <main className="pt-0 md:pt-[100px] pb-20">
         <div className="max-w-[1440px] mx-auto px-4 md:px-5">
-          {/* Hero Banner - Exactly like image */}
-          <div className="relative h-[250px] md:h-[400px] rounded-[16px] md:rounded-[24px] overflow-hidden mb-6 md:mb-10">
-            <div className="absolute inset-0">
-              <Image
-                src={getImageUrlOrFallback(
-                  university.bannerUrl,
-                  figmaAssets.heroImage
-                )}
-                alt={university.name}
-                fill
-                className="object-cover"
-                unoptimized
-              />
-              <div className="absolute inset-0 bg-[rgba(18,28,103,0.4)]" />
-            </div>
-            {/* Logo and Name - Bottom Left */}
-            <div className="absolute left-4 bottom-4 md:left-10 md:bottom-10 flex flex-col md:flex-row gap-2 md:gap-5 items-start md:items-center">
+          {/* Hero Banner */}
+          <div className="relative h-[260px] md:h-[420px] rounded-[20px] md:rounded-[28px] overflow-hidden mb-6 md:mb-10 animate-hero-reveal">
+            <Image
+              src={getImageUrlOrFallback(university.bannerUrl, figmaAssets.heroImage)}
+              alt={university.name}
+              fill
+              className="object-cover"
+              unoptimized
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#121c67]/80 via-[#121c67]/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+
+            {/* Ranking badge top-right */}
+            {university.worldRanking && (
+              <div className="absolute top-4 right-4">
+                <Badge className="bg-[#5260ce]/90 text-white text-xs font-montserrat-semibold shadow-md backdrop-blur-sm border-0 px-3 py-1.5">
+                  <Trophy className="w-3 h-3 mr-1.5" />
+                  #{university.worldRanking} World Ranking
+                </Badge>
+              </div>
+            )}
+
+            {/* Logo + Name bottom-left */}
+            <div className="absolute left-5 bottom-5 md:left-10 md:bottom-8 flex items-end gap-4">
               {(university.logoUrl || university.logo) && (
-                <div className="relative w-[60px] h-[60px] md:w-[134px] md:h-[134px] border-[3px] md:border-[5px] border-white rounded-full overflow-hidden shrink-0 bg-white">
+                <div className="relative w-16 h-16 md:w-[110px] md:h-[110px] border-4 border-white rounded-2xl overflow-hidden shrink-0 bg-white shadow-xl">
                   <Image
-                    src={getImageUrlOrFallback(
-                      university.logoUrl || university.logo,
-                      figmaAssets.logo
-                    )}
+                    src={getImageUrlOrFallback(university.logoUrl || university.logo, figmaAssets.logo)}
                     alt={university.name}
                     fill
                     className="object-contain p-1 md:p-2"
@@ -210,18 +216,23 @@ export default async function UniversityDetailPage({
                   />
                 </div>
               )}
-              <h1 className="font-montserrat-bold text-lg md:text-[34px] leading-[1.4] text-white max-w-[calc(100%-80px)] md:max-w-none">
-                {university.name}
-              </h1>
+              <div className="pb-1">
+                <p className="text-white/70 text-xs md:text-sm font-montserrat-regular mb-1">{university.country}</p>
+                <h1 className="font-montserrat-bold text-xl md:text-[36px] leading-tight text-white drop-shadow-lg">
+                  {university.name}
+                </h1>
+              </div>
             </div>
-            {/* View Academic Programs Button - Bottom Right */}
-            <div className="absolute right-4 bottom-4 md:right-10 md:bottom-10 left-4 md:left-auto">
+
+            {/* CTA bottom-right */}
+            <div className="absolute right-5 bottom-5 md:right-10 md:bottom-8">
               <Button
-                className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm md:text-[16px] h-[40px] md:h-[52px] w-full md:w-[260px] rounded-xl shadow-lg"
+                className="bg-white hover:bg-gray-50 text-[#5260ce] font-montserrat-semibold text-sm md:text-base h-10 md:h-12 px-5 md:px-7 rounded-xl shadow-lg transition-all hover:shadow-xl"
                 asChild
               >
-                <Link href={`/universities/${slug}/programs`}>
+                <Link href={`/universities/${slug}/programs`} className="flex items-center gap-2">
                   {t("viewAcademicPrograms")}
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
               </Button>
             </div>
@@ -230,9 +241,9 @@ export default async function UniversityDetailPage({
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Left Column - Main Content */}
             <div className="lg:col-span-2 space-y-8">
-              {/* About University Card - Exactly like image */}
-              <div className="bg-white border-[3px] md:border-[5px] border-white rounded-xl p-4 md:p-6 flex flex-col gap-4 md:gap-5 shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]">
-                <h3 className="font-montserrat-bold text-lg md:text-[24px] leading-[1.4] text-[#5260ce]">
+              {/* About University Card */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-7 flex flex-col gap-5 shadow-sm hover:shadow-md transition-shadow animate-fade-up">
+                <h3 className="font-montserrat-bold text-lg md:text-xl text-[#121c67] section-title-accent pb-1">
                   {t("about")} {university.name}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -301,93 +312,57 @@ export default async function UniversityDetailPage({
 
               {/* Statistics Card */}
               {university.establishmentYear && (
-                <div className="bg-white border-[3px] md:border-[5px] border-white rounded-xl p-4 md:p-6 flex flex-col gap-4 md:gap-5 shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]">
-                  <h3 className="font-montserrat-bold text-lg md:text-[24px] leading-[1.4] text-[#5260ce]">
+                <div className="bg-gradient-to-br from-[#121c67] to-[#5260ce] rounded-2xl p-5 md:p-7 flex flex-col gap-5 shadow-md animate-fade-up-d100">
+                  <h3 className="font-montserrat-bold text-lg md:text-xl text-white">
                     {t("statisticsAbout")} {university.name}
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                    {university.establishmentYear && (
-                      <div className="flex flex-col gap-3">
-                        <p className="font-montserrat-regular text-[14px] leading-[1.4] text-[#8b8c9a]">
-                          {t("establishmentYear")}
-                        </p>
-                        <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#2e2e2e]">
-                          {university.establishmentYear}
-                        </p>
-                      </div>
-                    )}
-                    {university.worldRanking && (
-                      <div className="flex flex-col gap-3">
-                        <p className="font-montserrat-regular text-[14px] leading-[1.4] text-[#8b8c9a]">
-                          {t("worldRanking")}
-                        </p>
-                        <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#2e2e2e]">
-                          {university.worldRanking}
-                        </p>
-                      </div>
-                    )}
-                    {university.localRanking && (
-                      <div className="flex flex-col gap-3">
-                        <p className="font-montserrat-regular text-[14px] leading-[1.4] text-[#8b8c9a]">
-                          {t("localRanking")}
-                        </p>
-                        <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#2e2e2e]">
-                          {university.localRanking}
-                        </p>
-                      </div>
-                    )}
-                    <div className="flex flex-col gap-3">
-                      <p className="font-montserrat-regular text-[14px] leading-[1.4] text-[#8b8c9a]">
-                        {t("programmesNumber")}
-                      </p>
-                      <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#2e2e2e]">
-                        {totalPrograms}
-                      </p>
-                    </div>
-                    {university.studentsNumber && (
-                      <div className="flex flex-col gap-3">
-                        <p className="font-montserrat-regular text-[14px] leading-[1.4] text-[#8b8c9a]">
-                          {t("studentsNumber")}
-                        </p>
-                        <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#2e2e2e]">
-                          {university.studentsNumber}
-                        </p>
-                      </div>
-                    )}
+                    {[
+                      { label: t("establishmentYear"), value: university.establishmentYear, icon: Calendar, show: !!university.establishmentYear },
+                      { label: t("worldRanking"),      value: `#${university.worldRanking}`, icon: Trophy,  show: !!university.worldRanking },
+                      { label: t("localRanking"),      value: `#${university.localRanking}`, icon: BarChart3, show: !!university.localRanking },
+                      { label: t("programmesNumber"),  value: totalPrograms,                 icon: BookOpen, show: true },
+                      { label: t("studentsNumber"),    value: university.studentsNumber,     icon: Users,    show: !!university.studentsNumber },
+                    ].filter(s => s.show).map(stat => {
+                      const Icon = stat.icon;
+                      return (
+                        <div key={stat.label} className="bg-white/15 backdrop-blur-sm rounded-xl p-3 flex flex-col gap-2 border border-white/20">
+                          <Icon className="w-4 h-4 text-[#75d3f7]" />
+                          <p className="font-montserrat-bold text-xl text-white leading-none">{stat.value}</p>
+                          <p className="font-montserrat-regular text-xs text-white/70">{stat.label}</p>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
               {/* Tour Gallery Card */}
               {tourImages.length > 0 && (
-                <div className="bg-white border-[3px] md:border-[5px] border-white rounded-xl p-4 md:p-6 flex flex-col gap-4 md:gap-5 shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]">
-                  <h3 className="font-montserrat-bold text-lg md:text-[24px] leading-[1.4] text-[#5260ce]">
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-7 flex flex-col gap-5 shadow-sm animate-fade-up-d200">
+                  <h3 className="font-montserrat-bold text-lg md:text-xl text-[#121c67] section-title-accent pb-1">
                     {t("tourInside")} {university.name}
                   </h3>
-                  <div className="flex flex-wrap gap-2 md:gap-4">
-                    {tourImages
-                      .slice(0, 5)
-                      .map((img: string, index: number) => (
-                        <div
-                          key={index}
-                          className="flex-1 min-w-[calc(50%-4px)] md:min-w-0 h-[100px] md:h-[130px] relative rounded-xl overflow-hidden"
-                        >
-                          <Image
-                            src={getImageUrl(img)}
-                            alt={`Tour ${index + 1}`}
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
-                        </div>
-                      ))}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {tourImages.slice(0, 6).map((img: string, index: number) => (
+                      <div key={index} className={`relative rounded-xl overflow-hidden group ${index === 0 ? "col-span-2 md:col-span-1 h-[180px]" : "h-[130px]"}`}>
+                        <Image
+                          src={getImageUrl(img)}
+                          alt={`Tour ${index + 1}`}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-110"
+                          unoptimized
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
               {/* About the University Card */}
-              <div className="bg-white border-[3px] md:border-[5px] border-white rounded-xl p-4 md:p-6 flex flex-col gap-4 md:gap-5 shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]">
-                <h3 className="font-montserrat-bold text-lg md:text-[24px] leading-[1.4] text-[#5260ce]">
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-7 flex flex-col gap-5 shadow-sm animate-fade-up-d300">
+                <h3 className="font-montserrat-bold text-lg md:text-xl text-[#121c67] section-title-accent pb-1">
                   {t("aboutTheUniversity")}
                 </h3>
                 <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
@@ -401,42 +376,28 @@ export default async function UniversityDetailPage({
               </div>
 
               {/* Admission Requirements Card */}
-              <div className="bg-white border-[3px] md:border-[5px] border-white rounded-xl p-4 md:p-6 flex flex-col gap-4 md:gap-5 shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]">
-                <h3 className="font-montserrat-bold text-lg md:text-[24px] leading-[1.4] text-[#5260ce]">
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-7 flex flex-col gap-5 shadow-sm animate-fade-up-d400">
+                <h3 className="font-montserrat-bold text-lg md:text-xl text-[#121c67] section-title-accent pb-1">
                   {t("admissionRequirements")}
                 </h3>
-                <div className="flex flex-col gap-2.5">
-                  {admissionRequirements.length > 0 ? (
-                    admissionRequirements.map((req: string, index: number) => (
-                      <p
-                        key={index}
-                        className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]"
-                      >
-                        • {req}
-                      </p>
-                    ))
-                  ) : (
-                    <>
-                      <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
-                        • {t("highAcademicPerformance")}
-                      </p>
-                      <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
-                        • {t("englishProficiency")}
-                      </p>
-                      <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
-                        • {t("satActScores")}
-                      </p>
-                      <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
-                        • {t("personalStatement")}
-                      </p>
-                    </>
-                  )}
+                <div className="flex flex-col gap-3">
+                  {(admissionRequirements.length > 0
+                    ? admissionRequirements
+                    : [t("highAcademicPerformance"), t("englishProficiency"), t("satActScores"), t("personalStatement")]
+                  ).map((req: string, index: number) => (
+                    <div key={index} className="flex items-start gap-3 p-3 rounded-xl bg-[#f9fafe] border border-gray-100">
+                      <div className="w-5 h-5 rounded-full bg-[#5260ce]/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <Check className="w-3 h-3 text-[#5260ce]" />
+                      </div>
+                      <p className="font-montserrat-regular text-sm md:text-base text-[#2e2e2e] leading-relaxed">{req}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               {/* Available Services Card */}
-              <div className="bg-white border-[3px] md:border-[5px] border-white rounded-xl p-4 md:p-6 flex flex-col gap-4 md:gap-5 shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]">
-                <h3 className="font-montserrat-bold text-lg md:text-[24px] leading-[1.4] text-[#5260ce]">
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-7 flex flex-col gap-5 shadow-sm">
+                <h3 className="font-montserrat-bold text-lg md:text-xl text-[#121c67] section-title-accent pb-1">
                   {t("availableServicesViaUniVolta")}
                 </h3>
                 <div className="flex flex-col gap-2.5">
@@ -481,15 +442,17 @@ export default async function UniversityDetailPage({
               </div>
             </div>
 
-            {/* Right Column - Sidebar - Exactly like image */}
+            {/* Right Column - Sidebar */}
             <div className="lg:col-span-1">
-              <div className="bg-white border-[3px] md:border-[5px] border-white rounded-xl p-4 md:p-6 flex flex-col gap-4 md:gap-6 lg:sticky lg:top-[120px] shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]">
-                <h3 className="font-montserrat-bold text-lg md:text-[24px] leading-[1.4] text-[#5260ce]">
-                  {t("availableMajors")}{" "}
-                  <span className="font-montserrat-regular text-base md:text-[20px]">
-                    ({totalPrograms})
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 flex flex-col gap-5 lg:sticky lg:top-[120px] shadow-sm animate-fade-up">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-montserrat-bold text-lg text-[#121c67] section-title-accent pb-1">
+                    {t("availableMajors")}
+                  </h3>
+                  <span className="text-sm font-montserrat-semibold text-[#5260ce] bg-[#5260ce]/10 px-2.5 py-1 rounded-full">
+                    {totalPrograms}
                   </span>
-                </h3>
+                </div>
 
                 {/* Search Bar */}
                 <div className={`bg-gray-50 border border-[#e0e6f1] rounded-xl px-3 md:px-3.5 py-2.5 md:py-3.5 flex gap-2 md:gap-3 items-center ${lang === "ar" ? "flex-row-reverse" : ""}`}>
@@ -561,135 +524,93 @@ export default async function UniversityDetailPage({
             </div>
           </div>
 
-          {/* Other Universities Section */}
+          {/* Other Universities Section — same card design as home page */}
           {otherUniversities.length > 0 && (
             <div className="mt-12 md:mt-20">
-              <h2 className="font-montserrat-bold text-xl md:text-[34px] leading-[1.4] text-[#121c67] mb-4">
-                {t("otherUniversitiesIn")} {university.country}{" "}
-                {getCountryFlag(university.country) && "🇺🇸"}
-              </h2>
-              <div className="relative w-[84px] h-[10px] mb-8">
-                <Image
-                  src={figmaAssets.whyUsVector5}
-                  alt=""
-                  fill
-                  className="object-contain"
-                  unoptimized
-                />
+              <div className="flex items-end gap-4 mb-8">
+                <div>
+                  <p className="text-sm font-montserrat-regular text-[#5260ce] mb-1">Discover More</p>
+                  <h2 className="font-montserrat-bold text-2xl md:text-[34px] text-[#121c67] leading-tight section-title-accent pb-1">
+                    {t("otherUniversitiesIn")} {university.country}
+                  </h2>
+                </div>
               </div>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-[30px]">
-                {otherUniversities.map((uni: any) => (
-                  <div
-                    key={uni.id}
-                    className="bg-white border-[5px] border-white rounded-xl overflow-hidden flex flex-col shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]"
-                  >
-                    <div className="relative pb-[67px]">
-                      <div className="h-[220px] -mb-[67px] relative rounded-xl overflow-hidden">
-                        <div className="absolute inset-0">
-                          <Image
-                            src={
-                              uni.image1 ||
-                              uni.bannerUrl ||
-                              figmaAssets.universityLogo1
-                            }
-                            alt={uni.name}
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                {otherUniversities.map((uni: any) => {
+                  const uniLogo = uni.logoUrl || uni.logo;
+                  const uniBanner = uni.bannerUrl || uni.image1 || figmaAssets.universityLogo1;
+                  return (
+                    <Card key={uni.id} className="group overflow-hidden border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-400 hover:-translate-y-2 bg-white h-full flex flex-col">
+                      {/* Banner */}
+                      <div className="relative h-52 overflow-hidden shrink-0">
+                        <Image
+                          src={uniBanner}
+                          alt={uni.name}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          unoptimized
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[rgba(18,28,103,0.75)] via-[rgba(18,28,103,0.25)] to-transparent" />
+                        <div className="absolute top-3 right-3">
+                          <Badge className="bg-white/90 text-[#121c67] hover:bg-white font-montserrat-semibold text-xs shadow-sm">{uni.country}</Badge>
                         </div>
-                      </div>
-                      <div className="relative flex gap-1 h-[86px] px-6 items-center -mt-[67px] rounded-br-xl">
-                        <div className="bg-[#5260ce] flex gap-1 h-[49px] items-center rounded-bl-[40px] rounded-br-xl rounded-tl-[40px]">
-                          {(uni.logoUrl || uni.logo) && (
-                            <div className="relative w-[76px] h-[76px] border-[5px] border-white rounded-full overflow-hidden shrink-0">
-                              <Image
-                                src={
-                                  uni.logoUrl || uni.logo || figmaAssets.logo
-                                }
-                                alt={uni.name}
-                                fill
-                                className="object-contain p-2"
-                                unoptimized
-                              />
-                            </div>
-                          )}
-                          <div className="px-4 py-6 h-[49px] flex items-center">
-                            <p className="font-montserrat-bold text-[18px] leading-[1.4] text-white">
-                              {uni.name}
-                            </p>
+                        {uni.worldRanking && (
+                          <div className="absolute top-3 left-3">
+                            <Badge className="bg-[#5260ce]/90 text-white text-xs font-montserrat-semibold shadow-sm">
+                              <Trophy className="w-3 h-3 mr-1" />#{uni.worldRanking} World
+                            </Badge>
                           </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-[10px] px-5 pt-4">
-                      <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e] px-5">
-                        {uni.description ||
-                          uni.about ||
-                          t("discoverWorldClassAcademics")}
-                      </p>
-                      <div className="flex gap-3 px-5">
-                        <div className="bg-[rgba(117,211,247,0.1)] border border-[#75d3f7] rounded-lg px-2 py-1.5 flex gap-1 items-center">
-                          <div className="relative w-6 h-6 shrink-0">
-                            <Image
-                              src={getCountryFlag(uni.country)}
-                              alt="Location"
-                              fill
-                              className="object-contain"
-                              unoptimized
-                            />
-                          </div>
-                          <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#2e2e2e]">
-                            {uni.country}
-                          </p>
-                        </div>
-                        <div className="bg-[rgba(117,211,247,0.1)] border border-[#75d3f7] rounded-lg px-2 py-1.5 flex gap-1 items-center">
-                          <div className="relative w-6 h-6 shrink-0">
-                            <Image
-                              src={getLanguageFlag(uni.language)}
-                              alt="Language"
-                              fill
-                              className="object-contain"
-                              unoptimized
-                            />
-                          </div>
-                          <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#2e2e2e]">
-                            {uni.language}
-                          </p>
-                        </div>
-                      </div>
-                      {uni.majors && uni.majors.length > 0 && (
-                        <div className="px-5">
-                          <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e] mb-2">
-                            {t("keyMajors")}
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {uni.majors.slice(0, 5).map((major: string) => (
-                              <div
-                                key={major}
-                                className="bg-[rgba(117,211,247,0.2)] rounded-md px-2 py-1 h-[26px] flex items-center justify-center"
-                              >
-                                <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#121c67] text-center">
-                                  {major}
-                                </p>
+                        )}
+                        {uniLogo && (
+                          <div className="absolute bottom-3 left-4">
+                            <div className="w-14 h-14 rounded-xl bg-white shadow-lg p-1.5 overflow-hidden">
+                              <div className="relative w-full h-full">
+                                <Image src={uniLogo} alt={uni.name} fill className="object-contain p-0.5" unoptimized />
                               </div>
-                            ))}
+                            </div>
                           </div>
+                        )}
+                        <div className="absolute bottom-0 left-0 right-0 p-4 pt-8">
+                          <h3 className={`font-montserrat-bold text-lg text-white leading-tight line-clamp-2 ${uniLogo ? "pl-16" : ""}`}>{uni.name}</h3>
                         </div>
-                      )}
-                      <div className="px-5 pb-5 pt-0">
-                        <Button
-                          className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-[16px] h-[48px] w-full rounded-xl"
-                          asChild
-                        >
-                          <Link href={`/universities/${uni.slug}`}>
+                      </div>
+                      <CardContent className="pt-4 pb-2 px-5 flex-1 flex flex-col gap-3">
+                        <div className="flex gap-2 flex-wrap">
+                          <Badge variant="outline" className="border-[#75d3f7] text-[#2e2e2e] bg-[rgba(117,211,247,0.08)] text-xs font-montserrat-regular gap-1 rounded-full">
+                            <MapPin className="w-3 h-3 text-[#5260ce]" />{uni.city || uni.country}
+                          </Badge>
+                          <Badge variant="outline" className="border-[#5260ce]/30 text-[#2e2e2e] bg-[rgba(82,96,206,0.06)] text-xs font-montserrat-regular gap-1 rounded-full">
+                            <Globe className="w-3 h-3 text-[#5260ce]" />{uni.language}
+                          </Badge>
+                        </div>
+                        <p className="text-sm font-montserrat-regular text-[#65666f] leading-relaxed line-clamp-2 flex-1">
+                          {uni.description || uni.about || t("discoverWorldClassAcademics")}
+                        </p>
+                        {uni.majors && uni.majors.length > 0 && (
+                          <div>
+                            <div className="flex items-center gap-1 mb-1.5">
+                              <GraduationCap className="w-3.5 h-3.5 text-[#5260ce]" />
+                              <span className="text-xs font-montserrat-semibold text-[#5260ce]">{t("keyMajors")}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {uni.majors.slice(0, 5).map((major: string, i: number) => (
+                                <Badge key={i} className="bg-[rgba(82,96,206,0.1)] text-[#5260ce] hover:bg-[rgba(82,96,206,0.18)] text-xs font-montserrat-regular border-0 rounded-md h-auto py-1">{major}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                      <CardFooter className="pt-3 pb-5 px-5">
+                        <Button className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm h-11 rounded-xl transition-all duration-300 hover:shadow-[0_8px_24px_rgba(82,96,206,0.35)] group/btn" asChild>
+                          <Link href={`/universities/${uni.slug}`} className="flex items-center justify-center gap-2">
                             {t("viewDetails")}
+                            <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover/btn:translate-x-1" />
                           </Link>
                         </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                      </CardFooter>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           )}

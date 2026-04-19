@@ -139,16 +139,21 @@ export default function DashboardLoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
-        <h1 className="text-3xl font-montserrat-bold text-[#121c67] mb-6 text-center">
+        <h1 className="text-3xl font-montserrat-bold text-[#121c67] mb-2 text-center">
           Dashboard Login
         </h1>
+        <p className="text-center text-xs text-[#65666f] font-montserrat-regular mb-6">
+          Open this page at{" "}
+          <code className="bg-gray-100 px-1.5 py-0.5 rounded text-[#121c67]">/dashboard/login</code>
+          {" "}(e.g. <code className="bg-gray-100 px-1.5 py-0.5 rounded">http://localhost:3000/dashboard/login</code>)
+        </p>
 
         {/* Credentials Display */}
         <div className="space-y-4 mb-6">
           {/* Admin Credentials */}
           <div className="bg-[rgba(82,96,206,0.1)] border border-[#5260ce] rounded-lg p-4">
             <h3 className="font-montserrat-semibold text-[#121c67] mb-2 text-sm">
-              Admin Credentials:
+              Admin (full platform):
             </h3>
             <div className="space-y-1 text-sm font-montserrat-regular">
               <div className="flex gap-2">
@@ -160,17 +165,49 @@ export default function DashboardLoginPage() {
                 <span className="text-[#121c67] font-montserrat-semibold">admin123</span>
               </div>
             </div>
+            <p className="text-xs text-[#65666f] mt-3 font-montserrat-regular">
+              After login you go to <strong className="text-[#121c67]">/dashboard</strong> (users, universities, applications, FAQs, etc.)
+            </p>
+          </div>
+
+          {/* Editor */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <h3 className="font-montserrat-semibold text-[#121c67] mb-2 text-sm">
+              Editor (content):
+            </h3>
+            <div className="space-y-1 text-sm font-montserrat-regular">
+              <div className="flex gap-2">
+                <span className="text-[#65666f]">Email:</span>
+                <span className="text-[#121c67] font-montserrat-semibold">editor@univolta.com</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="text-[#65666f]">Password:</span>
+                <span className="text-[#121c67] font-montserrat-semibold">user123</span>
+              </div>
+            </div>
+            <p className="text-xs text-[#65666f] mt-2">Same main dashboard as admin, with editor permissions.</p>
           </div>
 
           {/* University Credentials */}
           <div className="bg-[rgba(117,211,247,0.1)] border border-[#75d3f7] rounded-lg p-4">
             <h3 className="font-montserrat-semibold text-[#121c67] mb-2 text-sm">
-              University Control Panel Credentials:
+              University partner dashboard:
             </h3>
             <p className="text-xs text-[#65666f] mb-2 font-montserrat-regular">
-              University administrators can manage their programs, students, payments, and reports
+              Password for every seeded university account: <strong>university123</strong>. After login you are sent to{" "}
+              <strong>/dashboard/partner</strong>.
             </p>
             <div className="space-y-2 text-xs font-montserrat-regular">
+              <div>
+                <span className="text-[#65666f]">Cairo University (Egypt):</span>
+                <span className="text-[#121c67] font-montserrat-semibold ml-2 block sm:inline">admin@cairouniversity.univolta.com</span>
+                <span className="text-[#65666f] ml-2">/ university123</span>
+              </div>
+              <div>
+                <span className="text-[#65666f]">AUC (Egypt):</span>
+                <span className="text-[#121c67] font-montserrat-semibold ml-2 block sm:inline">admin@americanuniversitycairo.univolta.com</span>
+                <span className="text-[#65666f] ml-2">/ university123</span>
+              </div>
               <div>
                 <span className="text-[#65666f]">Stanford:</span>
                 <span className="text-[#121c67] font-montserrat-semibold ml-2">admin@stanforduniversity.univolta.com</span>

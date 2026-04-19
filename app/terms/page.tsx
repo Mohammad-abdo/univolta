@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { Button } from "@/components/ui/button";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { figmaAssets } from "@/lib/figma-assets";
 import { t, getLanguage, type Language } from "@/lib/i18n";
 import Link from "next/link";
@@ -90,7 +91,8 @@ export default function TermsPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-[rgba(105,171,233,0.2)] to-transparent pointer-events-none" />
 
           <div className="relative mx-auto max-w-[1280px] px-4 md:px-5">
-            <div className="relative h-[200px] md:h-[350px] overflow-hidden rounded-[16px] md:rounded-[24px] shadow-[0px_20px_80px_rgba(82,96,206,0.15)]">
+            <ScrollReveal direction="fade">
+            <div className="relative h-[200px] md:h-[320px] overflow-hidden rounded-[16px] md:rounded-[28px] shadow-[0px_20px_80px_rgba(82,96,206,0.15)] animate-hero-reveal">
               <Image
                 src={figmaAssets.termsHeroBackground}
                 alt="Students studying in a classroom"
@@ -119,12 +121,16 @@ export default function TermsPage() {
               />
               <div className="absolute inset-0 bg-[#121c67]/45" aria-hidden="true" />
 
-              <div className="absolute inset-0 flex items-center justify-center px-4 md:px-8 text-center">
-                <h1 className="text-white text-xl md:text-[34px] font-montserrat-bold leading-[1.4]">
+              <div className="absolute inset-0 flex flex-col items-center justify-center px-4 md:px-8 text-center">
+                <h1 className="text-white text-2xl md:text-[40px] font-montserrat-bold leading-tight animate-fade-up">
                   {t("termsPolicy")}
                 </h1>
+                <p className="text-white/70 text-sm md:text-base mt-2 font-montserrat-regular animate-fade-up-d100">
+                  Please read these terms carefully before using our services
+                </p>
               </div>
             </div>
+            </ScrollReveal>
           </div>
         </section>
 
@@ -140,28 +146,30 @@ export default function TermsPage() {
               </p>
             </div>
 
-            <div className="flex flex-col gap-6 md:gap-8">
-              {sections.map((section) => (
-                <article key={section.title} className="space-y-2 md:space-y-3">
-                  <h3 className="text-lg md:text-[24px] font-montserrat-bold text-[#5260ce] leading-[1.4]">
-                    {section.title}
-                  </h3>
-                  {section.body && (
-                    <p className="text-base md:text-[20px] font-montserrat-regular text-[#2e2e2e] leading-relaxed">
-                      {section.body}
-                    </p>
-                  )}
-                  {section.list && (
-                    <ul className="space-y-2 text-base md:text-[20px] font-montserrat-regular text-[#2e2e2e] leading-relaxed">
-                      {section.list.map((item) => (
-                        <li key={item} className="flex gap-2">
-                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#5260ce]" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </article>
+            <div className="flex flex-col gap-5 md:gap-6">
+              {sections.map((section, index) => (
+                <ScrollReveal key={section.title} direction="up" delay={index * 60}>
+                  <article className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 md:p-7 space-y-3 hover:shadow-md transition-shadow">
+                    <h3 className="text-base md:text-xl font-montserrat-bold text-[#5260ce] leading-tight">
+                      {section.title}
+                    </h3>
+                    {section.body && (
+                      <p className="text-sm md:text-base font-montserrat-regular text-[#2e2e2e] leading-relaxed">
+                        {section.body}
+                      </p>
+                    )}
+                    {section.list && (
+                      <ul className="space-y-2">
+                        {section.list.map((item) => (
+                          <li key={item} className="flex gap-3 text-sm md:text-base font-montserrat-regular text-[#2e2e2e] leading-relaxed">
+                            <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-gradient-to-br from-[#5260ce] to-[#75d3f7]" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </article>
+                </ScrollReveal>
               ))}
             </div>
           </div>

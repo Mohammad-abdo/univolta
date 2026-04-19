@@ -3,10 +3,28 @@ import { Footer } from "@/components/footer";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import Link from "next/link";
 import { figmaAssets } from "@/lib/figma-assets";
 import { notFound } from "next/navigation";
-import { Check, Search, CheckCircle } from "lucide-react";
+import {
+  Check,
+  Search,
+  Clock,
+  Globe,
+  DollarSign,
+  BookOpen,
+  Calendar,
+  GraduationCap,
+  Users,
+  Trophy,
+  ArrowRight,
+  ChevronRight,
+  MapPin,
+  Layers,
+  Star,
+} from "lucide-react";
 import { getImageUrl, getImageUrlOrFallback } from "@/lib/image-utils";
 import { ProgramRegisterButton } from "@/components/program-register-button";
 import { tServer } from "@/lib/i18n";
@@ -19,14 +37,9 @@ async function fetchProgram(slug: string) {
     const response = await fetch(`${API_BASE_URL}/public/programs/${slug}`, {
       next: { revalidate: 60 },
     });
-
-    if (!response.ok) {
-      return null;
-    }
-
+    if (!response.ok) return null;
     return await response.json();
-  } catch (error) {
-    console.error("Error fetching program:", error);
+  } catch {
     return null;
   }
 }
@@ -35,19 +48,12 @@ async function fetchUniversityPrograms(universitySlug: string) {
   try {
     const response = await fetch(
       `${API_BASE_URL}/public/universities/${universitySlug}/programs`,
-      {
-        next: { revalidate: 60 },
-      }
+      { next: { revalidate: 60 } }
     );
-
-    if (!response.ok) {
-      return [];
-    }
-
+    if (!response.ok) return [];
     const data = await response.json();
     return Array.isArray(data) ? data : [];
-  } catch (error) {
-    console.error("Error fetching university programs:", error);
+  } catch {
     return [];
   }
 }
@@ -58,22 +64,14 @@ async function fetchSimilarPrograms(
   universitySlug: string
 ) {
   try {
-    // Fetch programs from public endpoint
     const response = await fetch(
       `${API_BASE_URL}/public/universities/${universitySlug}/programs`,
-      {
-        next: { revalidate: 60 },
-      }
+      { next: { revalidate: 60 } }
     );
-
-    if (!response.ok) {
-      return [];
-    }
-
+    if (!response.ok) return [];
     const data = await response.json();
     if (!Array.isArray(data)) return [];
 
-    // Filter similar programs by name similarity
     const similar = data
       .filter(
         (p: any) =>
@@ -82,19 +80,14 @@ async function fetchSimilarPrograms(
       )
       .slice(0, 3);
 
-    // If not enough similar programs, get from other universities
     if (similar.length < 3) {
       try {
-        const allProgramsRes = await fetch(
-          `${API_BASE_URL}/public/universities`,
-          {
-            next: { revalidate: 60 },
-          }
-        );
+        const allProgramsRes = await fetch(`${API_BASE_URL}/public/universities`, {
+          next: { revalidate: 60 },
+        });
         if (allProgramsRes.ok) {
           const allUnis = await allProgramsRes.json();
           const allPrograms: any[] = [];
-
           if (allUnis.data && Array.isArray(allUnis.data)) {
             allUnis.data.forEach((uni: any) => {
               if (uni.programs && Array.isArray(uni.programs)) {
@@ -107,34 +100,27 @@ async function fetchSimilarPrograms(
                       slug: uni.slug,
                       country: uni.country,
                       logoUrl: uni.logoUrl || uni.logo,
+                      bannerUrl: uni.bannerUrl,
                     },
                   }))
                 );
               }
             });
           }
-
           const additional = allPrograms
             .filter(
               (p: any) =>
                 p.id !== excludeId &&
                 p.university?.slug !== universitySlug &&
-                p.name
-                  .toLowerCase()
-                  .includes(programName.toLowerCase().split(" ")[0])
+                p.name.toLowerCase().includes(programName.toLowerCase().split(" ")[0])
             )
             .slice(0, 3 - similar.length);
-
           return [...similar, ...additional].slice(0, 3);
         }
-      } catch (error) {
-        console.error("Error fetching additional similar programs:", error);
-      }
+      } catch {}
     }
-
     return similar;
-  } catch (error) {
-    console.error("Error fetching similar programs:", error);
+  } catch {
     return [];
   }
 }
@@ -147,11 +133,8 @@ export default async function ProgramDetailPage({
   const { slug, programSlug } = await params;
   const program = await fetchProgram(programSlug);
 
-  if (!program) {
-    notFound();
-  }
-  
-  // Get language from cookies (fallback to "en")
+  if (!program) notFound();
+
   const cookieStore = await cookies();
   const lang = (cookieStore.get("language")?.value as Language) || "en";
   const t = (key: string) => tServer(key, lang);
@@ -165,52 +148,35 @@ export default async function ProgramDetailPage({
     slug || program.university?.slug || ""
   );
 
-  // Safely parse JSON fields that might come as strings
+  // Parse JSON fields
   let coreSubjects: string[] = [];
   try {
-    if (Array.isArray(program.coreSubjects)) {
-      coreSubjects = program.coreSubjects;
-    } else if (typeof program.coreSubjects === "string") {
-      coreSubjects = JSON.parse(program.coreSubjects);
-    }
-  } catch {
-    coreSubjects = [];
-  }
+    coreSubjects = Array.isArray(program.coreSubjects)
+      ? program.coreSubjects
+      : JSON.parse(program.coreSubjects || "[]");
+  } catch { coreSubjects = []; }
 
   let programImages: string[] = [];
   try {
-    if (Array.isArray(program.programImages)) {
-      programImages = program.programImages;
-    } else if (typeof program.programImages === "string") {
-      programImages = JSON.parse(program.programImages);
-    }
-  } catch {
-    programImages = [];
-  }
+    programImages = Array.isArray(program.programImages)
+      ? program.programImages
+      : JSON.parse(program.programImages || "[]");
+  } catch { programImages = []; }
 
-  // Ensure we have valid image URLs - convert relative paths to full URLs
   programImages = programImages
     .filter((img) => img && typeof img === "string" && img.trim().length > 0)
     .map((img) => {
-      const trimmed = img.trim();
-      // If it's already a full URL, return as is, otherwise convert
-      if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-        return trimmed;
-      }
-      return getImageUrl(trimmed);
+      const t2 = img.trim();
+      return t2.startsWith("http://") || t2.startsWith("https://") ? t2 : getImageUrl(t2);
     });
 
-  // Group programs by department/specialization
   const programsByDepartment: Record<string, any[]> = {};
   universityPrograms.forEach((p: any) => {
     const dept = p.department || "Other";
-    if (!programsByDepartment[dept]) {
-      programsByDepartment[dept] = [];
-    }
+    if (!programsByDepartment[dept]) programsByDepartment[dept] = [];
     programsByDepartment[dept].push(p);
   });
 
-  // Count bachelor's and master's
   const bachelorCount = universityPrograms.filter(
     (p: any) =>
       p.degree?.toLowerCase().includes("bachelor") ||
@@ -222,431 +188,511 @@ export default async function ProgramDetailPage({
       p.degree?.toLowerCase().includes("graduate")
   ).length;
 
+  // Info stat tiles for the specialization card
+  const infoStats = [
+    { icon: GraduationCap, label: t("degreeOfStudy"),         value: program.degree || program.studyYear || "N/A" },
+    { icon: Clock,         label: t("studyPeriod"),           value: program.duration || "N/A" },
+    { icon: DollarSign,    label: t("tuitionFeesEstimated"),  value: program.tuition || "N/A" },
+    { icon: BookOpen,      label: t("programName"),           value: program.name },
+    { icon: Globe,         label: t("languageOfInstruction"), value: program.language || "N/A" },
+    { icon: Calendar,      label: t("startOfStudy"),          value: program.startDate || "N/A" },
+    { icon: Clock,         label: t("studyTime"),             value: program.classSchedule || "N/A" },
+    { icon: Layers,        label: t("studyMethod"),           value: program.studyMethod || t("undefined") },
+  ];
+
+  const heroBanner =
+    getImageUrlOrFallback(
+      program.bannerImage || programImages?.[0],
+      figmaAssets.heroImage
+    );
+
   return (
-    <div className="min-h-screen bg-white pb-16 md:pb-0">
+    <div className="min-h-screen bg-[#f9fafe] pb-16 md:pb-0">
       <Navbar />
-      <main className="pt-0 md:pt-[100px] pb-16 md:pb-20">
-        <div className="max-w-[1440px] mx-auto px-5">
-          {/* Hero Banner - Exactly like image with overlay */}
-          <div className="relative h-[500px] rounded-[24px] overflow-hidden mb-10">
-            <div className="absolute inset-0">
-              <Image
-                src={getImageUrlOrFallback(
-                  program.bannerImage || programImages?.[0],
-                  figmaAssets.heroImage
+
+      <main className="pt-0 md:pt-[110px] pb-16 md:pb-24">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-5">
+
+          {/* ── HERO BANNER ──────────────────────────────────────────────── */}
+          <div className="relative h-[280px] md:h-[520px] rounded-[20px] md:rounded-[32px] overflow-hidden mb-8 md:mb-10 animate-hero-reveal shadow-[0_24px_80px_rgba(82,96,206,0.2)]">
+            <Image
+              src={heroBanner}
+              alt={program.name}
+              fill
+              className="object-cover"
+              priority
+              unoptimized
+            />
+
+            {/* Layered gradients */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#121c67]/90 via-[#121c67]/55 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#121c67]/80 via-transparent to-transparent" />
+
+            {/* Dot pattern */}
+            <div
+              className="absolute inset-0 opacity-10"
+              style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "28px 28px" }}
+            />
+
+            {/* Floating orb */}
+            <div className="absolute top-10 right-20 w-48 h-48 rounded-full bg-[#75d3f7]/15 blur-3xl" />
+
+            {/* Top: breadcrumb + badges */}
+            <div className="absolute top-4 md:top-6 left-5 md:left-8 right-5 md:right-8 flex items-start justify-between">
+              {/* Breadcrumb */}
+              <nav className="hidden md:flex items-center gap-1.5 text-white/60 text-xs font-montserrat-regular animate-fade-up">
+                <Link href="/" className="hover:text-white/90 transition-colors">Home</Link>
+                <ChevronRight className="w-3 h-3" />
+                <Link href="/universities" className="hover:text-white/90 transition-colors">Universities</Link>
+                <ChevronRight className="w-3 h-3" />
+                <Link href={`/universities/${slug}`} className="hover:text-white/90 transition-colors">{program.university?.name}</Link>
+                <ChevronRight className="w-3 h-3" />
+                <Link href={`/universities/${slug}/programs`} className="hover:text-white/90 transition-colors">Programs</Link>
+                <ChevronRight className="w-3 h-3" />
+                <span className="text-white/90 truncate max-w-[200px]">{program.name}</span>
+              </nav>
+
+              {/* Right badges */}
+              <div className="flex items-center gap-2 animate-fade-up ml-auto">
+                {program.degree && (
+                  <Badge className="bg-[#5260ce]/80 text-white text-xs font-montserrat-semibold backdrop-blur-sm border-0 shadow-md px-3 py-1.5">
+                    <GraduationCap className="w-3 h-3 mr-1.5" />
+                    {program.degree}
+                  </Badge>
                 )}
-                alt={program.name}
-                fill
-                className="object-cover"
-                loading="eager"
-                priority
-                unoptimized
-              />
+                {program.language && (
+                  <Badge className="bg-white/20 text-white text-xs font-montserrat-semibold backdrop-blur-sm border border-white/30 px-3 py-1.5">
+                    <Globe className="w-3 h-3 mr-1.5" />
+                    {program.language}
+                  </Badge>
+                )}
+              </div>
             </div>
-            {/* Overlay with Logo, Title, and Register Button - Exactly like image */}
-            <div className="absolute inset-0 flex items-end pb-8 px-8">
-              <div className="flex items-center justify-between w-full">
-                {/* Left side - Circular Logo and Program Title */}
-                <div className="flex gap-5 items-center">
-                  {program.university?.logoUrl && (
-                    <div className="relative w-[134px] h-[134px] border-[5px] border-white rounded-full overflow-hidden shrink-0 bg-white shadow-lg">
-                      <Image
-                        src={getImageUrlOrFallback(
-                          program.university.logoUrl,
-                          figmaAssets.logo
-                        )}
-                        alt={program.university.name}
-                        fill
-                        className="object-contain p-2"
-                        loading="eager"
-                        priority
-                        unoptimized
-                      />
-                    </div>
-                  )}
-                  <div className="flex flex-col gap-1">
-                    <h1 className="font-montserrat-bold text-[34px] leading-[1.4] text-white drop-shadow-lg">
-                      {program.name}
-                    </h1>
-                    <p className="font-montserrat-regular text-[20px] leading-[1.4] text-white drop-shadow-lg">
-                      {program.university?.name}
-                    </p>
+
+            {/* Bottom: logo + title + CTA */}
+            <div className="absolute bottom-0 left-0 right-0 p-5 md:p-8 flex items-end justify-between gap-4">
+              {/* Left: logo + title */}
+              <div className="flex items-end gap-4 md:gap-5 flex-1 min-w-0">
+                {program.university?.logoUrl && (
+                  <div className="relative w-16 h-16 md:w-[110px] md:h-[110px] border-4 border-white rounded-2xl overflow-hidden shrink-0 bg-white shadow-xl animate-fade-up">
+                    <Image
+                      src={getImageUrlOrFallback(program.university.logoUrl, figmaAssets.logo)}
+                      alt={program.university.name}
+                      fill
+                      className="object-contain p-1.5 md:p-2"
+                      priority
+                      unoptimized
+                    />
                   </div>
+                )}
+                <div className="pb-1 flex-1 min-w-0">
+                  <p className="text-white/70 text-xs md:text-sm font-montserrat-regular mb-1 animate-fade-up">
+                    {program.university?.name}
+                    {program.university?.country && ` · ${program.university.country}`}
+                  </p>
+                  <h1 className="font-montserrat-bold text-xl md:text-[38px] leading-tight text-white drop-shadow-lg line-clamp-2 animate-fade-up-d100">
+                    {program.name}
+                  </h1>
+                  {program.tuition && (
+                    <p className="text-[#75d3f7] text-sm md:text-base font-montserrat-semibold mt-1 animate-fade-up-d200">
+                      {program.tuition} / year
+                    </p>
+                  )}
                 </div>
-                {/* Right side - Register Now Button */}
-                <ProgramRegisterButton
-                  programId={program.id}
-                  universitySlug={slug}
-                />
+              </div>
+
+              {/* Right: register button */}
+              <div className="hidden md:block shrink-0 animate-fade-up-d200">
+                <ProgramRegisterButton programId={program.id} universitySlug={slug} />
               </div>
             </div>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Left Column - Main Content */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* Specialization Information Card - Exactly like image */}
-              <div className="bg-white border-[5px] border-white rounded-xl p-6 flex flex-col gap-5 shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]">
-                <h3 className="font-montserrat-bold text-[24px] leading-[1.4] text-[#5260ce]">
-                  {t("specializationInformation")}
-                </h3>
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="flex flex-col gap-3">
-                    <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
-                      {t("degreeOfStudy")}
-                    </p>
-                    <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#2e2e2e]">
-                      {program.degree || program.studyYear || "N/A"}
-                    </p>
+          {/* Mobile register button */}
+          <div className="md:hidden mb-5">
+            <ProgramRegisterButton programId={program.id} universitySlug={slug} />
+          </div>
+
+          {/* ── MAIN LAYOUT ──────────────────────────────────────────────── */}
+          <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
+
+            {/* ══ LEFT / MAIN COLUMN ══ */}
+            <div className="lg:col-span-2 space-y-6 md:space-y-8">
+
+              {/* ─ Specialization Info ─ */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-7 shadow-sm animate-fade-up">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-9 h-9 rounded-xl bg-[rgba(82,96,206,0.1)] flex items-center justify-center shrink-0">
+                    <Star className="w-5 h-5 text-[#5260ce]" />
                   </div>
-                  <div className="flex flex-col gap-3">
-                    <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
-                      {t("studyPeriod")}
-                    </p>
-                    <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#2e2e2e]">
-                      {program.duration || "N/A"}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
-                      {t("tuitionFeesEstimated")}
-                    </p>
-                    <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#2e2e2e]">
-                      {program.tuition || "N/A"}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
-                      {t("programName")}
-                    </p>
-                    <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#2e2e2e]">
-                      {program.name}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
-                      {t("languageOfInstruction")}
-                    </p>
-                    <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#2e2e2e]">
-                      {program.language || "N/A"}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
-                      {t("startOfStudy")}
-                    </p>
-                    <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#2e2e2e]">
-                      {program.startDate || "N/A"}{" "}
-                      {program.lastApplicationDate && t("lastDateForApplication")}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
-                      {t("studyTime")}
-                    </p>
-                    <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#2e2e2e]">
-                      {program.classSchedule || "N/A"}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
-                      {t("studyMethod")}
-                    </p>
-                    <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#2e2e2e]">
-                      {program.studyMethod || t("undefined")}
-                    </p>
-                  </div>
+                  <h2 className="font-montserrat-bold text-xl md:text-[24px] text-[#121c67] section-title-accent pb-1">
+                    {t("specializationInformation")}
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                  {infoStats.map(({ icon: Icon, label, value }) => (
+                    <div
+                      key={label}
+                      className="bg-[#f9fafe] border border-gray-100 rounded-xl p-3 md:p-4 flex flex-col gap-2 hover:border-[#5260ce]/20 hover:shadow-sm transition-all"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-[rgba(82,96,206,0.08)] flex items-center justify-center">
+                        <Icon className="w-4 h-4 text-[#5260ce]" />
+                      </div>
+                      <p className="font-montserrat-regular text-xs text-[#8b8c9a] leading-tight">{label}</p>
+                      <p className="font-montserrat-semibold text-sm text-[#121c67] leading-snug">{value}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Tour Gallery Card - Always show, exactly 5 images like image */}
-              <div className="bg-white border-[5px] border-white rounded-xl p-6 flex flex-col gap-5 shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]">
-                <h3 className="font-montserrat-bold text-[24px] leading-[1.4] text-[#5260ce]">
-                  {t("tourInsideDepartment")}
-                </h3>
-                <div className="flex gap-4">
-                  {programImages.length > 0 ? (
-                    programImages
-                      .slice(0, 5)
-                      .map((img: string, index: number) => (
-                        <div
-                          key={index}
-                          className="flex-1 h-[130px] relative rounded-xl overflow-hidden bg-gray-100"
-                        >
-                          <Image
-                            src={getImageUrlOrFallback(
-                              img,
-                              figmaAssets.heroImage
-                            )}
-                            alt={`Tour ${index + 1}`}
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
-                        </div>
-                      ))
-                  ) : (
-                    // Show placeholder images if none exist
-                    Array.from({ length: 5 }).map((_, index) => (
+              {/* ─ Tour Gallery ─ */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-7 shadow-sm animate-fade-up-d100">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-9 h-9 rounded-xl bg-[rgba(82,96,206,0.1)] flex items-center justify-center shrink-0">
+                    <BookOpen className="w-5 h-5 text-[#5260ce]" />
+                  </div>
+                  <h2 className="font-montserrat-bold text-xl md:text-[24px] text-[#121c67] section-title-accent pb-1">
+                    {t("tourInsideDepartment")}
+                  </h2>
+                </div>
+
+                {/* Gallery grid: first image large, rest smaller */}
+                {programImages.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {programImages.slice(0, 5).map((img, i) => (
                       <div
-                        key={index}
-                        className="flex-1 h-[130px] relative rounded-xl overflow-hidden bg-gray-100"
+                        key={i}
+                        className={`relative overflow-hidden rounded-xl group ${i === 0 ? "col-span-2 md:col-span-2 row-span-2 h-52 md:h-64" : "h-24 md:h-[120px]"}`}
                       >
                         <Image
-                          src={figmaAssets.heroImage}
-                          alt={`Tour ${index + 1}`}
+                          src={getImageUrlOrFallback(img, figmaAssets.heroImage)}
+                          alt={`Tour ${i + 1}`}
                           fill
-                          className="object-cover opacity-50"
+                          className="object-cover transition-transform duration-500 group-hover:scale-110"
                           unoptimized
                         />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
                       </div>
-                    ))
-                  )}
-                </div>
+                    ))}
+                    {/* Fill with placeholders if needed */}
+                    {Array.from({ length: Math.max(0, 5 - programImages.length) }).map((_, i) => (
+                      <div
+                        key={`ph-${i}`}
+                        className={`relative overflow-hidden rounded-xl bg-gradient-to-br from-[#f0f4ff] to-[#e8eaf6] ${programImages.length === 0 && i === 0 ? "col-span-2 md:col-span-2 row-span-2 h-52 md:h-64" : "h-24 md:h-[120px]"}`}
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <BookOpen className="w-8 h-8 text-[#5260ce]/20" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`relative overflow-hidden rounded-xl bg-gradient-to-br from-[#f0f4ff] to-[#e8eaf6] ${i === 0 ? "col-span-2 md:col-span-2 row-span-2 h-52 md:h-64" : "h-24 md:h-[120px]"}`}
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <BookOpen className="w-8 h-8 text-[#5260ce]/20" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* About the Program Card */}
+              {/* ─ About the Program ─ */}
               {program.about && (
-                <div className="bg-white border-[5px] border-white rounded-xl p-6 flex flex-col gap-5 shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]">
-                  <h3 className="font-montserrat-bold text-[24px] leading-[1.4] text-[#5260ce]">
-                    {t("aboutTheProgram")}
-                  </h3>
-                  <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e] whitespace-pre-line">
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-7 shadow-sm animate-fade-up-d200">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-9 h-9 rounded-xl bg-[rgba(82,96,206,0.1)] flex items-center justify-center shrink-0">
+                      <BookOpen className="w-5 h-5 text-[#5260ce]" />
+                    </div>
+                    <h2 className="font-montserrat-bold text-xl md:text-[24px] text-[#121c67] section-title-accent pb-1">
+                      {t("aboutTheProgram")}
+                    </h2>
+                  </div>
+                  <p className="font-montserrat-regular text-sm md:text-base text-[#65666f] leading-relaxed whitespace-pre-line">
                     {program.about}
                   </p>
                 </div>
               )}
 
-              {/* Core Subjects Card */}
+              {/* ─ Core Subjects ─ */}
               {coreSubjects.length > 0 && (
-                <div className="bg-white border-[5px] border-white rounded-xl p-6 flex flex-col gap-5 shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]">
-                  <h3 className="font-montserrat-bold text-[24px] leading-[1.4] text-[#5260ce]">
-                    {t("coreSubjects")}
-                  </h3>
-                  <div className="flex flex-col gap-2.5">
-                    {coreSubjects.map((subject: string, index: number) => (
-                      <p
-                        key={index}
-                        className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]"
-                      >
-                        • {subject}
-                      </p>
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-7 shadow-sm animate-fade-up-d200">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-9 h-9 rounded-xl bg-[rgba(82,96,206,0.1)] flex items-center justify-center shrink-0">
+                      <Layers className="w-5 h-5 text-[#5260ce]" />
+                    </div>
+                    <h2 className="font-montserrat-bold text-xl md:text-[24px] text-[#121c67] section-title-accent pb-1">
+                      {t("coreSubjects")}
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                    {coreSubjects.map((subject, i) => (
+                      <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-[#f9fafe] border border-gray-100">
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#5260ce] to-[#75d3f7] flex items-center justify-center shrink-0 mt-0.5">
+                          <span className="text-white text-[10px] font-montserrat-bold">{i + 1}</span>
+                        </div>
+                        <p className="font-montserrat-regular text-sm text-[#2e2e2e] leading-relaxed">{subject}</p>
+                      </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Admission Requirements Card */}
+              {/* ─ Admission Requirements ─ */}
               {program.university?.admissionRequirements &&
                 Array.isArray(program.university.admissionRequirements) &&
                 program.university.admissionRequirements.length > 0 && (
-                  <div className="bg-white border-[5px] border-white rounded-xl p-6 flex flex-col gap-5 shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]">
-                    <h3 className="font-montserrat-bold text-[24px] leading-[1.4] text-[#5260ce]">
-                      {t("admissionRequirements")}
-                    </h3>
-                    <div className="flex flex-col gap-2.5">
-                      {program.university.admissionRequirements.map(
-                        (req: string, index: number) => (
-                          <p
-                            key={index}
-                            className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]"
-                          >
-                            • {req}
-                          </p>
-                        )
-                      )}
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-7 shadow-sm animate-fade-up-d300">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-9 h-9 rounded-xl bg-[rgba(82,96,206,0.1)] flex items-center justify-center shrink-0">
+                      <Trophy className="w-5 h-5 text-[#5260ce]" />
                     </div>
+                    <h2 className="font-montserrat-bold text-xl md:text-[24px] text-[#121c67] section-title-accent pb-1">
+                      {t("admissionRequirements")}
+                    </h2>
                   </div>
-                )}
+                  <div className="flex flex-col gap-2.5">
+                    {program.university.admissionRequirements.map((req: string, i: number) => (
+                      <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-[#f9fafe] border border-gray-100">
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center shrink-0 mt-0.5">
+                          <Check className="w-3.5 h-3.5 text-white" />
+                        </div>
+                        <p className="font-montserrat-regular text-sm text-[#2e2e2e] leading-relaxed">{req}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-              {/* Available Services Card */}
+              {/* ─ Available Services ─ */}
               {program.university?.services &&
                 Array.isArray(program.university.services) &&
                 program.university.services.length > 0 && (
-                  <div className="bg-white border-[5px] border-white rounded-xl p-6 flex flex-col gap-5 shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]">
-                    <h3 className="font-montserrat-bold text-[24px] leading-[1.4] text-[#5260ce]">
-                      {t("availableServicesViaUniVolta")}
-                    </h3>
-                    <div className="flex flex-col gap-2.5">
-                      {program.university.services.map(
-                        (service: string, index: number) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <Check className="w-5 h-5 text-green-600 shrink-0" />
-                            <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
-                              {service}
-                            </p>
-                          </div>
-                        )
-                      )}
+                <div className="bg-gradient-to-br from-[#121c67] to-[#5260ce] rounded-2xl p-5 md:p-7 shadow-sm animate-fade-up-d300">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                      <Users className="w-5 h-5 text-white" />
                     </div>
+                    <h2 className="font-montserrat-bold text-xl md:text-[24px] text-white">
+                      {t("availableServicesViaUniVolta")}
+                    </h2>
                   </div>
-                )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {program.university.services.map((service: string, i: number) => (
+                      <div key={i} className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/15">
+                        <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                          <Check className="w-3.5 h-3.5 text-white" />
+                        </div>
+                        <p className="font-montserrat-regular text-sm text-white/90">{service}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Right Column - Sidebar - Exactly like image */}
+            {/* ══ RIGHT SIDEBAR ══ */}
             <div className="lg:col-span-1">
-              <div className="bg-white border-[5px] border-white rounded-xl p-6 flex flex-col gap-6 sticky top-[120px] shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]">
-                <h3 className="font-montserrat-bold text-[24px] leading-[1.4] text-[#5260ce]">
-                  {t("availableMajors")}{" "}
-                  <span className="font-montserrat-regular text-[20px]">
-                    ({universityPrograms.length})
-                  </span>
-                </h3>
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 shadow-sm sticky top-[130px]">
 
-                {/* Search Bar */}
-                <div className="bg-gray-50 border border-[#e0e6f1] rounded-xl px-3.5 py-3.5 flex gap-3 items-center">
-                  <Search className="w-5 h-5 text-[#8b8c9a] shrink-0" />
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-xs font-montserrat-regular text-[#5260ce] mb-0.5">{program.university?.name}</p>
+                    <h3 className="font-montserrat-bold text-lg text-[#121c67]">
+                      {t("availableMajors")}
+                      <span className="text-sm font-montserrat-regular text-[#8b8c9a] ml-1.5">({universityPrograms.length})</span>
+                    </h3>
+                  </div>
+                </div>
+
+                {/* Search */}
+                <div className="bg-[#f9fafe] border border-[#e0e6f1] rounded-xl px-3 py-2.5 flex gap-2.5 items-center mb-4">
+                  <Search className="w-4 h-4 text-[#8b8c9a] shrink-0" />
                   <input
                     type="text"
                     placeholder={t("searchPrograms")}
-                    className="flex-1 bg-transparent border-none outline-none font-montserrat-light text-[16px] leading-[1.4] text-[#8b8c9a] placeholder:text-[#8b8c9a]"
+                    className="flex-1 bg-transparent border-none outline-none font-montserrat-regular text-sm text-[#2e2e2e] placeholder:text-[#8b8c9a]"
                   />
                 </div>
 
-                {/* Bachelor's/Master's Tabs */}
-                <div className="flex gap-5">
-                  <div className="flex-1 bg-[rgba(117,211,247,0.1)] border border-[#75d3f7] rounded-[10px] px-4 py-2.5 flex items-center justify-center">
-                    <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#121c67]">
-                      {t("bachelors")} ({bachelorCount})
-                    </p>
+                {/* Degree Tabs */}
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <div className="bg-[rgba(82,96,206,0.08)] border border-[#5260ce]/20 rounded-xl px-3 py-2.5 flex flex-col items-center">
+                    <span className="font-montserrat-bold text-lg text-[#5260ce] leading-none">{bachelorCount}</span>
+                    <span className="font-montserrat-regular text-xs text-[#5260ce]/70 mt-0.5">{t("bachelors")}</span>
                   </div>
-                  <div className="flex-1 border border-[#b1b2bf] rounded-[10px] px-4 py-2.5 flex items-center justify-center">
-                    <p className="font-montserrat-regular text-[18px] leading-[1.4] text-[#65666f]">
-                      {t("masters")} ({masterCount})
-                    </p>
+                  <div className="bg-[#f9fafe] border border-gray-100 rounded-xl px-3 py-2.5 flex flex-col items-center">
+                    <span className="font-montserrat-bold text-lg text-[#121c67] leading-none">{masterCount}</span>
+                    <span className="font-montserrat-regular text-xs text-[#8b8c9a] mt-0.5">{t("masters")}</span>
                   </div>
                 </div>
 
-                {/* Programs by Department */}
-                <div className="flex flex-col gap-3 max-h-[500px] overflow-y-auto">
-                  {Object.entries(programsByDepartment).map(
-                    ([department, programs]) => (
-                      <div
-                        key={department}
-                        className="border-b border-[#e0e6f1] pb-3 last:border-b-0"
-                      >
-                        <p className="font-montserrat-semibold text-[16px] text-[#121c67] mb-2">
-                          {department} ({programs.length}{" "}
-                          {programs.length === 1 ? t("program") : t("programs")})
-                        </p>
-                        <div className="flex flex-col gap-2">
-                          {programs.map((p: any) => (
+                {/* Programs list */}
+                <div className="flex flex-col gap-0.5 max-h-[460px] overflow-y-auto pr-1 scrollbar-thin">
+                  {Object.entries(programsByDepartment).map(([dept, programs]) => (
+                    <div key={dept} className="mb-3">
+                      <p className="font-montserrat-semibold text-xs text-[#8b8c9a] uppercase tracking-wider px-2 mb-1.5">
+                        {dept} · {programs.length}
+                      </p>
+                      <div className="flex flex-col gap-0.5">
+                        {programs.map((p: any) => {
+                          const isActive = p.id === program.id;
+                          return (
                             <Link
                               key={p.id}
                               href={`/universities/${slug}/programs/${p.slug}`}
-                              className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors ${
-                                p.id === program.id
-                                  ? "bg-[rgba(82,96,206,0.1)]"
-                                  : ""
+                              className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-all ${
+                                isActive
+                                  ? "bg-[rgba(82,96,206,0.08)] border-l-[3px] border-[#5260ce]"
+                                  : "hover:bg-gray-50 border-l-[3px] border-transparent"
                               }`}
                             >
-                              <span
-                                className={`font-montserrat-regular text-[14px] ${
-                                  p.id === program.id
-                                    ? "text-[#5260ce] font-semibold"
-                                    : "text-[#2e2e2e]"
-                                }`}
-                              >
+                              <span className={`font-montserrat-regular text-sm leading-snug ${isActive ? "text-[#5260ce] font-semibold" : "text-[#2e2e2e]"}`}>
                                 {p.name}
                               </span>
-                              {p.tuition && (
-                                <span className="font-montserrat-semibold text-[14px] text-[#5260ce]">
-                                  {p.tuition}
-                                </span>
+                              {p.tuition ? (
+                                <span className="font-montserrat-semibold text-xs text-[#5260ce] shrink-0 ml-2">{p.tuition}</span>
+                              ) : (
+                                isActive && <ArrowRight className="w-3.5 h-3.5 text-[#5260ce] shrink-0 ml-2" />
                               )}
                             </Link>
-                          ))}
-                        </div>
+                          );
+                        })}
                       </div>
-                    )
-                  )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Apply CTA */}
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <Button className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold h-11 rounded-xl shadow-[0_4px_16px_rgba(82,96,206,0.3)] hover:shadow-[0_6px_20px_rgba(82,96,206,0.4)] transition-all group" asChild>
+                    <Link href={`/universities/${slug}/programs`} className="flex items-center justify-center gap-2">
+                      View All Programs
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                  </Button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Similar Options Section - Exactly like image */}
+          {/* ── SIMILAR PROGRAMS ──────────────────────────────────────────── */}
           {similarPrograms.length > 0 && (
-            <div className="mt-20">
-              <div className="flex items-center gap-3 mb-8">
-                <h2 className="font-montserrat-bold text-[34px] leading-[1.4] text-[#121c67]">
-                  {t("similarOptionsAtOtherUniversities")}
-                </h2>
-                <div className="relative w-8 h-8">
-                  <Image
-                    src={figmaAssets.whyUsVector5}
-                    alt=""
-                    fill
-                    className="object-contain"
-                    unoptimized
-                  />
+            <div className="mt-14 md:mt-20">
+              <div className="flex items-end gap-4 mb-8">
+                <div>
+                  <p className="text-sm font-montserrat-regular text-[#5260ce] mb-1">Discover More</p>
+                  <h2 className="font-montserrat-bold text-2xl md:text-[34px] text-[#121c67] leading-tight section-title-accent pb-1">
+                    {t("similarOptionsAtOtherUniversities")}
+                  </h2>
                 </div>
               </div>
-              <div className="grid md:grid-cols-3 gap-6">
-                {similarPrograms.map((similar: any) => (
-                  <div
-                    key={similar.id}
-                    className="bg-white border-[5px] border-white rounded-xl p-6 flex flex-col gap-4 shadow-[0px_4px_40px_0px_rgba(82,96,206,0.12)]"
-                  >
-                    <div className="flex items-center gap-3">
-                      {similar.university?.logoUrl && (
-                        <div className="relative w-16 h-16 border-2 border-gray-200 rounded-full overflow-hidden shrink-0">
-                          <Image
-                            src={getImageUrlOrFallback(
-                              similar.university.logoUrl,
-                              figmaAssets.logo
-                            )}
-                            alt={similar.university.name}
-                            fill
-                            className="object-contain p-1"
-                            unoptimized
-                          />
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                {similarPrograms.map((similar: any) => {
+                  const simLogo   = similar.university?.logoUrl;
+                  const simBanner = similar.university?.bannerUrl || figmaAssets.heroImage;
+                  return (
+                    <Card key={similar.id} className="group overflow-hidden border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-400 hover:-translate-y-2 bg-white h-full flex flex-col">
+                      {/* Banner */}
+                      <div className="relative h-48 overflow-hidden shrink-0">
+                        <Image
+                          src={getImageUrlOrFallback(simBanner, figmaAssets.heroImage)}
+                          alt={similar.name}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          unoptimized
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[rgba(18,28,103,0.75)] via-[rgba(18,28,103,0.25)] to-transparent" />
+
+                        {/* Degree badge */}
+                        {similar.degree && (
+                          <div className="absolute top-3 left-3">
+                            <Badge className="bg-[#5260ce]/90 text-white text-xs font-montserrat-semibold shadow-sm border-0">
+                              <GraduationCap className="w-3 h-3 mr-1" />{similar.degree}
+                            </Badge>
+                          </div>
+                        )}
+
+                        {/* Logo */}
+                        {simLogo && (
+                          <div className="absolute bottom-3 left-4">
+                            <div className="w-12 h-12 rounded-xl bg-white shadow-lg p-1.5 overflow-hidden">
+                              <div className="relative w-full h-full">
+                                <Image src={getImageUrlOrFallback(simLogo, figmaAssets.logo)} alt={similar.university?.name} fill className="object-contain" unoptimized />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Program name overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 p-4 pt-8">
+                          <h3 className={`font-montserrat-bold text-base text-white leading-tight line-clamp-2 ${simLogo ? "pl-16" : ""}`}>
+                            {similar.name}
+                          </h3>
                         </div>
-                      )}
-                      <div>
-                        <p className="font-montserrat-semibold text-[16px] text-[#121c67]">
-                          {similar.university?.name}
-                        </p>
-                        <p className="font-montserrat-regular text-[14px] text-gray-600">
-                          {similar.university?.country}
-                        </p>
                       </div>
-                    </div>
-                    <p className="font-montserrat-semibold text-[18px] text-[#121c67]">
-                      {similar.name}
-                    </p>
-                    <div className="flex gap-2 flex-wrap">
-                      <span className="bg-[rgba(117,211,247,0.1)] border border-[#75d3f7] rounded-lg px-2 py-1 text-sm">
-                        {similar.university?.country}
-                      </span>
-                      <span className="bg-[rgba(117,211,247,0.1)] border border-[#75d3f7] rounded-lg px-2 py-1 text-sm">
-                        {similar.language}
-                      </span>
-                      {similar.tuition && (
-                        <span className="bg-[rgba(117,211,247,0.1)] border border-[#75d3f7] rounded-lg px-2 py-1 text-sm font-semibold text-[#5260ce]">
-                          {similar.tuition}
-                        </span>
-                      )}
-                    </div>
-                    <Button
-                      className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-[14px] h-[40px] w-full rounded-lg mt-2"
-                      asChild
-                    >
-                      <Link
-                        href={`/universities/${
-                          similar.university?.slug || slug
-                        }/programs/${similar.slug}`}
-                      >
-                        {t("viewDetails")}
-                      </Link>
-                    </Button>
-                  </div>
-                ))}
+
+                      <CardContent className="pt-4 pb-2 px-5 flex-1 flex flex-col gap-3">
+                        {/* University info */}
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-[#5260ce] shrink-0" />
+                          <span className="text-xs font-montserrat-regular text-[#65666f] truncate">
+                            {similar.university?.name}
+                            {similar.university?.country && ` · ${similar.university.country}`}
+                          </span>
+                        </div>
+
+                        {/* Stats badges */}
+                        <div className="flex gap-2 flex-wrap">
+                          {similar.duration && (
+                            <Badge variant="outline" className="border-[#5260ce]/30 text-[#2e2e2e] bg-[rgba(82,96,206,0.06)] text-xs font-montserrat-regular gap-1 rounded-full">
+                              <Clock className="w-3 h-3 text-[#5260ce]" />{similar.duration}
+                            </Badge>
+                          )}
+                          {similar.language && (
+                            <Badge variant="outline" className="border-[#75d3f7] text-[#2e2e2e] bg-[rgba(117,211,247,0.08)] text-xs font-montserrat-regular gap-1 rounded-full">
+                              <Globe className="w-3 h-3 text-[#5260ce]" />{similar.language}
+                            </Badge>
+                          )}
+                          {similar.tuition && (
+                            <Badge className="bg-[rgba(82,96,206,0.1)] text-[#5260ce] text-xs font-montserrat-semibold border-0 rounded-full">
+                              {similar.tuition}
+                            </Badge>
+                          )}
+                        </div>
+                      </CardContent>
+
+                      <CardFooter className="pt-3 pb-5 px-5">
+                        <Button
+                          className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm h-11 rounded-xl transition-all duration-300 hover:shadow-[0_8px_24px_rgba(82,96,206,0.35)] group/btn"
+                          asChild
+                        >
+                          <Link
+                            href={`/universities/${similar.university?.slug || slug}/programs/${similar.slug}`}
+                            className="flex items-center justify-center gap-2"
+                          >
+                            {t("viewDetails")}
+                            <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover/btn:translate-x-1" />
+                          </Link>
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           )}
         </div>
       </main>
+
       <Footer />
       <MobileBottomNav />
     </div>

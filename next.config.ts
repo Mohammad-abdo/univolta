@@ -19,8 +19,18 @@ const nextConfig: NextConfig = {
         hostname: 'univolta.developteam.site',
         pathname: '/uploads/**',
       },
+      // Wikimedia / Wikipedia — Egyptian university real images
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+      },
+      // Unsplash — free high-quality university campus photos
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
     ],
-    unoptimized: false, // Keep optimization but allow localhost
+    unoptimized: false,
   },
 };
 

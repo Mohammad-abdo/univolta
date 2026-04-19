@@ -44,7 +44,8 @@ export function FAQSection({ showIllustration = false }: FAQSectionProps) {
       const response = await fetch(`${API_BASE_URL}/public/faqs`);
       if (response.ok) {
         const data = await response.json();
-        const faqsData = Array.isArray(data) ? data : [];
+        // Handle both { data: [...] } and raw array responses
+        const faqsData = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
         setFaqs(faqsData);
         // Set first FAQ as open if available
         if (faqsData.length > 0) {

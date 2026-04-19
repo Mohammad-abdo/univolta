@@ -7,16 +7,49 @@ export const languages: { code: Language; name: string; flag: string }[] = [
   { code: "ar", name: "العربية", flag: "🇸🇦" },
 ];
 
+/** Read `language` cookie (client only). */
+function readLanguageCookie(): Language | null {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(/(?:^|;\s*)language=([^;]*)/);
+  if (!m) return null;
+  const v = decodeURIComponent(m[1].trim()) as Language;
+  return v === "ar" || v === "en" ? v : null;
+}
+
 export function getLanguage(): Language {
   if (typeof window === "undefined") return "en";
-  return (localStorage.getItem("language") as Language) || "en";
+  try {
+    const stored = localStorage.getItem("language") as Language | null;
+    if (stored === "ar" || stored === "en") return stored;
+    const fromCookie = readLanguageCookie();
+    if (fromCookie) {
+      localStorage.setItem("language", fromCookie);
+      return fromCookie;
+    }
+  } catch {
+    /* storage unavailable */
+  }
+  return "en";
 }
 
 export function setLanguage(lang: Language): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem("language", lang);
-  // Reload page to apply language changes
+  try {
+    localStorage.setItem("language", lang);
+  } catch {
+    /* ignore */
+  }
+  const maxAge = 60 * 60 * 24 * 365;
+  document.cookie = `language=${lang}; path=/; max-age=${maxAge}; SameSite=Lax`;
   window.location.reload();
+}
+
+/** Keep cookie aligned with current language (fixes SSR vs client mismatch). */
+export function syncLanguageCookie(): void {
+  if (typeof window === "undefined") return;
+  const lang = getLanguage();
+  const maxAge = 60 * 60 * 24 * 365;
+  document.cookie = `language=${lang}; path=/; max-age=${maxAge}; SameSite=Lax`;
 }
 
 // Cache for translations from backend
@@ -25,11 +58,21 @@ let translationsCache: Record<Language, Record<string, string> | null> = {
   ar: null,
 };
 
+/**
+ * Merged dictionary: local bundle (complete) + API overrides.
+ * Never mixes languages — missing keys stay in the active locale only.
+ */
+function getMergedDictionary(lang: Language): Record<string, string> {
+  const base = translations[lang] || {};
+  const remote = translationsCache[lang];
+  if (!remote) return base;
+  return { ...base, ...remote };
+}
+
 // Fetch translations from backend
 export async function fetchTranslations(lang: Language): Promise<Record<string, string>> {
-  // Return cached translations if available
   if (translationsCache[lang]) {
-    return translationsCache[lang]!;
+    return getMergedDictionary(lang);
   }
 
   try {
@@ -37,16 +80,17 @@ export async function fetchTranslations(lang: Language): Promise<Record<string, 
     const response = await fetch(`${API_BASE_URL}/translations/${lang}`);
     
     if (response.ok) {
-      const translations = await response.json();
-      translationsCache[lang] = translations;
-      return translations;
+      const data = await response.json();
+      // Local bundle wins over API so repo copy & new keys are not overwritten by stale backend JSON
+      translationsCache[lang] = { ...data, ...translations[lang] };
+      return getMergedDictionary(lang);
     }
   } catch (error) {
     console.error("Error fetching translations from backend:", error);
   }
 
-  // Fallback to local translations if backend fails
-  return translations[lang] || translations.en;
+  translationsCache[lang] = { ...translations[lang] };
+  return getMergedDictionary(lang);
 }
 
 // Clear cache (useful for development)
@@ -282,10 +326,13 @@ const translations: Record<Language, Record<string, string>> = {
     roles: "Roles",
     settings: "Settings",
     // Home Page
-    studyAbroadMadeEasy: "Study Abroad Made Easy",
-    connectWithTopUniversities: "Connect with top international universities and get personalized support throughout your application journey.",
-    searchUniversities: "Search universities, programs, or countries",
-    studentsInUniversities: "+ 150 students in various universities around the world.",
+    studyAbroadMadeEasy:
+      "Your Gateway to Egyptian Universities",
+    connectWithTopUniversities:
+      "We help international students apply to accredited Egyptian universities, and help Egyptian students compare programmes, fees, and universities — with full support in Arabic and English.",
+    searchUniversities: "Search Egyptian universities, programmes, or majors",
+    studentsInUniversities:
+      "150+ students exploring Egyptian universities — including international applicants preparing to study in Egypt.",
     // Footer
     footerDescription: "At Univolta, we strive to help ambitious students achieve their educational dreams. Join us today to discover how we can be the first step in your successful educational journey.",
     followUs: "Follow Us",
@@ -349,7 +396,8 @@ const translations: Record<Language, Record<string, string>> = {
     // Why Us Section
     whyUnivolta: "Why UNIVOLTA",
     topValuesForYou: "Top Values For You 🔥",
-    whyUnivoltaDescription: "At UNIVOLTA, we aim to assist driven students in realizing their academic aspirations globally. Through our strong collaborations with top universities around the world, we offer unmatched support in helping students navigate their university admissions.",
+    whyUnivoltaDescription:
+      "UNIVOLTA focuses on Egyptian higher education: we connect you with accredited universities in Egypt, clear admissions steps, and practical help — especially for international students coming to study in Egypt and for Egyptians choosing the right faculty.",
     easyApplication: "Easy Application",
     easyApplicationDesc: "Apply to universities easily with a guided and streamlined process.",
     oneOnOneSupport: "One-on-One Support",
@@ -359,7 +407,7 @@ const translations: Record<Language, Record<string, string>> = {
     studentServices: "Student Services",
     studentServicesDesc: "Enjoy extra support like airport pickup, housing, and orientation assistance.",
     // Universities Section
-    listOfInternationalUniversities: "List of International Universities",
+    listOfInternationalUniversities: "Egyptian universities & programmes",
     languageOfStudy: "Language of study",
     fieldOfSpecialisation: "Field of specialisation",
     searchUniversitiesPlaceholder: "Search universities...",
@@ -373,9 +421,11 @@ const translations: Record<Language, Record<string, string>> = {
     // How It Works Section
     howItWorks: "How It Works",
     howToApply: "How to Apply - A Step-by-Step Guide 🔍",
-    howToApplyDescription: "We simplify the application process to international universities with just a few steps",
+    howToApplyDescription:
+      "We simplify applying to Egyptian universities — browse programmes, submit documents, and track your admission in a few clear steps.",
     exploreChoose: "Explore & Choose",
-    exploreChooseDesc: "Browse universities and programs that match your academic goals and preferences.",
+    exploreChooseDesc:
+      "Browse Egyptian universities and programmes that match your goals, budget, and preferred city.",
     applyOnline: "Apply Online",
     applyOnlineDesc: "Complete your application form and upload required documents through our secure platform.",
     getSupport: "Get Support",
@@ -542,6 +592,61 @@ const translations: Record<Language, Record<string, string>> = {
     nA: "N/A",
     noDocumentsUploaded: "No documents uploaded",
     companyName: "UniVolta Consulting Services Company",
+    // ── Enhanced UI (Three.js / Reactbits / animated sections) ──
+    // Hero rotating badge
+    discoverTop: "Discover top",
+    heroWord1: "Egyptian universities",
+    heroWord2: "programs",
+    heroWord3: "majors",
+    // Hero slideshow badges (Ken Burns slides)
+    heroSlideBadge1: "150+ Egyptian & partner universities",
+    heroSlideBadge2: "Libraries, labs & research",
+    heroSlideBadge3: "Across Egypt's governorates",
+    heroSlideBadge4: "From application to graduation",
+    heroCampusImageAlt: "University campus background",
+    heroMaskedCampusAlt: "Featured campus view",
+    heroStudentAvatarAlt: "Student {n}",
+    heroAriaPreviousSlide: "Previous slide",
+    heroAriaNextSlide: "Next slide",
+    heroAriaGoToSlide: "Go to slide {n}",
+    // Hero animated stats
+    studentsStatLabel: "Students",
+    universitiesStatLabel: "Universities",
+    countriesStatLabel: "Countries",
+    heroThirdStatLabel: "Programs",
+    // How It Works enhanced
+    stepsToApply: "Simple Steps",
+    thenNext: "then",
+    // FAQ enhanced labels
+    collapseAnswer: "Collapse",
+    expandAnswer: "Expand",
+    // Universities section enhanced
+    exploreAll: "Explore All",
+    featuredUniversity: "Featured",
+    topRanked: "Top Ranked",
+    // Testimonials enhanced
+    readMore: "Read More",
+    readLess: "Read Less",
+    verifiedStudent: "Verified Student",
+    // General interactive
+    learnMore: "Learn More",
+    getStarted: "Get Started",
+    applyNow: "Apply Now",
+    viewProgram: "View Program",
+    // Marquee/ticker section
+    trustedBy: "Trusted by students from",
+    andMore: "and more",
+    businessModelBadge: "Egyptian universities",
+    businessModelTitle: "Rich study options — students from abroad join Egyptian campuses",
+    businessModelLead:
+      "UniVolta is built around Egyptian higher education: we help Egyptian students choose the right faculty, and we help international students coming from abroad to apply, prepare documents, and enrol in accredited Egyptian universities — with clear fees, timelines, and support in Arabic and English.",
+    businessModelPoint1:
+      "International students: guided admission to study in Egypt — visas, equivalency, and programme matching in one flow.",
+    businessModelPoint2:
+      "Egyptian students: compare public and private universities, majors, and tuition before you apply.",
+    businessModelPoint3:
+      "Partner universities: programmes, services, and requirements presented transparently for every applicant.",
+    businessModelCta: "Browse Egyptian universities",
   },
   ar: {
     home: "الرئيسية",
@@ -728,10 +833,37 @@ const translations: Record<Language, Record<string, string>> = {
     roles: "الأدوار",
     settings: "الإعدادات",
     // Home Page
-    studyAbroadMadeEasy: "الدراسة بالخارج أصبحت سهلة",
-    connectWithTopUniversities: "تواصل مع أفضل الجامعات الدولية واحصل على دعم مخصص طوال رحلة التقديم الخاصة بك.",
-    searchUniversities: "ابحث عن الجامعات أو البرامج أو البلدان",
-    studentsInUniversities: "+ 150 طالب في جامعات مختلفة حول العالم.",
+    studyAbroadMadeEasy:
+      "بوابتك للجامعات المصرية",
+    connectWithTopUniversities:
+      "نساعد الطلاب الدوليين على القبول في جامعات مصرية معتمدة، ونساعد المصريين على مقارنة البرامج والمصاريف — بدعم كامل بالعربية والإنجليزية.",
+    searchUniversities: "ابحث عن جامعات مصرية أو برامج أو تخصصات",
+    studentsInUniversities:
+      "أكثر من 150 طالباً يستكشفون الجامعات المصرية — بمن فيهم المتقدمون من الخارج للدراسة في مصر.",
+    // Why Us / How It Works — Arabic copy lives here so it wins over API after merge
+    whyUnivolta: "لماذا UNIVOLTA",
+    topValuesForYou: "أفضل القيم لك 🔥",
+    whyUnivoltaDescription:
+      "تركّز يونيفولتا على التعليم العالي في مصر: نربطك بجامعات معتمدة، بخطوات قبول واضحة، ودعماً عملياً — للطلاب الدوليين الراغبين في الدراسة في مصر وللمصريين لاختيار الكلية والبرنامج المناسبين.",
+    easyApplication: "تقديم سهل",
+    easyApplicationDesc: "قدّم على جامعات مصرية عبر مسار موجّه وواضح.",
+    oneOnOneSupport: "دعم مباشر",
+    oneOnOneSupportDesc: "إرشاد ومتابعة مع فريقنا خلال التقديم والقبول.",
+    trustedPartners: "شركاء موثوقون",
+    trustedPartnersDesc: "نعرض جامعات وبرامج معتمدة في مصر بشفافية في المتطلبات والرسوم.",
+    studentServices: "خدمات للطلاب",
+    studentServicesDesc: "توجيه للسكن والاستقبال وخدمات إضافية عند الحاجة.",
+    listOfInternationalUniversities: "الجامعات المصرية والبرامج",
+    howItWorks: "كيف يعمل",
+    howToApply: "كيفية التقديم — دليل خطوة بخطوة 🔍",
+    howToApplyDescription:
+      "نُبسّط التقديم على الجامعات المصرية: تصفّح البرامج، ارفع المستندات، وتابع حالة قبولك في خطوات واضحة.",
+    exploreChoose: "استكشف واختر",
+    exploreChooseDesc: "قارن الجامعات والتخصصات داخل مصر وفق أهدافك وميزانيتك.",
+    applyOnline: "تقديم عبر المنصة",
+    applyOnlineDesc: "أكمل الطلب وارفع المستندات عبر منصة آمنة.",
+    getSupport: "الدعم بعد التقديم",
+    getSupportDesc: "متابعة القبول وإرشاد للتأشيرة والسكن عند الحاجة.",
     // Footer
     footerDescription: "في Univolta، نسعى لمساعدة الطلاب الطموحين على تحقيق أحلامهم التعليمية. انضم إلينا اليوم لاكتشاف كيف يمكننا أن نكون الخطوة الأولى في رحلتك التعليمية الناجحة.",
     followUs: "تابعنا",
@@ -933,41 +1065,84 @@ const translations: Record<Language, Record<string, string>> = {
     uploadInvoiceNote: "ارفع فاتورة الدفع الخاصة بك (PDF، DOC، أو صورة). الحد الأقصى 10 ميجابايت.",
     downloading: "جاري التحميل...",
     downloadInvoice: "تحميل الفاتورة",
+    // ── Enhanced UI (Three.js / Reactbits / animated sections) ──
+    // Hero rotating badge
+    discoverTop: "اكتشف أفضل",
+    heroWord1: "الجامعات المصرية",
+    heroWord2: "البرامج",
+    heroWord3: "التخصصات",
+    // Hero slideshow badges
+    heroSlideBadge1: "أكثر من 150 جامعة مصرية وشريكة",
+    heroSlideBadge2: "مكتبات ومختبرات وبحث",
+    heroSlideBadge3: "في محافظات مصر",
+    heroSlideBadge4: "من التقديم حتى التخرج",
+    heroCampusImageAlt: "خلفية حرم جامعي",
+    heroMaskedCampusAlt: "عرض مميز للحرم الجامعي",
+    heroStudentAvatarAlt: "طالب {n}",
+    heroAriaPreviousSlide: "الشريحة السابقة",
+    heroAriaNextSlide: "الشريحة التالية",
+    heroAriaGoToSlide: "الانتقال إلى الشريحة {n}",
+    // Hero animated stats
+    studentsStatLabel: "طالب",
+    universitiesStatLabel: "جامعة",
+    countriesStatLabel: "دولة",
+    heroThirdStatLabel: "برامج",
+    // How It Works enhanced
+    stepsToApply: "خطوات بسيطة",
+    thenNext: "ثم",
+    // FAQ enhanced labels
+    collapseAnswer: "إخفاء",
+    expandAnswer: "توسيع",
+    // Universities section enhanced
+    exploreAll: "استعرض الكل",
+    featuredUniversity: "مميز",
+    topRanked: "الأعلى تصنيفاً",
+    // Testimonials enhanced
+    readMore: "اقرأ المزيد",
+    readLess: "اقرأ أقل",
+    verifiedStudent: "طالب موثق",
+    // General interactive
+    learnMore: "اعرف أكثر",
+    getStarted: "ابدأ الآن",
+    applyNow: "قدّم الآن",
+    viewProgram: "عرض البرنامج",
+    // Marquee/ticker section
+    trustedBy: "يثق بنا طلاب من",
+    andMore: "والمزيد",
+    businessModelBadge: "الجامعات المصرية",
+    businessModelTitle: "خيارات دراسية متنوعة — وطلاب من الخارج يلتحقون بالجامعات المصرية",
+    businessModelLead:
+      "منصة UniVolta مبنية على هذا النموذج: نساعد الطلاب المصريين على اختيار الكلية المناسبة، ونساعد الطلاب القادمين من الخارج على التقديم وإعداد الأوراق والالتحاق بجامعات مصرية معتمدة — برسوم ومواعيد واضحة ودعم بالعربية والإنجليزية.",
+    businessModelPoint1:
+      "للطلاب الدوليين: مسار قبول موجّه للدراسة في مصر — تأشيرة، معادلة، ومطابقة البرنامج في خطوة واحدة.",
+    businessModelPoint2:
+      "للطلاب المصريين: قارن بين الجامعات الحكومية والخاصة والتخصصات والمصاريف قبل التقديم.",
+    businessModelPoint3:
+      "للجامعات الشريكة: عرض البرامج والخدمات وشروط القبول بشفافية لكل متقدم.",
+    businessModelCta: "استعرض الجامعات المصرية",
   },
 };
 
 // Server-side safe translation function (doesn't use window/localStorage)
 export function tServer(key: string, lang: Language = "en"): string {
-  // Try to get from backend cache first (if available)
-  if (translationsCache[lang]) {
-    const cached = translationsCache[lang]![key];
-    if (cached) return cached;
-  }
-  
-  // Fallback to local translations
-  return translations[lang]?.[key] || translations.en[key] || key;
+  const dict = getMergedDictionary(lang);
+  const val = dict[key];
+  if (val !== undefined && val !== "") return val;
+  return key;
 }
 
 // Client-side translation function (uses window/localStorage)
 export function t(key: string, lang?: Language): string {
-  // Check if we're in a server environment
   if (typeof window === "undefined") {
-    // Server-side: use default language or provided lang
     const currentLang = lang || "en";
     return tServer(key, currentLang);
   }
-  
-  // Client-side: use getLanguage()
+
   const currentLang = lang || getLanguage();
-  
-  // Try to get from backend cache first
-  if (translationsCache[currentLang]) {
-    const cached = translationsCache[currentLang]![key];
-    if (cached) return cached;
-  }
-  
-  // Fallback to local translations
-  return translations[currentLang]?.[key] || translations.en[key] || key;
+  const dict = getMergedDictionary(currentLang);
+  const val = dict[key];
+  if (val !== undefined && val !== "") return val;
+  return key;
 }
 
 export function getDirection(): "ltr" | "rtl" {

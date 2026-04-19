@@ -2,83 +2,141 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { figmaAssets } from "@/lib/figma-assets";
-import { Phone, Mail, MapPin, Facebook, Youtube, Twitter, Instagram, MessageCircle } from "lucide-react";
-import { t, getLanguage, type Language } from "@/lib/i18n";
 import { useState, useEffect } from "react";
+import { Phone, Mail, MapPin, Facebook, Youtube, Twitter, Instagram, MessageCircle, Send, GraduationCap, Globe } from "lucide-react";
+import { figmaAssets } from "@/lib/figma-assets";
+import { t, getLanguage, type Language } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
 
 export function Footer() {
   const [currentLang, setCurrentLang] = useState<Language>(getLanguage());
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
   const isRTL = currentLang === "ar";
 
   useEffect(() => {
     const interval = setInterval(() => {
       const lang = getLanguage();
-      if (lang !== currentLang) {
-        setCurrentLang(lang);
-      }
+      if (lang !== currentLang) setCurrentLang(lang);
     }, 100);
     return () => clearInterval(interval);
   }, [currentLang]);
 
-  const footerLinks = {
-    quickLinks: [
-      { name: t("home"), href: "/" },
-      { name: t("universities"), href: "/universities" },
-      { name: t("faq"), href: "/faq" },
-      { name: t("contact"), href: "/contact" },
-      { name: t("termsPolicy"), href: "/terms" },
-    ],
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email) {
+      setSubscribed(true);
+      setEmail("");
+      setTimeout(() => setSubscribed(false), 3000);
+    }
   };
 
+  const quickLinks = [
+    { name: t("home"), href: "/" },
+    { name: t("universities"), href: "/universities" },
+    { name: t("faq"), href: "/faq" },
+    { name: t("contact"), href: "/contact" },
+    { name: t("termsPolicy"), href: "/terms" },
+  ];
+
+  const programs = ["Engineering", "Business", "Medicine", "Law", "Computer Science", "Architecture"];
+
+  const socials = [
+    { Icon: Instagram, href: "#", label: "Instagram", color: "hover:bg-gradient-to-br hover:from-[#833ab4] hover:via-[#fd1d1d] hover:to-[#fcb045]" },
+    { Icon: Facebook,  href: "#", label: "Facebook",  color: "hover:bg-[#1877F2]" },
+    { Icon: Youtube,   href: "#", label: "YouTube",   color: "hover:bg-[#FF0000]" },
+    { Icon: Twitter,   href: "#", label: "Twitter",   color: "hover:bg-[#1DA1F2]" },
+  ];
+
   return (
-    <footer className="bg-gradient-to-b from-[rgba(117,211,247,0.2)] to-white pt-8 md:pt-20 pb-20 md:pb-6">
-      <div className="max-w-[1280px] mx-auto px-4 md:px-5">
-        <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-8 md:mb-12 ${isRTL ? "text-right" : "text-left"}`}>
-          {/* Logo & Description */}
-          <div className="space-y-4 md:space-y-5">
-            <div className="relative w-[80px] h-[60px] md:w-[109px] md:h-[81px]">
+    <footer className="relative bg-[#0d1550] text-white overflow-hidden" dir={isRTL ? "rtl" : "ltr"}>
+      {/* Decorative background orbs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(82,96,206,0.18) 0%, transparent 65%)" }} />
+        <div className="absolute -bottom-20 -left-20 w-[400px] h-[400px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(117,211,247,0.1) 0%, transparent 65%)" }} />
+      </div>
+
+      {/* Gradient accent line */}
+      <div className="h-1 bg-gradient-to-r from-[#5260ce] via-[#75d3f7] to-[#5260ce]" />
+
+      {/* Newsletter Section */}
+      <div className="relative border-b border-white/10">
+        <div className="max-w-[1280px] mx-auto px-4 md:px-5 py-8 md:py-10">
+          <div className={`flex flex-col md:flex-row items-center justify-between gap-6 ${isRTL ? "md:flex-row-reverse" : ""}`}>
+            <div className={isRTL ? "text-right" : ""}>
+              <div className="flex items-center gap-2 mb-1">
+                <GraduationCap className="w-5 h-5 text-[#75d3f7]" />
+                <h3 className="font-montserrat-bold text-lg text-white">Stay in the Loop</h3>
+              </div>
+              <p className="font-montserrat-regular text-white/55 text-sm">Get the latest university news and scholarship opportunities</p>
+            </div>
+            <form
+              onSubmit={handleSubscribe}
+              className="flex gap-2 w-full md:w-auto"
+            >
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="flex-1 md:w-72 bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white placeholder:text-white/40 text-sm focus:outline-none focus:border-[#75d3f7] transition-colors"
+              />
+              <Button
+                type="submit"
+                className="bg-[#5260ce] hover:bg-[#4350b0] text-white px-5 rounded-xl text-sm font-montserrat-semibold shrink-0 transition-all"
+              >
+                {subscribed ? "✓ Subscribed!" : <><Send className="w-4 h-4 mr-1 inline" />Subscribe</>}
+              </Button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Footer Grid */}
+      <div className="relative max-w-[1280px] mx-auto px-4 md:px-5 py-12 md:py-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10">
+
+          {/* Column 1: Logo + Description + Social */}
+          <div className={`col-span-2 md:col-span-1 space-y-5 ${isRTL ? "text-right" : ""}`}>
+            <div className="relative w-[90px] h-[55px]">
               <Image
                 src={figmaAssets.footerLogo}
                 alt="UniVolta"
                 fill
-                className="object-contain"
+                className="object-contain brightness-0 invert"
                 unoptimized
               />
             </div>
-            <p className="text-xs md:text-base font-montserrat-regular text-[#8b8c9a] leading-relaxed max-w-full md:max-w-md">
+            <p className="font-montserrat-regular text-white/55 text-sm leading-relaxed">
               {t("footerDescription")}
             </p>
-            
-            {/* Social Media */}
-            <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 ${isRTL ? "sm:flex-row-reverse" : ""}`}>
-              <div className="bg-[#75d3f7] px-2.5 py-1 rounded text-white font-montserrat-light text-xs md:text-base">
-                {t("followUs")}
-              </div>
-              <div className={`flex gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-                <a href="#" className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center text-[#5260ce] hover:text-[#4350b0] transition-colors" aria-label="Instagram">
-                  <Instagram className="w-full h-full" />
+
+            {/* Social icons */}
+            <div className="flex gap-2.5">
+              {socials.map(({ Icon, href, label, color }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={label}
+                  className={`w-9 h-9 rounded-full bg-white/10 flex items-center justify-center transition-all duration-300 hover:scale-110 ${color}`}
+                >
+                  <Icon className="w-4 h-4" />
                 </a>
-                <a href="#" className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center text-[#5260ce] hover:text-[#4350b0] transition-colors" aria-label="Facebook">
-                  <Facebook className="w-full h-full" />
-                </a>
-                <a href="#" className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center bg-[#5260ce] rounded p-1 md:p-1.5 text-white hover:bg-[#4350b0] transition-colors" aria-label="YouTube">
-                  <Youtube className="w-full h-full" />
-                </a>
-                <a href="#" className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center bg-[#5260ce] rounded p-1 md:p-1.5 text-white hover:bg-[#4350b0] transition-colors" aria-label="Twitter">
-                  <Twitter className="w-full h-full" />
-                </a>
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-base md:text-xl font-montserrat-bold text-[#2e2e2e] mb-3 md:mb-6">{t("quickLinks")}</h4>
-            <ul className="space-y-2 md:space-y-5">
-              {footerLinks.quickLinks.map((link) => (
+          {/* Column 2: Quick Links */}
+          <div className={isRTL ? "text-right" : ""}>
+            <h4 className="font-montserrat-bold text-white mb-5 text-sm uppercase tracking-wider opacity-80">
+              {t("quickLinks")}
+            </h4>
+            <ul className="space-y-3">
+              {quickLinks.map((link) => (
                 <li key={link.name}>
-                  <Link href={link.href} className="text-xs md:text-base font-montserrat-regular text-[#8b8c9a] hover:text-[#121c67] transition-colors">
+                  <Link href={link.href} className="footer-link">
                     {link.name}
                   </Link>
                 </li>
@@ -86,56 +144,67 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Contact Information */}
-          <div>
-            <h4 className="text-base md:text-xl font-montserrat-bold text-[#2e2e2e] mb-3 md:mb-6">{t("contactInformation")}</h4>
-            <div className="space-y-2.5 md:space-y-4">
-              <div className={`flex items-center gap-2 md:gap-2.5 ${isRTL ? "flex-row-reverse" : ""}`}>
-                <div className="bg-[#5260ce] p-1.5 md:p-2 rounded-full shrink-0">
-                  <Phone className="w-4 h-4 md:w-6 md:h-6 text-white" />
+          {/* Column 3: Programs */}
+          <div className={isRTL ? "text-right" : ""}>
+            <h4 className="font-montserrat-bold text-white mb-5 text-sm uppercase tracking-wider opacity-80">
+              Programs
+            </h4>
+            <ul className="space-y-3">
+              {programs.map((p) => (
+                <li key={p}>
+                  <Link href="/universities" className="footer-link">
+                    {p}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 4: Contact */}
+          <div className={isRTL ? "text-right" : ""}>
+            <h4 className="font-montserrat-bold text-white mb-5 text-sm uppercase tracking-wider opacity-80">
+              {t("contactInformation")}
+            </h4>
+            <div className="space-y-4">
+              {[
+                { Icon: Phone,  text: "+00 000 000 00 67" },
+                { Icon: Mail,   text: "info@univolta.com" },
+                { Icon: Globe,  text: "www.univolta.com" },
+                { Icon: MapPin, text: "Brooklyn, New York, USA" },
+              ].map(({ Icon, text }) => (
+                <div key={text} className={`flex items-start gap-3 ${isRTL ? "flex-row-reverse" : ""}`}>
+                  <div className="w-8 h-8 rounded-lg bg-[#5260ce]/40 flex items-center justify-center shrink-0">
+                    <Icon className="w-4 h-4 text-[#75d3f7]" />
+                  </div>
+                  <p className="text-white/55 text-sm leading-relaxed">{text}</p>
                 </div>
-                <p className="text-xs md:text-base font-montserrat-regular text-[#8b8c9a]">+00 000 000 00 67</p>
-              </div>
-              <div className={`flex items-center gap-2 md:gap-2.5 ${isRTL ? "flex-row-reverse" : ""}`}>
-                <div className="bg-[#5260ce] p-1.5 md:p-2 rounded-full shrink-0">
-                  <Mail className="w-4 h-4 md:w-6 md:h-6 text-white" />
-                </div>
-                <p className="text-xs md:text-base font-montserrat-regular text-[#8b8c9a] break-all">info@univolta.com</p>
-              </div>
-              <div className={`flex items-start gap-2 md:gap-2.5 ${isRTL ? "flex-row-reverse" : ""}`}>
-                <div className="bg-[#5260ce] p-1.5 md:p-2 rounded-full flex-shrink-0 mt-0.5">
-                  <MapPin className="w-4 h-4 md:w-6 md:h-6 text-white" />
-                </div>
-                <p className="text-xs md:text-base font-montserrat-regular text-[#8b8c9a] leading-relaxed">
-                  Mert, Rainbow Center, Floor: 3, Office: 12B, Brooklyn, New York, USA, Spring St. No:5, 11215, USA
-                </p>
-              </div>
+              ))}
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-gray-200 pt-4 md:pt-8 flex flex-col md:flex-row justify-center items-center gap-2 md:gap-2">
-          <p className="text-xs md:text-sm font-montserrat-regular text-[#65666f] text-center">
-            {t("poweredBy")} <span className="font-montserrat-bold text-[#5260ce]">Qeematech</span>
-          </p>
-          <div className="hidden md:block w-0.5 h-3.5 bg-gray-300"></div>
-          <p className="text-xs md:text-sm font-montserrat-regular text-[#65666f] text-center">
-            {t("allRightsReserved")}
+      {/* Bottom Bar */}
+      <div className="relative border-t border-white/10 py-5">
+        <div className={`max-w-[1280px] mx-auto px-4 md:px-5 flex flex-col md:flex-row justify-between items-center gap-2 ${isRTL ? "md:flex-row-reverse" : ""}`}>
+          <p className="text-white/40 text-xs font-montserrat-regular">{t("allRightsReserved")}</p>
+          <p className="text-white/40 text-xs font-montserrat-regular">
+            {t("poweredBy")}{" "}
+            <span className="text-[#75d3f7] font-montserrat-bold">Qeematech</span>
           </p>
         </div>
       </div>
 
-      {/* WhatsApp Float Button - Hidden on mobile (bottom nav handles navigation) */}
+      {/* WhatsApp Floating Button */}
       <div className="hidden md:block fixed bottom-8 right-8 z-50">
         <a
           href="https://wa.me/1234567890"
           target="_blank"
           rel="noopener noreferrer"
-          className="w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+          className="group w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center shadow-[0_8px_24px_rgba(37,211,102,0.4)] hover:scale-110 transition-transform"
           aria-label="Contact us on WhatsApp"
         >
-          <MessageCircle className="w-8 h-8 text-white" />
+          <MessageCircle className="w-7 h-7 text-white group-hover:rotate-12 transition-transform" />
         </a>
       </div>
     </footer>

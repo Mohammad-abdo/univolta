@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronDown, User, LogOut, Globe, Bell } from "lucide-react";
+import { Menu, X, ChevronDown, User, LogOut, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
 import { figmaAssets } from "@/lib/figma-assets";
 import { usePathname } from "next/navigation";
@@ -26,6 +26,7 @@ export function Navbar() {
   const [userName, setUserName] = useState<string | null>(null);
   const [currentLang, setCurrentLang] = useState<Language>("en");
   const [mounted, setMounted] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -33,13 +34,19 @@ export function Navbar() {
     setMounted(true);
     setCurrentLang(getLanguage());
     checkAuth();
-    
-    // Listen for language changes
+
     const interval = setInterval(() => {
       const lang = getLanguage();
       setCurrentLang(lang);
     }, 100);
-    return () => clearInterval(interval);
+
+    const onScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   const checkAuth = async () => {
@@ -95,12 +102,6 @@ export function Navbar() {
     { href: "/contact", label: t("contact"), active: pathname === "/contact" },
   ];
 
-  const activeIndicators = {
-    "/": figmaAssets.navActiveHome,
-    "/universities": figmaAssets.navActiveUniversities,
-    "/faq": figmaAssets.navActiveFAQ,
-    "/contact": figmaAssets.navActiveContact,
-  };
 
   const navItemConfig = {
     "/": { width: "w-[65px]", ml: "ml-[32.5px]", height: "h-[70px]" },
@@ -182,88 +183,70 @@ export function Navbar() {
       {/* Spacer for mobile content - pushes content below fixed header */}
       <div className="md:hidden h-14" aria-hidden="true" />
 
-      <nav className="hidden md:block fixed top-[30px] left-1/2 -translate-x-1/2 z-50 w-full max-w-[1440px] px-5">
-      <div className="bg-white rounded-[20px] shadow-[0px_4px_40px_0px_rgba(82,96,206,0.1)] h-[70px] flex items-center justify-between px-6 relative">
+      {/* ── Rainbow accent bar fixed at the very top (desktop only) ── */}
+      <div className="hidden md:block fixed top-0 left-0 right-0 z-[60] nav-top-bar h-[3px]" />
+
+      <nav className={`hidden md:block fixed left-1/2 -translate-x-1/2 z-50 w-full max-w-[1440px] px-5 transition-[top] duration-500 ${scrolled ? "top-[8px]" : "top-[28px]"}`}>
+      <div className={`animate-nav-enter rounded-[22px] h-[70px] flex items-center justify-between px-6 relative transition-[background-color,box-shadow,border-color] duration-500 ${
+        scrolled
+          ? "bg-white/92 backdrop-blur-2xl shadow-[0_8px_48px_rgba(82,96,206,0.22)] ring-1 ring-[#5260ce]/12"
+          : "bg-white shadow-[0px_4px_40px_0px_rgba(82,96,206,0.10)]"
+      }`}>
+
         {/* Logo */}
-        <Link href="/" className="flex items-center shrink-0">
-          <div className="relative w-[50px] h-[30px] md:w-[78px] md:h-[48px]">
-            <Image
-              src={figmaAssets.logo}
-              alt="UniVolta Logo"
-              fill
-              className="object-contain"
-              unoptimized
-            />
+        <Link href="/" className="flex items-center shrink-0 group">
+          <div className="relative w-[50px] h-[30px] md:w-[78px] md:h-[48px] transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_2px_8px_rgba(82,96,206,0.3)]">
+            <Image src={figmaAssets.logo} alt="UniVolta Logo" fill className="object-contain" unoptimized />
           </div>
         </Link>
 
         {/* Desktop Menu - Centered */}
-        <div className={`hidden md:flex items-center justify-center gap-[24px] flex-1 absolute ${currentLang === "ar" ? "right-1/2 translate-x-1/2" : "left-1/2 -translate-x-1/2"}`}>
-          {navItems.map((item) => {
-            const config =
-              navItemConfig[item.href as keyof typeof navItemConfig] ||
-              navItemConfig["/"];
-
-            return (
-              <div
-                key={item.href}
-                className="relative flex items-center justify-center"
-                style={{ height: "70px" }}
-              >
-                {/* Active Indicator Background - Mask Group */}
-                {item.active && (
-                  <div
-                    className={`absolute top-0 ${config.width} ${config.height}`}
-                  ></div>
-                )}
-                {/* Text positioned exactly like Figma */}
-                <Link
-                  href={item.href}
-                  className={`relative ${currentLang === "ar" ? config.ml.replace("ml-", "mr-") : config.ml} font-montserrat-${
-                    item.active ? "bold" : "regular"
-                  } text-base leading-[1.4] text-center ${
-                    item.active ? "text-[#5260ce]" : "text-[#2e2e2e]"
-                  } transition-colors hover:text-[#5260ce]`}
-                  style={{ transform: currentLang === "ar" ? "translateX(50%)" : "translateX(-50%)" }}
-                >
-                  {item.label}
-                </Link>
-              </div>
-            );
-          })}
+        <div className={`hidden md:flex items-center justify-center gap-1 flex-1 absolute ${currentLang === "ar" ? "right-1/2 translate-x-1/2" : "left-1/2 -translate-x-1/2"}`}>
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`relative px-4 py-2 rounded-xl font-montserrat-${item.active ? "bold" : "regular"} text-[15px] leading-none transition-all duration-200 group ${
+                item.active
+                  ? "text-[#5260ce] bg-[rgba(82,96,206,0.08)]"
+                  : "text-[#2e2e2e] hover:text-[#5260ce] hover:bg-[rgba(82,96,206,0.06)]"
+              }`}
+            >
+              {item.label}
+              {item.active && (
+                <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-[2px] rounded-full bg-[#5260ce]" />
+              )}
+            </Link>
+          ))}
         </div>
 
-        {/* Right Side - Language, Login, Sign Up */}
-        <div className={`hidden md:flex items-center gap-[24px] shrink-0 ${currentLang === "ar" ? "mr-auto" : "ml-auto"}`}>
+        {/* Right Side */}
+        <div className={`hidden md:flex items-center gap-4 shrink-0 ${currentLang === "ar" ? "mr-auto" : "ml-auto"}`}>
           {/* Language Selector */}
           <div className="relative">
             <button
               onClick={() => setLangMenuOpen(!langMenuOpen)}
-              className="flex items-center gap-[6px] justify-end text-[#040404] font-montserrat-regular text-base cursor-pointer hover:text-[#121c67] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[#65666f] font-montserrat-regular text-sm hover:text-[#5260ce] hover:bg-[rgba(82,96,206,0.06)] transition-all"
             >
-              <Globe className="w-4 h-4 shrink-0 text-[#040404]" />
-              <span>{currentLang.toUpperCase()}</span>
-              <ChevronDown className="w-3 h-3" />
+              <Globe className="w-4 h-4 shrink-0" />
+              <span className="font-montserrat-semibold">{currentLang.toUpperCase()}</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${langMenuOpen ? "rotate-180" : ""}`} />
             </button>
             {langMenuOpen && (
               <>
-                {/* Backdrop to close menu when clicking outside */}
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setLangMenuOpen(false)}
-                />
-                <div className={`absolute ${currentLang === "ar" ? "left-0" : "right-0"} mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50`}>
+                <div className="fixed inset-0 z-40" onClick={() => setLangMenuOpen(false)} />
+                <div className={`absolute ${currentLang === "ar" ? "left-0" : "right-0"} mt-2 w-44 bg-white rounded-2xl shadow-[0_8px_32px_rgba(82,96,206,0.15)] border border-gray-100 z-50 overflow-hidden`}>
                   {languages.map((lang) => (
                     <button
                       key={lang.code}
                       onClick={() => handleLanguageChange(lang.code)}
-                      className={`w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 transition-colors ${
+                      className={`w-full text-left px-4 py-2.5 flex items-center gap-3 transition-colors ${
                         currentLang === lang.code
-                          ? "bg-blue-50 text-[#5260ce] font-semibold"
-                          : "text-gray-700"
+                          ? "bg-[rgba(82,96,206,0.08)] text-[#5260ce] font-montserrat-semibold"
+                          : "text-gray-700 hover:bg-gray-50"
                       }`}
                     >
-                      <span className="text-lg">{lang.flag}</span>
+                      <span className="text-xl">{lang.flag}</span>
                       <span className="text-sm font-montserrat-regular">{lang.name}</span>
                     </button>
                   ))}
@@ -272,58 +255,56 @@ export function Navbar() {
             )}
           </div>
 
-          {/* User Menu or Login/Sign Up */}
+          {/* Separator */}
+          <div className="w-px h-5 bg-gray-200" />
+
+          {/* User / Auth */}
           {isAuthenticated ? (
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-2 text-[#040404] font-montserrat-regular text-base hover:text-[#121c67] transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-[#2e2e2e] font-montserrat-regular text-sm hover:text-[#5260ce] hover:bg-[rgba(82,96,206,0.06)] transition-all"
               >
-                <User className="w-5 h-5" />
-                <span>{userName}</span>
-                <ChevronDown className="w-3 h-3" />
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#5260ce] to-[#75d3f7] flex items-center justify-center text-white text-xs font-montserrat-bold shrink-0">
+                  {userName?.charAt(0).toUpperCase() || "U"}
+                </div>
+                <span className="max-w-[100px] truncate">{userName}</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
               </button>
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                  <Link
-                    href="/my-applications"
-                    className="block px-4 py-2 hover:bg-gray-100"
-                    onClick={() => setUserMenuOpen(false)}
-                  >
+                <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-[0_8px_32px_rgba(82,96,206,0.15)] border border-gray-100 z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-gray-100 bg-[#f9fafe]">
+                    <p className="text-xs text-[#8b8c9a] font-montserrat-regular">Signed in as</p>
+                    <p className="text-sm font-montserrat-semibold text-[#121c67] truncate">{userName}</p>
+                  </div>
+                  <Link href="/my-applications" className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 text-sm text-[#2e2e2e] transition-colors" onClick={() => setUserMenuOpen(false)}>
                     {t("myApplications")}
                   </Link>
-                  <Link
-                    href="/profile"
-                    className="block px-4 py-2 hover:bg-gray-100"
-                    onClick={() => setUserMenuOpen(false)}
-                  >
+                  <Link href="/profile" className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 text-sm text-[#2e2e2e] transition-colors" onClick={() => setUserMenuOpen(false)}>
                     {t("profile")}
                   </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-600"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    {t("logout")}
-                  </button>
+                  <div className="border-t border-gray-100">
+                    <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-2 text-red-600 text-sm transition-colors">
+                      <LogOut className="w-4 h-4" />
+                      {t("logout")}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-[20px]">
+            <div className="flex items-center gap-3">
               <Link
                 href="/login"
-                className="text-[#040404] font-montserrat-regular text-base hover:text-[#121c67] transition-colors"
+                className="text-[#2e2e2e] font-montserrat-regular text-sm hover:text-[#5260ce] transition-colors px-2 py-1"
               >
                 {mounted ? t("login") : "Login"}
               </Link>
               <Button
-                className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-base h-[42px] w-[132px] rounded-xl relative overflow-hidden"
+                className="nav-cta-shine text-white font-montserrat-semibold text-sm h-[40px] px-5 rounded-xl relative overflow-hidden shadow-[0_4px_14px_rgba(82,96,206,0.35)] hover:shadow-[0_6px_20px_rgba(82,96,206,0.5)] hover:-translate-y-0.5 transition-all duration-200"
                 asChild
               >
-                <Link href="/signup" className="relative z-10">
-                  {mounted ? t("signUp") : "Sign Up"}
-                </Link>
+                <Link href="/signup">{mounted ? t("signUp") : "Sign Up"}</Link>
               </Button>
             </div>
           )}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { getLanguage, fetchTranslations } from "@/lib/i18n";
+import { getLanguage, fetchTranslations, syncLanguageCookie } from "@/lib/i18n";
 
 export function DirectionProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -19,8 +19,9 @@ export function DirectionProvider({ children }: { children: React.ReactNode }) {
     const updateLanguage = async () => {
       const currentLang = getLanguage();
       setLang(currentLang);
-      
-      // Fetch translations from backend
+      syncLanguageCookie();
+
+      // Fetch translations from backend (merged with local bundles in i18n.ts)
       try {
         await fetchTranslations(currentLang);
       } catch (error) {

@@ -2,6 +2,7 @@ import { Navbar } from "@/components/navbar";
 import { HeroSection } from "@/components/hero-section";
 import { WhyUsSection } from "@/components/why-us-section";
 import { UniversitiesSection } from "@/components/universities-section";
+import { EgyptBusinessSection } from "@/components/egypt-business-section";
 import { HowItWorksSection } from "@/components/how-it-works-section";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { FAQSection } from "@/components/faq-section";
@@ -16,6 +17,7 @@ export default function Home() {
         <HeroSection />
         <WhyUsSection />
         <UniversitiesSection />
+        <EgyptBusinessSection />
         <HowItWorksSection />
         <TestimonialsSection />
         <FAQSection />
