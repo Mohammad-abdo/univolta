@@ -44,16 +44,23 @@ const INTERVAL_MS = 5500;
 
 export function HeroSection() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentLang, setCurrentLang] = useState<Language>(getLanguage());
+  // Always start with "en" so server HTML == first client render (hydration-safe)
+  const [currentLang, setCurrentLang] = useState<Language>("en");
+  const [mounted, setMounted] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [prevSlide, setPrevSlide]     = useState<number | null>(null);
   const [paused, setPaused]           = useState(false);
   const router = useRouter();
 
-  const isRTL = currentLang === "ar";
+  // isRTL is false until mounted so server layout == initial client layout
+  const isRTL = mounted && currentLang === "ar";
+  // tl() uses the React state lang so every call is consistent with server render
+  const tl = (key: string) => t(key, currentLang);
 
   // language sync
   useEffect(() => {
+    setMounted(true);
+    setCurrentLang(getLanguage());
     const id = setInterval(() => {
       const lang = getLanguage();
       if (lang !== currentLang) setCurrentLang(lang);
@@ -78,11 +85,11 @@ export function HeroSection() {
     figmaAssets.student4, figmaAssets.student5,
   ];
 
-  const rotatingWords = [t("heroWord1"), t("heroWord2"), t("heroWord3")];
+  const rotatingWords = [tl("heroWord1"), tl("heroWord2"), tl("heroWord3")];
   const stats = [
-    { target: 150, suffix: "+", label: t("studentsStatLabel") },
-    { target: 50,  suffix: "+", label: t("universitiesStatLabel") },
-    { target: 30,  suffix: "+", label: t("heroThirdStatLabel") },
+    { target: 150, suffix: "+", label: tl("studentsStatLabel") },
+    { target: 50,  suffix: "+", label: tl("universitiesStatLabel") },
+    { target: 30,  suffix: "+", label: tl("heroThirdStatLabel") },
   ];
 
   return (
@@ -104,7 +111,7 @@ export function HeroSection() {
           >
             <Image
               src={slide.image}
-              alt={t("heroCampusImageAlt")}
+              alt={tl("heroCampusImageAlt")}
               fill
               priority={idx === 0}
               className={`object-cover ${isActive ? "slide-ken" : ""}`}
@@ -182,7 +189,7 @@ export function HeroSection() {
                 >
                   <Image
                     src={slide.image}
-                    alt={t("heroMaskedCampusAlt")}
+                    alt={tl("heroMaskedCampusAlt")}
                     fill
                     className={`object-cover ${activeSlide === idx ? "slide-ken" : ""}`}
                     style={{ objectPosition: "center top" }}
@@ -246,7 +253,7 @@ export function HeroSection() {
           {/* Slide indicator badge (top-right of hero frame) */}
           <div className={`absolute z-[6] ${isRTL ? "right-[828px]" : "left-[828px]"} top-[150px]`}>
             <div className="bg-white/90 backdrop-blur-md text-[#5260ce] text-xs font-montserrat-semibold px-3 py-1.5 rounded-full shadow-md border border-[#5260ce]/10 animate-fade-up">
-              {t(SLIDES[activeSlide].badgeKey)}
+              {tl(SLIDES[activeSlide].badgeKey)}
             </div>
           </div>
         </div>
@@ -261,19 +268,19 @@ export function HeroSection() {
           <div className={`inline-flex items-center gap-2 glass-badge rounded-full px-4 py-1.5 mb-5 ${isRTL ? "flex-row-reverse" : ""}`}>
             <span className="text-base" aria-hidden="true">🌍</span>
             <span className="font-montserrat-regular text-sm text-[#65666f]">
-              {t("discoverTop")}{" "}
+              {tl("discoverTop")}{" "}
               <RotatingText words={rotatingWords} className="font-montserrat-semibold text-[#5260ce]" />
             </span>
           </div>
 
           {/* Headline */}
           <h1 className="font-montserrat-bold text-2xl md:text-[40px] leading-[1.25] text-[#121c67] mb-3 md:mb-4">
-            {t("studyAbroadMadeEasy")}
+            {tl("studyAbroadMadeEasy")}
           </h1>
 
           {/* Description */}
           <p className="font-montserrat-regular text-sm md:text-[17px] leading-[1.55] text-[#65666f] mb-5 md:mb-6">
-            {t("connectWithTopUniversities")}
+            {tl("connectWithTopUniversities")}
           </p>
 
           {/* Search Bar */}
@@ -283,7 +290,7 @@ export function HeroSection() {
                 <Search className={`w-5 h-5 md:w-6 md:h-6 text-[#8b8c9a] shrink-0 ${isRTL ? "ml-2 md:ml-3" : ""}`} />
                 <input
                   type="text"
-                  placeholder={t("searchUniversities")}
+                  placeholder={tl("searchUniversities")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => {
@@ -303,7 +310,7 @@ export function HeroSection() {
                 }}
                 className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm md:text-base h-[48px] md:h-[52px] w-full sm:w-auto sm:min-w-[124px] rounded-lg md:rounded-xl shrink-0 transition-all duration-300 hover:shadow-[0_8px_24px_rgba(82,96,206,0.4)] hover:-translate-y-0.5"
               >
-                {t("search")}
+                {tl("search")}
               </Button>
             </div>
 
@@ -326,7 +333,7 @@ export function HeroSection() {
                   }}
                   className="px-2 py-1 text-sm md:text-base font-montserrat-light text-[#040404] bg-[#e0e6f1] rounded-[50px] hover:bg-[#5260ce] hover:text-white transition-all duration-200"
                 >
-                  {t(tag.key)}
+                  {tl(tag.key)}
                 </button>
               ))}
             </div>
@@ -362,7 +369,7 @@ export function HeroSection() {
                   <div className="absolute inset-0 bg-[#d9d9d9] rounded-full" />
                   <Image
                     src={avatar}
-                    alt={t("heroStudentAvatarAlt").replace("{n}", String(index + 1))}
+                    alt={tl("heroStudentAvatarAlt").replace("{n}", String(index + 1))}
                     fill
                     className="object-cover rounded-full"
                     unoptimized
@@ -372,7 +379,7 @@ export function HeroSection() {
             </div>
             <div className="flex items-center py-2.5">
               <p className="font-montserrat-regular text-sm md:text-[18px] leading-[1.4] text-[#2e2e2e] max-w-full md:max-w-[498px]">
-                {t("studentsInUniversities")}
+                {tl("studentsInUniversities")}
               </p>
             </div>
           </div>

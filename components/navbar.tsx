@@ -91,12 +91,16 @@ export function Navbar() {
     setLangMenuOpen(false);
   };
 
+  // Safe: returns English until mounted so server HTML == first client render
+  const tl = (key: string, fallback: string) => (mounted ? t(key) : fallback);
+  const isRTL = mounted && currentLang === "ar";
+
   const navItems = [
-    { href: "/", label: t("home"), active: pathname === "/" },
-    { href: "/universities", label: t("universities"), active: pathname === "/universities" },
-    { href: "/about", label: t("aboutNavLink"), active: pathname === "/about" },
-    { href: "/faq", label: t("faq"), active: pathname === "/faq" },
-    { href: "/contact", label: t("contact"), active: pathname === "/contact" },
+    { href: "/", label: tl("home", "Home"), active: pathname === "/" },
+    { href: "/universities", label: tl("universities", "Universities"), active: pathname === "/universities" },
+    { href: "/about", label: tl("aboutNavLink", "About"), active: pathname === "/about" },
+    { href: "/faq", label: tl("faq", "FAQ"), active: pathname === "/faq" },
+    { href: "/contact", label: tl("contact", "Contact"), active: pathname === "/contact" },
   ];
 
 
@@ -148,11 +152,11 @@ export function Navbar() {
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                aria-label={t("logout")}
+                aria-label={tl("logout", "Logout")}
               >
                 <LogOut className="w-4 h-4 flex-shrink-0" />
                 <span className="font-montserrat-medium text-xs hidden sm:inline">
-                  {t("logout")}
+                  {tl("logout", "Logout")}
                 </span>
               </button>
             </div>
@@ -198,7 +202,7 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Menu - Centered */}
-        <div className={`hidden md:flex items-center justify-center gap-1 flex-1 absolute ${currentLang === "ar" ? "right-1/2 translate-x-1/2" : "left-1/2 -translate-x-1/2"}`}>
+        <div className={`hidden md:flex items-center justify-center gap-1 flex-1 absolute ${isRTL ? "right-1/2 translate-x-1/2" : "left-1/2 -translate-x-1/2"}`}>
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -218,7 +222,7 @@ export function Navbar() {
         </div>
 
         {/* Right Side */}
-        <div className={`hidden md:flex items-center gap-4 shrink-0 ${currentLang === "ar" ? "mr-auto" : "ml-auto"}`}>
+          <div className={`hidden md:flex items-center gap-4 shrink-0 ${isRTL ? "mr-auto" : "ml-auto"}`}>
           {/* Language Selector */}
           <div className="relative">
             <button
@@ -232,7 +236,7 @@ export function Navbar() {
             {langMenuOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setLangMenuOpen(false)} />
-                <div className={`absolute ${currentLang === "ar" ? "left-0" : "right-0"} mt-2 w-44 bg-white rounded-2xl shadow-[0_8px_32px_rgba(82,96,206,0.15)] border border-gray-100 z-50 overflow-hidden`}>
+                <div className={`absolute ${isRTL ? "left-0" : "right-0"} mt-2 w-44 bg-white rounded-2xl shadow-[0_8px_32px_rgba(82,96,206,0.15)] border border-gray-100 z-50 overflow-hidden`}>
                   {languages.map((lang) => (
                     <button
                       key={lang.code}
@@ -275,15 +279,15 @@ export function Navbar() {
                     <p className="text-sm font-montserrat-semibold text-[#121c67] truncate">{userName}</p>
                   </div>
                   <Link href="/my-applications" className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 text-sm text-[#2e2e2e] transition-colors" onClick={() => setUserMenuOpen(false)}>
-                    {t("myApplications")}
+                    {tl("myApplications", "My Applications")}
                   </Link>
                   <Link href="/profile" className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 text-sm text-[#2e2e2e] transition-colors" onClick={() => setUserMenuOpen(false)}>
-                    {t("profile")}
+                    {tl("profile", "Profile")}
                   </Link>
                   <div className="border-t border-gray-100">
                     <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-2 text-red-600 text-sm transition-colors">
                       <LogOut className="w-4 h-4" />
-                      {t("logout")}
+                      {tl("logout", "Logout")}
                     </button>
                   </div>
                 </div>
@@ -318,7 +322,7 @@ export function Navbar() {
             onClick={() => setIsOpen(false)}
           />
           {/* Menu Panel */}
-          <div className={`fixed top-14 ${currentLang === "ar" ? "right-0" : "left-0"} w-full max-w-sm h-[calc(100vh-56px)] bg-white shadow-2xl z-[70] md:hidden transform transition-transform duration-300 ease-in-out overflow-y-auto`}>
+          <div className={`fixed top-14 ${isRTL ? "right-0" : "left-0"} w-full max-w-sm h-[calc(100vh-56px)] bg-white shadow-2xl z-[70] md:hidden transform transition-transform duration-300 ease-in-out overflow-y-auto`}>
             <div className="px-4 py-4 space-y-1">
               {/* Navigation Items */}
               {navItems.map((item) => (
@@ -342,7 +346,7 @@ export function Navbar() {
               {/* Language Selector */}
               <div className="px-4 py-2">
                 <p className="text-xs font-montserrat-semibold text-gray-500 mb-3 uppercase tracking-wide">
-                  {t("language")}
+                  {tl("language", "Language")}
                 </p>
                 <div className="flex gap-2">
                   {languages.map((lang) => (
@@ -372,7 +376,7 @@ export function Navbar() {
               {isAuthenticated ? (
                 <div className="px-4 py-2 space-y-1">
                   <p className="text-xs font-montserrat-semibold text-gray-500 mb-3 uppercase tracking-wide">
-                    {t("account")}
+                    {tl("account", "Account")}
                   </p>
                   <Link
                     href="/my-applications"
@@ -380,7 +384,7 @@ export function Navbar() {
                     onClick={() => setIsOpen(false)}
                   >
                     <User className="w-5 h-5 text-[#5260ce]" />
-                    <span className="text-base">{t("myApplications")}</span>
+                    <span className="text-base">{tl("myApplications", "My Applications")}</span>
                   </Link>
                   <Link
                     href="/profile"
@@ -388,7 +392,7 @@ export function Navbar() {
                     onClick={() => setIsOpen(false)}
                   >
                     <User className="w-5 h-5 text-[#5260ce]" />
-                    <span className="text-base">{t("profile")}</span>
+                    <span className="text-base">{tl("profile", "Profile")}</span>
                   </Link>
                   <button
                     onClick={() => {
@@ -398,7 +402,7 @@ export function Navbar() {
                     className="w-full flex items-center gap-3 py-3.5 px-4 rounded-xl text-red-600 font-montserrat-regular hover:bg-red-50 active:bg-red-100 transition-all"
                   >
                     <LogOut className="w-5 h-5" />
-                    <span className="text-base">{t("logout")}</span>
+                    <span className="text-base">{tl("logout", "Logout")}</span>
                   </button>
                 </div>
               ) : (
