@@ -182,6 +182,10 @@
   line-height: 1.7;
 }
 
+/* Utility: completely hide scrollbar while keeping scroll functionality */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

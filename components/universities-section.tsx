@@ -69,11 +69,10 @@ function UniversityCardSkeleton() {
 // ── Professional University Card ───────────────────────────────────────────
 function UniversityCard({
   university,
-  index,
   isRTL,
 }: {
   university: University;
-  index: number;
+  index?: number;
   isRTL: boolean;
 }) {
   const bannerSrc =
@@ -82,8 +81,7 @@ function UniversityCard({
     figmaAssets.universityLogo1;
 
   return (
-    <ScrollReveal direction="up" delay={index * 140} threshold={0.08}>
-      <Card className="group overflow-hidden border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-400 hover:-translate-y-2 bg-white h-full flex flex-col">
+    <Card className="group overflow-hidden border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-400 hover:-translate-y-2 bg-white h-full flex flex-col">
         {/* ── Banner image ── */}
         <div className="relative h-52 overflow-hidden shrink-0">
           <Image
@@ -225,7 +223,6 @@ function UniversityCard({
           </Button>
         </CardFooter>
       </Card>
-    </ScrollReveal>
   );
 }
 
@@ -335,6 +332,7 @@ function FilterSelect({ label, isRTL }: { label: string; isRTL: boolean }) {
   );
 }
 
+
 // ── Main Section ──────────────────────────────────────────────────────────
 export function UniversitiesSection() {
   const [universities, setUniversities] = useState<University[]>([]);
@@ -372,7 +370,7 @@ export function UniversitiesSection() {
   const isRTL = currentLang === "ar";
 
   return (
-    <section className="py-16 md:py-24 bg-[#f8f9ff] relative overflow-hidden">
+    <section className="py-16 md:py-24 bg-[#f8f9ff] relative">
       {/* Background decoration */}
       <div
         className="absolute top-0 right-0 w-[500px] h-[500px] pointer-events-none"
@@ -394,7 +392,7 @@ export function UniversitiesSection() {
           <FilterBar isRTL={isRTL} />
         </ScrollReveal>
 
-        {/* Card grid */}
+        {/* 3-card grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {loading ? (
             <>
@@ -413,18 +411,13 @@ export function UniversitiesSection() {
             </div>
           ) : (
             universities.map((uni, i) => (
-              <UniversityCard
-                key={uni.id}
-                university={uni}
-                index={i}
-                isRTL={isRTL}
-              />
+              <UniversityCard key={uni.id} university={uni} index={i} isRTL={isRTL} />
             ))
           )}
         </div>
 
         {/* View all link */}
-        <ScrollReveal direction="up" delay={200} className="mt-12 text-center">
+        <ScrollReveal direction="up" delay={200} className="mt-10 text-center">
           <Button
             variant="outline"
             className="border-2 border-[#5260ce] text-[#5260ce] hover:bg-[#5260ce] hover:text-white font-montserrat-semibold text-base h-12 px-8 rounded-xl transition-all duration-300 gap-2 group"

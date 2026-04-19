@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { figmaAssets } from "@/lib/figma-assets";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search } from "lucide-react";
 import { t, getLanguage, type Language } from "@/lib/i18n";
 import { RotatingText } from "@/components/ui/rotating-text";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
@@ -379,43 +379,8 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* ── SLIDE NAVIGATION ── */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[6] flex items-center gap-3">
-        {/* Prev */}
-        <button
-          onClick={() => goTo(activeSlide - 1)}
-          className="w-8 h-8 rounded-full bg-white/70 backdrop-blur-sm border border-white/60 flex items-center justify-center hover:bg-white transition-all shadow-sm"
-          aria-label={t("heroAriaPreviousSlide")}
-        >
-          <ChevronLeft className="w-4 h-4 text-[#5260ce]" />
-        </button>
-
-        {/* Dots */}
-        {SLIDES.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => goTo(idx)}
-            className={`rounded-full transition-all duration-500 ${
-              idx === activeSlide
-                ? "w-6 h-2.5 bg-[#5260ce] shadow-[0_0_8px_rgba(82,96,206,0.5)]"
-                : "w-2.5 h-2.5 bg-[#5260ce]/25 hover:bg-[#5260ce]/50"
-            }`}
-            aria-label={t("heroAriaGoToSlide").replace("{n}", String(idx + 1))}
-          />
-        ))}
-
-        {/* Next */}
-        <button
-          onClick={() => goTo(activeSlide + 1)}
-          className="w-8 h-8 rounded-full bg-white/70 backdrop-blur-sm border border-white/60 flex items-center justify-center hover:bg-white transition-all shadow-sm"
-          aria-label={t("heroAriaNextSlide")}
-        >
-          <ChevronRight className="w-4 h-4 text-[#5260ce]" />
-        </button>
-      </div>
-
-      {/* Progress bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-[2px] z-[6] bg-gray-100">
+      {/* Progress bar only — no dots/arrows */}
+      <div className="absolute bottom-0 left-0 right-0 h-[3px] z-[6] bg-gray-100/40">
         <div
           key={activeSlide}
           className="h-full bg-gradient-to-r from-[#5260ce] to-[#75d3f7]"
