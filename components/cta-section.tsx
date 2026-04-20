@@ -79,11 +79,11 @@ export function CtaSection() {
             <Button
               asChild
               variant="outline"
-              className="border-white/30 text-white hover:bg-white/10 hover:border-white/50 font-montserrat-semibold text-base h-[52px] px-8 rounded-xl backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5"
+              className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white hover:border-white/60 font-montserrat-semibold text-base h-[52px] px-8 rounded-xl backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 [&_svg]:text-white"
             >
-              <Link href="/contact" className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-                <MessageCircle className="w-4 h-4" />
-                {tl("ctaButtonSecondary")}
+              <Link href="/contact" className={`flex items-center justify-center gap-2 min-w-0 ${isRTL ? "flex-row-reverse" : ""}`}>
+                <MessageCircle className="w-4 h-4 shrink-0" aria-hidden />
+                <span className="text-white">{tl("ctaButtonSecondary")}</span>
               </Link>
             </Button>
           </div>
