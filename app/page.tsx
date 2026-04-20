@@ -72,7 +72,7 @@ export default function Home() {
       <main className="pt-0 pb-16 md:pb-0">
         <HeroSection slidesOverride={heroSlides} />
         {orderedSections.map((id) => (
-          <div key={id}>{sectionMap[id]}</div>
+          <div key={id}>{sectionMap[id as keyof typeof sectionMap]}</div>
         ))}
       </main>
       <Footer />
