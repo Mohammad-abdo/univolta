@@ -17,10 +17,10 @@ const ParticleField = dynamic(
 );
 
 const SLIDES = [
-  { image: "https://images.unsplash.com/photo-1562774053-701939374585?w=1600&q=80", badgeKey: "heroSlideBadge1" as const, accent: "#5260ce" },
-  { image: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1600&q=80", badgeKey: "heroSlideBadge2" as const, accent: "#3b5bdb" },
-  { image: "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=1600&q=80", badgeKey: "heroSlideBadge3" as const, accent: "#1971c2" },
-  { image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1600&q=80", badgeKey: "heroSlideBadge4" as const, accent: "#5260ce" },
+  { image: "https://images.unsplash.com/photo-1562774053-701939374585?w=1600&q=80", badgeKey: "heroSlideBadge1" as const },
+  { image: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1600&q=80", badgeKey: "heroSlideBadge2" as const },
+  { image: "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=1600&q=80", badgeKey: "heroSlideBadge3" as const },
+  { image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1600&q=80", badgeKey: "heroSlideBadge4" as const },
 ];
 
 const INTERVAL_MS = 5500;
@@ -34,7 +34,11 @@ export function HeroSection() {
   const [paused, setPaused] = useState(false);
   const router = useRouter();
 
-  // isRTL is ONLY used for text alignment — layout positions are fixed (Arabic design)
+  /*
+   * isRTL is ONLY used for text alignment & inline-flex ordering.
+   * The visual layout (image side, gradient direction, positions) is
+   * IDENTICAL for both languages — English layout used as the base.
+   */
   const isRTL = mounted && currentLang === "ar";
   const tl = (key: string) => t(key, currentLang);
 
@@ -100,14 +104,15 @@ export function HeroSection() {
               unoptimized
             />
             {/*
-              Gradient is ALWAYS "to left" so the white cover is on the RIGHT side
-              where the text content lives — same composition in both English and Arabic.
+              Gradient is always "to right":
+              white on the LEFT (text content side), transparent on the RIGHT (image panel side).
+              Same direction in both English and Arabic — layout is fixed.
             */}
             <div
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(to left, white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)",
+                  "linear-gradient(to right, white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)",
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-white/60 to-transparent" />
@@ -120,11 +125,11 @@ export function HeroSection() {
         <ParticleField />
       </div>
 
-      {/* ── Soft radial glow — always right side ── */}
+      {/* ── Soft radial glow — always LEFT side (where content lives) ── */}
       <div
         className="absolute pointer-events-none z-[2]"
         style={{
-          right: "-10%",
+          left: "-10%",
           top: "10%",
           width: "600px",
           height: "600px",
@@ -138,29 +143,30 @@ export function HeroSection() {
       {/* ── MAIN CONTENT ── */}
       <div className="max-w-[1440px] mx-auto relative h-full px-4 md:px-5 z-[3]">
 
-        {/* ── Desktop Decorative Elements — fixed on the LEFT side ── */}
+        {/* ── Desktop Decorative Elements — always RIGHT side, same for both languages ── */}
         <div className="hidden lg:block">
-          {/* Graduation cap decoration */}
-          <div className="absolute right-[671px] top-[202px] w-[100px] h-[79px] flex items-center justify-center animate-float">
+
+          {/* Graduation cap */}
+          <div className="absolute left-[671px] top-[202px] w-[100px] h-[79px] flex items-center justify-center animate-float">
             <div className="relative w-full h-full rotate-180 scale-y-[-100%]">
               <Image src={figmaAssets.heroGraduationCap} alt="" fill className="object-contain" unoptimized />
             </div>
           </div>
 
-          {/* Vector underline */}
-          <div className="absolute right-[80px] top-[312px] w-[141px] h-[10px]">
+          {/* Vector underline accent */}
+          <div className="absolute left-[80px] top-[312px] w-[141px] h-[10px]">
             <div className="absolute inset-[-30%_-2.13%_-30.01%_-2.13%]">
               <Image src={figmaAssets.heroVector} alt="" fill className="object-contain" unoptimized />
             </div>
           </div>
 
-          {/* Hero frame overlay */}
-          <div className="absolute right-[825px] top-[236px] w-[481px] h-[481px] z-[4]">
+          {/* Hero frame */}
+          <div className="absolute left-[825px] top-[236px] w-[481px] h-[481px] z-[4]">
             <Image src={figmaAssets.heroFrame} alt="" fill className="object-contain" unoptimized />
           </div>
 
           {/* Masked slide images */}
-          <div className="absolute right-[824px] top-[149px] w-[481px] h-[580px] overflow-hidden z-[4]">
+          <div className="absolute left-[824px] top-[149px] w-[481px] h-[580px] overflow-hidden z-[4]">
             <div
               className="absolute inset-0 transition-all duration-1000"
               style={{
@@ -199,15 +205,15 @@ export function HeroSection() {
 
           {/* Country Flag bubbles */}
           {[
-            { src: figmaAssets.flagFrance,  id: "f1", right: "right-[1114px]", top: "top-[155px]",  delay: "0s"   },
-            { src: figmaAssets.flagUSA,     id: "f2", right: "right-[816px]",  top: "top-[315px]",  delay: "0.8s" },
-            { src: figmaAssets.flagCanada,  id: "f3", right: "right-[1210px]", top: "top-[281px]",  delay: "1.5s" },
-            { src: figmaAssets.flagUK,      id: "f4", right: "right-[1271px]", top: "top-[418px]",  delay: "0.4s" },
-            { src: figmaAssets.flagGermany, id: "f5", right: "right-[781px]",  top: "top-[470px]",  delay: "1.2s" },
-          ].map(({ src, id, right, top, delay }) => (
+            { src: figmaAssets.flagFrance,  id: "f1", pos: "left-[1114px]", top: "top-[155px]",  delay: "0s"   },
+            { src: figmaAssets.flagUSA,     id: "f2", pos: "left-[816px]",  top: "top-[315px]",  delay: "0.8s" },
+            { src: figmaAssets.flagCanada,  id: "f3", pos: "left-[1210px]", top: "top-[281px]",  delay: "1.5s" },
+            { src: figmaAssets.flagUK,      id: "f4", pos: "left-[1271px]", top: "top-[418px]",  delay: "0.4s" },
+            { src: figmaAssets.flagGermany, id: "f5", pos: "left-[781px]",  top: "top-[470px]",  delay: "1.2s" },
+          ].map(({ src, id, pos, top, delay }) => (
             <div
               key={id}
-              className={`absolute ${right} ${top} w-[69px] h-[70px] bg-white rounded-[110px] p-3 flex items-center justify-center shadow-lg z-[5]`}
+              className={`absolute ${pos} ${top} w-[69px] h-[70px] bg-white rounded-[110px] p-3 flex items-center justify-center shadow-lg z-[5]`}
               style={{ animation: `float-gentle 5s ease-in-out infinite ${delay}` }}
             >
               <div className="relative w-11 h-11">
@@ -217,20 +223,20 @@ export function HeroSection() {
           ))}
 
           {/* Sparkle decorations */}
-          <div className="absolute right-[1124px] top-[597px] w-[214px] h-[95px] overflow-hidden z-[4]">
+          <div className="absolute left-[1124px] top-[597px] w-[214px] h-[95px] overflow-hidden z-[4]">
             <div className="absolute inset-0 rotate-[193.445deg]">
               <div className="relative w-full h-full">
                 <Image src={figmaAssets.heroVector3} alt="" fill className="object-contain" unoptimized />
               </div>
             </div>
           </div>
-          <div className="absolute right-[864px] top-[199px] w-[95px] h-[95px] overflow-hidden z-[4]">
-            <div className="absolute right-[15px] top-[5px] w-[66px] h-[66px]">
+          <div className="absolute left-[864px] top-[199px] w-[95px] h-[95px] overflow-hidden z-[4]">
+            <div className="absolute left-[15px] top-[5px] w-[66px] h-[66px]">
               <Image src={figmaAssets.heroSparkle} alt="" fill className="object-contain" unoptimized />
             </div>
           </div>
-          <div className="absolute right-[889px] top-[631px] w-[111px] h-[102px] overflow-hidden z-[4]">
-            <div className="absolute right-1/2 translate-x-1/2 top-[9px] w-[84px] h-[83px]">
+          <div className="absolute left-[889px] top-[631px] w-[111px] h-[102px] overflow-hidden z-[4]">
+            <div className="absolute left-1/2 -translate-x-1/2 top-[9px] w-[84px] h-[83px]">
               <div className="absolute inset-[20.04%_20.15%]">
                 <Image src={figmaAssets.heroStar} alt="" fill className="object-contain" unoptimized />
               </div>
@@ -238,7 +244,7 @@ export function HeroSection() {
           </div>
 
           {/* Slide indicator badge */}
-          <div className="absolute z-[6] right-[828px] top-[150px]">
+          <div className="absolute z-[6] left-[828px] top-[150px]">
             <div className="bg-white/90 backdrop-blur-md text-[#5260ce] text-xs font-montserrat-semibold px-3 py-1.5 rounded-full shadow-md border border-[#5260ce]/10 animate-fade-up">
               {tl(SLIDES[activeSlide].badgeKey)}
             </div>
@@ -247,13 +253,12 @@ export function HeroSection() {
 
         {/*
           ── TEXT CONTENT ──
-          Layout is fixed: content always lives in the RIGHT portion of the viewport.
-          paddingLeft pushes content away from the left image panel.
-          Text alignment (text-left / text-right) is the ONLY thing that changes per language.
+          Always in the LEFT portion of the screen (paddingRight pushes it away from the image).
+          isRTL only changes text-alignment and inline-flex ordering — NOT layout positions.
         */}
         <div
           className={`relative z-[5] pt-8 md:pt-[249px] pb-12 md:pb-0 ${isRTL ? "text-right" : "text-left"}`}
-          style={{ paddingLeft: "clamp(0px, 52%, 760px)" }}
+          style={{ paddingRight: "clamp(0px, 42%, 640px)" }}
         >
 
           {/* Discovery Badge */}
@@ -309,12 +314,12 @@ export function HeroSection() {
             {/* Quick Filters */}
             <div className={`flex gap-1.5 items-center flex-wrap ${isRTL ? "flex-row-reverse" : ""}`}>
               {[
-                { key: "filterUSA",        value: "USA",         type: "country"       },
-                { key: "filterCanada",      value: "Canada",      type: "country"       },
-                { key: "filterMexico",      value: "Mexico",      type: "country"       },
+                { key: "filterUSA",        value: "USA",         type: "country"        },
+                { key: "filterCanada",      value: "Canada",      type: "country"        },
+                { key: "filterMexico",      value: "Mexico",      type: "country"        },
                 { key: "filterMedicine",    value: "Medicine",    type: "specialization" },
                 { key: "filterEngineering", value: "Engineering", type: "specialization" },
-                { key: "filterEnglish",     value: "English",     type: "language"      },
+                { key: "filterEnglish",     value: "English",     type: "language"       },
               ].map((tag) => (
                 <button
                   key={tag.key}
@@ -331,9 +336,9 @@ export function HeroSection() {
             </div>
 
             {/* Animated Stats Row */}
-            <div className={`flex items-center gap-0 pt-3 border-t border-gray-100 ${isRTL ? "flex-row-reverse" : ""}`}>
+            <div className={`flex items-center pt-3 border-t border-gray-100 ${isRTL ? "flex-row-reverse" : ""}`}>
               {stats.map((stat, i) => (
-                <div key={stat.label} className={`flex ${isRTL ? "flex-row-reverse" : ""} items-center`}>
+                <div key={stat.label} className="flex items-center flex-1">
                   <div className="flex-1 text-center px-4">
                     <div className="font-montserrat-bold text-xl text-gradient-accent">
                       <AnimatedCounter target={stat.target} suffix={stat.suffix} />
