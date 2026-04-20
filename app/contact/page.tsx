@@ -21,11 +21,14 @@ import {
 import { figmaAssets } from "@/lib/figma-assets";
 import { showToast } from "@/lib/toast";
 import { t } from "@/lib/i18n";
+import { contactApi } from "@/lib/admin-api";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
+    subject: "",
     message: "",
   });
   const [loading, setLoading] = useState(false);
@@ -35,10 +38,9 @@ export default function ContactPage() {
     setLoading(true);
 
     try {
-      // TODO: Implement actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await contactApi.submit(formData);
       showToast.success(t("messageSentSuccess"));
-      setFormData({ name: "", email: "", message: "" });
+      setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
     } catch (error: any) {
       showToast.error(error.message || t("errorOccurred"));
     } finally {

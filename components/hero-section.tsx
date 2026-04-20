@@ -81,14 +81,14 @@ export function HeroSection() {
     { target: 30,  suffix: "+", label: tl("heroThirdStatLabel")     },
   ];
 
-  /* ── Positional helpers — mirrors layout for RTL ──────────────────────── */
-  const side   = (lVal: string, rVal: string) => isRTL ? rVal : lVal; // left / right
-  const padSide = isRTL
-    ? { paddingLeft:  "clamp(0px, 52%, 760px)" }
-    : { paddingRight: "clamp(0px, 42%, 640px)" };
-  const gradient = isRTL
-    ? "linear-gradient(to left,  white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)"
-    : "linear-gradient(to right, white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)";
+  /*
+   * Layout is FIXED (identical for English and Arabic):
+   *   LEFT  → text content (white gradient cover)
+   *   RIGHT → decorative image panel (transparent gradient, visible photo)
+   * isRTL only controls text-alignment and inline flex direction — NOT positions.
+   */
+  const gradient = "linear-gradient(to right, white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)";
+  const padSide  = { paddingRight: "clamp(0px, 42%, 640px)" };
 
   return (
     <section
@@ -127,12 +127,12 @@ export function HeroSection() {
         <ParticleField />
       </div>
 
-      {/* ── SOFT RADIAL GLOW ─────────────────────────────────────────────── */}
+      {/* ── SOFT RADIAL GLOW — always left side (text side) ─────────────── */}
       <div
         className="absolute pointer-events-none z-[2]"
         style={{
-          [isRTL ? "right" : "left"]: "-10%",
-          top:    "10%",
+          left: "-10%",
+          top:  "10%",
           width:  "600px",
           height: "600px",
           borderRadius: "50%",
@@ -149,26 +149,26 @@ export function HeroSection() {
         <div className="hidden lg:block">
 
           {/* Graduation cap */}
-          <div className={`absolute ${side("left-[671px]", "right-[671px]")} top-[202px] w-[100px] h-[79px] flex items-center justify-center animate-float`}>
+          <div className="absolute left-[671px] top-[202px] w-[100px] h-[79px] flex items-center justify-center animate-float">
             <div className="relative w-full h-full rotate-180 scale-y-[-100%]">
               <Image src={figmaAssets.heroGraduationCap} alt="" fill className="object-contain" unoptimized />
             </div>
           </div>
 
           {/* Vector underline */}
-          <div className={`absolute ${side("left-[80px]", "right-[80px]")} top-[312px] w-[141px] h-[10px]`}>
+          <div className="absolute left-[80px] top-[312px] w-[141px] h-[10px]">
             <div className="absolute inset-[-30%_-2.13%_-30.01%_-2.13%]">
               <Image src={figmaAssets.heroVector} alt="" fill className="object-contain" unoptimized />
             </div>
           </div>
 
           {/* Circular frame overlay */}
-          <div className={`absolute ${side("left-[825px]", "right-[825px]")} top-[236px] w-[481px] h-[481px] z-[4]`}>
+          <div className="absolute left-[825px] top-[236px] w-[481px] h-[481px] z-[4]">
             <Image src={figmaAssets.heroFrame} alt="" fill className="object-contain" unoptimized />
           </div>
 
           {/* Masked slide-image panel */}
-          <div className={`absolute ${side("left-[824px]", "right-[824px]")} top-[149px] w-[481px] h-[580px] overflow-hidden z-[4]`}>
+          <div className="absolute left-[824px] top-[149px] w-[481px] h-[580px] overflow-hidden z-[4]">
             <div
               className="absolute inset-0"
               style={{
@@ -208,15 +208,15 @@ export function HeroSection() {
 
           {/* Country flag bubbles */}
           {[
-            { src: figmaAssets.flagFrance,  id: "f1", lp: "left-[1114px]", rp: "right-[1114px]", top: "top-[155px]",  delay: "0s"   },
-            { src: figmaAssets.flagUSA,     id: "f2", lp: "left-[816px]",  rp: "right-[816px]",  top: "top-[315px]",  delay: "0.8s" },
-            { src: figmaAssets.flagCanada,  id: "f3", lp: "left-[1210px]", rp: "right-[1210px]", top: "top-[281px]",  delay: "1.5s" },
-            { src: figmaAssets.flagUK,      id: "f4", lp: "left-[1271px]", rp: "right-[1271px]", top: "top-[418px]",  delay: "0.4s" },
-            { src: figmaAssets.flagGermany, id: "f5", lp: "left-[781px]",  rp: "right-[781px]",  top: "top-[470px]",  delay: "1.2s" },
-          ].map(({ src, id, lp, rp, top, delay }) => (
+            { src: figmaAssets.flagFrance,  id: "f1", pos: "left-[1114px]", top: "top-[155px]",  delay: "0s"   },
+            { src: figmaAssets.flagUSA,     id: "f2", pos: "left-[816px]",  top: "top-[315px]",  delay: "0.8s" },
+            { src: figmaAssets.flagCanada,  id: "f3", pos: "left-[1210px]", top: "top-[281px]",  delay: "1.5s" },
+            { src: figmaAssets.flagUK,      id: "f4", pos: "left-[1271px]", top: "top-[418px]",  delay: "0.4s" },
+            { src: figmaAssets.flagGermany, id: "f5", pos: "left-[781px]",  top: "top-[470px]",  delay: "1.2s" },
+          ].map(({ src, id, pos, top, delay }) => (
             <div
               key={id}
-              className={`absolute ${side(lp, rp)} ${top} w-[69px] h-[70px] bg-white rounded-[110px] p-3 flex items-center justify-center shadow-lg z-[5]`}
+              className={`absolute ${pos} ${top} w-[69px] h-[70px] bg-white rounded-[110px] p-3 flex items-center justify-center shadow-lg z-[5]`}
               style={{ animation: `float-gentle 5s ease-in-out infinite ${delay}` }}
             >
               <div className="relative w-11 h-11">
@@ -226,7 +226,7 @@ export function HeroSection() {
           ))}
 
           {/* Sparkle decorations */}
-          <div className={`absolute ${side("left-[1124px]", "right-[1124px]")} top-[597px] w-[214px] h-[95px] overflow-hidden z-[4]`}>
+          <div className="absolute left-[1124px] top-[597px] w-[214px] h-[95px] overflow-hidden z-[4]">
             <div className="absolute inset-0 rotate-[193.445deg]">
               <div className="relative w-full h-full">
                 <Image src={figmaAssets.heroVector3} alt="" fill className="object-contain" unoptimized />
@@ -234,14 +234,14 @@ export function HeroSection() {
             </div>
           </div>
 
-          <div className={`absolute ${side("left-[864px]", "right-[864px]")} top-[199px] w-[95px] h-[95px] overflow-hidden z-[4]`}>
-            <div className={`absolute ${side("left-[15px]", "right-[15px]")} top-[5px] w-[66px] h-[66px]`}>
+          <div className="absolute left-[864px] top-[199px] w-[95px] h-[95px] overflow-hidden z-[4]">
+            <div className="absolute left-[15px] top-[5px] w-[66px] h-[66px]">
               <Image src={figmaAssets.heroSparkle} alt="" fill className="object-contain" unoptimized />
             </div>
           </div>
 
-          <div className={`absolute ${side("left-[889px]", "right-[889px]")} top-[631px] w-[111px] h-[102px] overflow-hidden z-[4]`}>
-            <div className={`absolute ${isRTL ? "right-1/2 translate-x-1/2" : "left-1/2 -translate-x-1/2"} top-[9px] w-[84px] h-[83px]`}>
+          <div className="absolute left-[889px] top-[631px] w-[111px] h-[102px] overflow-hidden z-[4]">
+            <div className="absolute left-1/2 -translate-x-1/2 top-[9px] w-[84px] h-[83px]">
               <div className="absolute inset-[20.04%_20.15%]">
                 <Image src={figmaAssets.heroStar} alt="" fill className="object-contain" unoptimized />
               </div>
@@ -249,7 +249,7 @@ export function HeroSection() {
           </div>
 
           {/* Slide indicator badge */}
-          <div className={`absolute z-[6] ${side("left-[828px]", "right-[828px]")} top-[150px]`}>
+          <div className="absolute z-[6] left-[828px] top-[150px]">
             <div className="bg-white/90 backdrop-blur-md text-[#5260ce] text-xs font-montserrat-semibold px-3 py-1.5 rounded-full shadow-md border border-[#5260ce]/10 animate-fade-up">
               {tl(SLIDES[activeSlide].badgeKey)}
             </div>
