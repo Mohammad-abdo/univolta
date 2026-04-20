@@ -4,8 +4,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import { contactApi, ContactMessage } from "@/lib/admin-api";
 import {
   Mail, MailOpen, Trash2, Archive, ArchiveRestore,
-  RefreshCw, Search, Filter, Reply, CheckSquare, Square,
-  ChevronLeft, User, Phone, Clock,
+  RefreshCw, Search, Reply, CheckSquare, Square,
+  ChevronLeft, User, Phone, Clock, Inbox, MessageSquare,
 } from "lucide-react";
 
 export default function MessagesPage() {
@@ -75,11 +75,7 @@ export default function MessagesPage() {
   };
 
   const toggleSelect = (id: string) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setSelected((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
 
   const toggleAll = () =>
     setSelected(selected.size === messages.length ? new Set() : new Set(messages.map((m) => m.id)));
@@ -94,78 +90,99 @@ export default function MessagesPage() {
     : messages;
 
   const fmtDate = (d: string) =>
-    new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+  const avatarColor = (name: string) => {
+    const colors = ["from-violet-500 to-purple-600", "from-blue-500 to-indigo-600", "from-pink-500 to-rose-600", "from-emerald-500 to-teal-600", "from-orange-500 to-amber-600"];
+    return colors[name.charCodeAt(0) % colors.length];
+  };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-gray-800">Messages</h2>
-          {unread > 0 && (
-            <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded-full">
-              {unread} unread
-            </span>
-          )}
+    <div className="space-y-4 h-full flex flex-col">
+      {/* Page Header */}
+      <div className="bg-gradient-to-r from-[#5260ce] to-[#7c3aed] rounded-2xl p-5 text-white flex items-center gap-4 flex-wrap">
+        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+          <MessageSquare size={20} />
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              className="border border-gray-200 rounded-xl pl-8 pr-3 py-2 text-sm w-52 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              placeholder="Search messages…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl font-bold">Messages</h1>
+          <p className="text-indigo-200 text-sm">Incoming contact form submissions</p>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          {unread > 0 && (
+            <div className="flex items-center gap-2 bg-white/20 rounded-xl px-3 py-1.5">
+              <span className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
+              <span className="text-sm font-semibold">{unread} unread</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-1.5">
+            <Inbox size={14} />
+            <span className="text-sm font-medium">{total} total</span>
           </div>
-          <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
-            {(["all", "unread", "archived"] as const).map((f) => (
-              <button key={f}
-                onClick={() => { setFilter(f); setPage(1); }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all capitalize
-                  ${filter === f ? "bg-white shadow text-indigo-700" : "text-gray-500 hover:text-gray-700"}`}
-              >{f}</button>
-            ))}
-          </div>
-          <button onClick={load} className="p-2 rounded-xl hover:bg-gray-100 transition-colors">
-            <RefreshCw size={15} className={`text-gray-500 ${loading ? "animate-spin" : ""}`} />
-          </button>
         </div>
       </div>
 
-      <div className="flex gap-4 h-[calc(100vh-220px)] min-h-[500px]">
+      {/* Controls */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent"
+            placeholder="Search messages…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
+          {(["all", "unread", "archived"] as const).map((f) => (
+            <button key={f}
+              onClick={() => { setFilter(f); setPage(1); }}
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize
+                ${filter === f ? "bg-white shadow text-indigo-700" : "text-gray-500 hover:text-gray-700"}`}
+            >{f}</button>
+          ))}
+        </div>
+        <button onClick={load} className="w-9 h-9 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-center transition-colors">
+          <RefreshCw size={14} className={`text-gray-500 ${loading ? "animate-spin" : ""}`} />
+        </button>
+      </div>
+
+      {/* Main split */}
+      <div className="flex gap-4 flex-1 min-h-[520px]">
         {/* Message list */}
-        <div className={`${activeMsg ? "hidden md:flex" : "flex"} flex-col w-full md:w-80 lg:w-96 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden`}>
-          {/* Bulk actions */}
+        <div className={`${activeMsg ? "hidden md:flex" : "flex"} flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden w-full md:w-80 lg:w-96 shrink-0`}>
+          {/* Bulk bar */}
           {selected.size > 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 border-b border-indigo-100 text-xs">
-              <span className="text-indigo-700 font-medium">{selected.size} selected</span>
-              <button onClick={bulkMarkRead} className="ml-auto text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+            <div className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-xs">
+              <span className="font-semibold flex-1">{selected.size} selected</span>
+              <button onClick={bulkMarkRead} className="flex items-center gap-1 bg-white/20 hover:bg-white/30 px-2 py-1 rounded-lg transition-colors">
                 <MailOpen size={12} /> Mark read
               </button>
-              <button onClick={bulkDelete} className="text-red-500 hover:text-red-700 flex items-center gap-1">
+              <button onClick={bulkDelete} className="flex items-center gap-1 bg-red-500/80 hover:bg-red-500 px-2 py-1 rounded-lg transition-colors">
                 <Trash2 size={12} /> Delete
               </button>
             </div>
           )}
 
           {/* List header */}
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 bg-gray-50/50">
+          <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100 bg-gray-50/50">
             <button onClick={toggleAll} className="p-1 text-gray-400 hover:text-indigo-500 transition-colors">
-              {selected.size === messages.length && messages.length > 0 ? <CheckSquare size={14} /> : <Square size={14} />}
+              {selected.size === messages.length && messages.length > 0
+                ? <CheckSquare size={15} className="text-indigo-500" />
+                : <Square size={15} />}
             </button>
-            <span className="text-xs text-gray-400">{total} message{total !== 1 ? "s" : ""}</span>
+            <span className="text-xs font-medium text-gray-500 flex-1">{total} message{total !== 1 ? "s" : ""}</span>
           </div>
 
           <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
             {loading && filtered.length === 0 && (
-              <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
-                <RefreshCw size={18} className="animate-spin mr-2" /> Loading…
+              <div className="flex items-center justify-center h-32 text-gray-400 text-sm gap-2">
+                <RefreshCw size={16} className="animate-spin" /> Loading…
               </div>
             )}
             {!loading && filtered.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-32 text-gray-400">
-                <Mail size={32} className="mb-2 opacity-30" />
+              <div className="flex flex-col items-center justify-center h-40 text-gray-400 gap-2">
+                <Mail size={36} className="opacity-20" />
                 <p className="text-sm">No messages found</p>
               </div>
             )}
@@ -173,70 +190,72 @@ export default function MessagesPage() {
               <div
                 key={msg.id}
                 onClick={() => open(msg)}
-                className={`flex items-start gap-3 px-3 py-3 cursor-pointer transition-colors hover:bg-indigo-50/50
-                  ${activeMsg?.id === msg.id ? "bg-indigo-50 border-l-2 border-indigo-500" : ""}
-                  ${!msg.isRead ? "bg-blue-50/30" : ""}`}
+                className={`flex items-start gap-3 px-3 py-3.5 cursor-pointer transition-colors group
+                  ${activeMsg?.id === msg.id ? "bg-indigo-50 border-l-2 border-l-indigo-500" : "hover:bg-gray-50/80"}
+                  ${!msg.isRead ? "bg-blue-50/40" : ""}`}
               >
                 <button
                   onClick={(e) => { e.stopPropagation(); toggleSelect(msg.id); }}
-                  className="p-0.5 text-gray-300 hover:text-indigo-400 mt-0.5 shrink-0 transition-colors"
+                  className="p-0.5 text-gray-300 hover:text-indigo-400 mt-1 shrink-0 transition-colors"
                 >
                   {selected.has(msg.id) ? <CheckSquare size={14} className="text-indigo-500" /> : <Square size={14} />}
                 </button>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarColor(msg.name)} flex items-center justify-center text-white text-sm font-bold shrink-0`}>
                   {msg.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-1">
-                    <p className={`text-sm truncate ${!msg.isRead ? "font-semibold text-gray-900" : "font-medium text-gray-700"}`}>
+                  <div className="flex items-center justify-between gap-1 mb-0.5">
+                    <p className={`text-sm truncate ${!msg.isRead ? "font-bold text-gray-900" : "font-semibold text-gray-700"}`}>
                       {msg.name}
                     </p>
                     <span className="text-[10px] text-gray-400 shrink-0">{fmtDate(msg.createdAt)}</span>
                   </div>
-                  <p className="text-xs text-gray-400 truncate">{msg.subject || msg.email}</p>
-                  <p className="text-xs text-gray-500 truncate mt-0.5">{msg.message}</p>
+                  <p className="text-xs text-gray-500 truncate font-medium">{msg.subject || msg.email}</p>
+                  <p className="text-xs text-gray-400 truncate mt-0.5">{msg.message}</p>
                 </div>
-                {!msg.isRead && <span className="w-2 h-2 bg-indigo-500 rounded-full mt-2 shrink-0" />}
+                {!msg.isRead && <span className="w-2.5 h-2.5 bg-indigo-500 rounded-full mt-1.5 shrink-0" />}
               </div>
             ))}
           </div>
 
           {/* Pagination */}
           {total > LIMIT && (
-            <div className="flex items-center justify-between px-3 py-2 border-t border-gray-100 text-xs text-gray-500 bg-gray-50/50">
+            <div className="flex items-center justify-between px-3 py-2.5 border-t border-gray-100 text-xs text-gray-500 bg-gray-50/50">
               <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)}
-                className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-40 transition-colors">← Prev</button>
-              <span>Page {page} of {Math.ceil(total / LIMIT)}</span>
+                className="px-3 py-1 rounded-lg hover:bg-gray-200 disabled:opacity-40 transition-colors font-medium">← Prev</button>
+              <span className="font-medium">{page} / {Math.ceil(total / LIMIT)}</span>
               <button disabled={page >= Math.ceil(total / LIMIT)} onClick={() => setPage((p) => p + 1)}
-                className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-40 transition-colors">Next →</button>
+                className="px-3 py-1 rounded-lg hover:bg-gray-200 disabled:opacity-40 transition-colors font-medium">Next →</button>
             </div>
           )}
         </div>
 
         {/* Message detail */}
-        <div className={`${activeMsg ? "flex" : "hidden md:flex"} flex-1 flex-col bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden`}>
+        <div className={`${activeMsg ? "flex" : "hidden md:flex"} flex-1 flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden min-w-0`}>
           {!activeMsg ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-300">
-              <MailOpen size={48} className="mb-3 opacity-40" />
-              <p className="text-sm">Select a message to read</p>
+            <div className="flex flex-col items-center justify-center h-full text-gray-300 gap-3">
+              <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center">
+                <MailOpen size={28} className="opacity-50" />
+              </div>
+              <p className="text-sm font-medium text-gray-400">Select a message to read</p>
             </div>
           ) : (
             <>
               {/* Detail header */}
-              <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
-                <button onClick={() => setActiveMsg(null)} className="md:hidden p-1 rounded-lg hover:bg-gray-100 transition-colors">
+              <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50/50">
+                <button onClick={() => setActiveMsg(null)} className="md:hidden p-1.5 rounded-xl hover:bg-gray-200 transition-colors shrink-0">
                   <ChevronLeft size={18} className="text-gray-500" />
                 </button>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-800 truncate">{activeMsg.subject || "No subject"}</h3>
-                  <p className="text-xs text-gray-400">{fmtDate(activeMsg.createdAt)}</p>
+                  <h3 className="font-bold text-gray-800 truncate">{activeMsg.subject || "No subject"}</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">{new Date(activeMsg.createdAt).toLocaleString()}</p>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   <a
                     href={`mailto:${activeMsg.email}?subject=Re: ${encodeURIComponent(activeMsg.subject ?? "Your message")}`}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl text-xs font-medium transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl text-xs font-semibold transition-colors"
                   >
-                    <Reply size={12} /> Reply
+                    <Reply size={13} /> Reply
                   </a>
                   <button
                     onClick={() => archiveMsg(activeMsg.id, !activeMsg.isArchived)}
@@ -248,7 +267,6 @@ export default function MessagesPage() {
                   <button
                     onClick={() => deleteMsg(activeMsg.id)}
                     className="p-2 rounded-xl hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
-                    title="Delete"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -256,42 +274,38 @@ export default function MessagesPage() {
               </div>
 
               {/* Sender info */}
-              <div className="px-5 py-4 border-b border-gray-50 bg-gray-50/50 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-                <span className="flex items-center gap-2 text-gray-600">
-                  <User size={14} className="text-gray-400" />
-                  {activeMsg.name}
-                </span>
-                <a href={`mailto:${activeMsg.email}`} className="flex items-center gap-2 text-indigo-600 hover:underline">
-                  <Mail size={14} className="text-gray-400" />
-                  {activeMsg.email}
-                </a>
-                {activeMsg.phone && (
-                  <span className="flex items-center gap-2 text-gray-600">
-                    <Phone size={14} className="text-gray-400" />
-                    {activeMsg.phone}
-                  </span>
-                )}
-                <span className="flex items-center gap-2 text-gray-400 text-xs ml-auto">
-                  <Clock size={12} />
-                  {new Date(activeMsg.createdAt).toLocaleString()}
-                </span>
+              <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/50">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${avatarColor(activeMsg.name)} flex items-center justify-center text-white font-bold shrink-0`}>
+                    {activeMsg.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-800">{activeMsg.name}</p>
+                    <a href={`mailto:${activeMsg.email}`} className="text-xs text-indigo-600 hover:underline">{activeMsg.email}</a>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-gray-500">
+                  {activeMsg.phone && (
+                    <span className="flex items-center gap-1.5"><Phone size={11} className="text-gray-400" /> {activeMsg.phone}</span>
+                  )}
+                  <span className="flex items-center gap-1.5"><Clock size={11} className="text-gray-400" /> {new Date(activeMsg.createdAt).toLocaleString()}</span>
+                </div>
               </div>
 
-              {/* Message body */}
+              {/* Body */}
               <div className="flex-1 p-5 overflow-y-auto">
-                <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap leading-relaxed">
+                <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed bg-gray-50/50 rounded-xl p-4 border border-gray-100">
                   {activeMsg.message}
                 </div>
               </div>
 
-              {/* Quick reply button */}
+              {/* Footer */}
               <div className="px-5 py-4 border-t border-gray-100 bg-gray-50/50">
                 <a
                   href={`mailto:${activeMsg.email}?subject=Re: ${encodeURIComponent(activeMsg.subject ?? "Your message")}`}
-                  className="inline-flex items-center gap-2 bg-[#5260ce] hover:bg-[#4251be] text-white text-sm font-medium px-5 py-2.5 rounded-xl transition-colors"
+                  className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
                 >
-                  <Reply size={15} />
-                  Reply via Email
+                  <Reply size={15} /> Reply via Email
                 </a>
               </div>
             </>

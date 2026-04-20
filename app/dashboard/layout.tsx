@@ -8,6 +8,7 @@ import { API_BASE_URL } from "@/lib/constants";
 import { canAccess, type UserRole } from "@/lib/permissions";
 import {
   LayoutDashboard,
+  Home,
   GraduationCap,
   BookOpen,
   FileText,
@@ -101,6 +102,31 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
   // Admin/Editor menu items
   return [
     { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
+    {
+      href: "/dashboard/cms",
+      label: "CMS Dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      href: "/dashboard/cms/homepage",
+      label: "CMS Home Page",
+      icon: Home,
+    },
+    {
+      href: "/dashboard/cms/site-settings",
+      label: "CMS Site Settings",
+      icon: Settings,
+    },
+    {
+      href: "/dashboard/cms/footer",
+      label: "CMS Footer",
+      icon: Settings,
+    },
+    {
+      href: "/dashboard/cms/messages",
+      label: "CMS Messages",
+      icon: MessageSquare,
+    },
     {
       href: "/dashboard/universities",
       label: t("universities"),

@@ -10,6 +10,8 @@ import { Search } from "lucide-react";
 import { t, getLanguage, type Language } from "@/lib/i18n";
 import { RotatingText } from "@/components/ui/rotating-text";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
+import type { HeroSlideSetting } from "@/lib/site-settings";
+import { getImageUrl } from "@/lib/image-utils";
 
 /* Three.js background loaded only on the client */
 const ParticleField = dynamic(
@@ -28,7 +30,7 @@ const SLIDES = [
 const INTERVAL_MS = 5500;
 
 /* ── Component ──────────────────────────────────────────────────────────── */
-export function HeroSection() {
+export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSetting[] }) {
   const [searchQuery,  setSearchQuery]  = useState("");
   /* Always start with "en" → server and first client render match (hydration-safe) */
   const [currentLang,  setCurrentLang]  = useState<Language>("en");
@@ -37,6 +39,7 @@ export function HeroSection() {
   const [prevSlide,    setPrevSlide]    = useState<number | null>(null);
   const [paused,       setPaused]       = useState(false);
   const router = useRouter();
+  const slides = slidesOverride && slidesOverride.length > 0 ? slidesOverride : SLIDES;
 
   /* isRTL is false until mounted → server HTML == initial client HTML */
   const isRTL = mounted && currentLang === "ar";
@@ -58,9 +61,9 @@ export function HeroSection() {
   const goTo = useCallback(
     (idx: number) => {
       setPrevSlide(activeSlide);
-      setActiveSlide((idx + SLIDES.length) % SLIDES.length);
+      setActiveSlide((idx + slides.length) % slides.length);
     },
-    [activeSlide]
+    [activeSlide, slides.length]
   );
 
   useEffect(() => {
@@ -75,6 +78,15 @@ export function HeroSection() {
   ];
 
   const rotatingWords = [tl("heroWord1"), tl("heroWord2"), tl("heroWord3")];
+  const currentSlideData = slides[activeSlide] as HeroSlideSetting | (typeof SLIDES)[number];
+  const slideTitle =
+    "titleEn" in currentSlideData
+      ? (isRTL ? currentSlideData.titleAr : currentSlideData.titleEn) || tl("studyAbroadMadeEasy")
+      : tl("studyAbroadMadeEasy");
+  const slideSubtitle =
+    "subEn" in currentSlideData
+      ? (isRTL ? currentSlideData.subAr : currentSlideData.subEn) || tl("connectWithTopUniversities")
+      : tl("connectWithTopUniversities");
   const stats = [
     { target: 150, suffix: "+", label: tl("studentsStatLabel")      },
     { target: 50,  suffix: "+", label: tl("universitiesStatLabel")  },
@@ -97,18 +109,18 @@ export function HeroSection() {
       onMouseLeave={() => setPaused(false)}
     >
       {/* ── BACKGROUND SLIDESHOW ─────────────────────────────────────────── */}
-      {SLIDES.map((slide, idx) => {
+      {slides.map((slide, idx) => {
         const isActive = idx === activeSlide;
         const wasPrev  = idx === prevSlide;
         return (
           <div
-            key={slide.image}
+            key={"id" in slide ? slide.id : slide.image}
             className={`absolute inset-0 transition-opacity duration-1000 ${
               isActive ? "opacity-100 z-[1]" : wasPrev ? "opacity-0 z-[0]" : "opacity-0 z-0"
             }`}
           >
             <Image
-              src={slide.image}
+              src={getImageUrl(slide.image) || slide.image}
               alt={tl("heroCampusImageAlt")}
               fill
               priority={idx === 0}
@@ -178,13 +190,13 @@ export function HeroSection() {
                 maskRepeat:   "no-repeat",
               }}
             >
-              {SLIDES.map((slide, idx) => (
+              {slides.map((slide, idx) => (
                 <div
                   key={slide.image}
                   className={`absolute inset-0 transition-opacity duration-1000 ${activeSlide === idx ? "opacity-100" : "opacity-0"}`}
                 >
                   <Image
-                    src={slide.image}
+                    src={getImageUrl(slide.image) || slide.image}
                     alt={tl("heroMaskedCampusAlt")}
                     fill
                     className={`object-cover ${activeSlide === idx ? "slide-ken" : ""}`}
@@ -251,7 +263,9 @@ export function HeroSection() {
           {/* Slide indicator badge */}
           <div className="absolute z-[6] left-[828px] top-[150px]">
             <div className="bg-white/90 backdrop-blur-md text-[#5260ce] text-xs font-montserrat-semibold px-3 py-1.5 rounded-full shadow-md border border-[#5260ce]/10 animate-fade-up">
-              {tl(SLIDES[activeSlide].badgeKey)}
+              {"badgeKey" in slides[activeSlide]
+                ? tl((slides[activeSlide] as { badgeKey: string }).badgeKey)
+                : (slides[activeSlide] as HeroSlideSetting).badge || tl("heroSlideBadge1")}
             </div>
           </div>
         </div>
@@ -277,12 +291,12 @@ export function HeroSection() {
 
           {/* Headline */}
           <h1 className="font-montserrat-bold text-2xl md:text-[40px] leading-[1.25] text-[#121c67] mb-3 md:mb-4">
-            {tl("studyAbroadMadeEasy")}
+            {slideTitle}
           </h1>
 
           {/* Description */}
           <p className="font-montserrat-regular text-sm md:text-[17px] leading-[1.55] text-[#65666f] mb-5 md:mb-6">
-            {tl("connectWithTopUniversities")}
+            {slideSubtitle}
           </p>
 
           {/* ── Search card ── */}

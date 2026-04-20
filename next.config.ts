@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "") ?? "http://localhost:4000";
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -19,18 +21,28 @@ const nextConfig: NextConfig = {
         hostname: 'univolta.developteam.site',
         pathname: '/uploads/**',
       },
-      // Wikimedia / Wikipedia — Egyptian university real images
+      // Wikimedia / Wikipedia
       {
         protocol: 'https',
         hostname: 'upload.wikimedia.org',
       },
-      // Unsplash — free high-quality university campus photos
+      // Unsplash
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
     ],
-    unoptimized: false,
+    unoptimized: true,
+  },
+
+  // Proxy /uploads/* → backend so relative URLs work even without getImageUrl
+  async rewrites() {
+    return [
+      {
+        source: "/uploads/:path*",
+        destination: `${BACKEND_URL}/uploads/:path*`,
+      },
+    ];
   },
 };
 

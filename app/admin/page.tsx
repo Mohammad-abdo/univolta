@@ -7,6 +7,7 @@ import {
   Home,
   Settings,
   Globe,
+  ShieldCheck,
   ArrowRight,
   Mail,
   CheckCircle,
@@ -86,10 +87,18 @@ export default function AdminDashboard() {
         <p className="text-indigo-200 text-sm">
           Manage your site content, hero banner, footer, and incoming messages from one place.
         </p>
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 mt-4 bg-indigo-500/70 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-xl transition-all"
+        >
+          <ShieldCheck size={15} />
+          Open Full Management Dashboard
+          <ArrowRight size={14} />
+        </Link>
         {stats.unreadMessages > 0 && (
           <Link
             href="/admin/messages?unread=true"
-            className="inline-flex items-center gap-2 mt-4 bg-white/20 hover:bg-white/30 text-white text-sm font-medium px-4 py-2 rounded-xl transition-all"
+            className="inline-flex items-center gap-2 mt-4 ml-3 bg-white/20 hover:bg-white/30 text-white text-sm font-medium px-4 py-2 rounded-xl transition-all"
           >
             <Mail size={15} />
             You have {stats.unreadMessages} unread message{stats.unreadMessages > 1 ? "s" : ""}
@@ -131,6 +140,7 @@ export default function AdminDashboard() {
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
+            { href: "/dashboard", label: "Open full backend panel", sub: "Users, roles, universities, programs and more" },
             { href: "/admin/homepage", label: "Edit hero slides",     sub: "Change banner images and text" },
             { href: "/admin/homepage", label: "Toggle home sections", sub: "Show/hide sections on the home page" },
             { href: "/admin/site-settings", label: "Update logos",    sub: "Change site logo and footer logo" },

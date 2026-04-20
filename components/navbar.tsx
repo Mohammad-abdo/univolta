@@ -17,6 +17,8 @@ import {
 } from "@/lib/i18n";
 import { API_BASE_URL } from "@/lib/constants";
 import { AlertNotification } from "@/components/alerts/alert-notification";
+import { fetchPublicSiteSettings } from "@/lib/site-settings";
+import { getImageUrl } from "@/lib/image-utils";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,6 +29,7 @@ export function Navbar() {
   const [currentLang, setCurrentLang] = useState<Language>("en");
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [siteLogoUrl, setSiteLogoUrl] = useState<string>(figmaAssets.logo);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -34,6 +37,11 @@ export function Navbar() {
     setMounted(true);
     setCurrentLang(getLanguage());
     checkAuth();
+    fetchPublicSiteSettings()
+      .then((settings) => {
+        if (settings["site.logoUrl"]) setSiteLogoUrl(getImageUrl(settings["site.logoUrl"]) || figmaAssets.logo);
+      })
+      .catch(() => {});
 
     const interval = setInterval(() => {
       const lang = getLanguage();
@@ -197,7 +205,7 @@ export function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center shrink-0 group">
           <div className="relative w-[50px] h-[30px] md:w-[78px] md:h-[48px] transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_2px_8px_rgba(82,96,206,0.3)]">
-            <Image src={figmaAssets.logo} alt="UniVolta Logo" fill className="object-contain" unoptimized />
+            <Image src={siteLogoUrl} alt="UniVolta Logo" fill className="object-contain" unoptimized />
           </div>
         </Link>
 

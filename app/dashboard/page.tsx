@@ -29,6 +29,7 @@ import {
   BarChart3,
   PieChart,
   Activity,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { t, getLanguage } from "@/lib/i18n";
@@ -449,6 +450,13 @@ export default function DashboardPage() {
             <p className="text-blue-100 text-sm sm:text-base md:text-lg">
               {t("whatsHappening")}
             </p>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 mt-4 bg-white/20 hover:bg-white/30 text-white text-sm font-montserrat-semibold px-4 py-2 rounded-lg transition-all"
+            >
+              <Globe className="w-4 h-4" />
+              Website
+            </Link>
           </div>
           <div className="hidden md:block flex-shrink-0 ml-4">
             <TrendingUp className="w-20 h-20 lg:w-24 lg:h-24 text-blue-200 opacity-50" />

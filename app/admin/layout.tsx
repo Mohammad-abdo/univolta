@@ -24,7 +24,8 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/admin",              label: "Dashboard",       icon: <LayoutDashboard size={18} /> },
+  { href: "/admin",              label: "CMS Dashboard",   icon: <LayoutDashboard size={18} /> },
+  { href: "/admin/dashboard",    label: "Full Dashboard",  icon: <LayoutDashboard size={18} /> },
   { href: "/admin/site-settings",label: "Site Settings",   icon: <Settings         size={18} /> },
   { href: "/admin/homepage",     label: "Home Page",       icon: <Home             size={18} /> },
   { href: "/admin/footer",       label: "Footer",          icon: <Globe            size={18} /> },

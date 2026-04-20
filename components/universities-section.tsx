@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { figmaAssets } from "@/lib/figma-assets";
 import { API_BASE_URL } from "@/lib/constants";
+import { getImageUrl } from "@/lib/image-utils";
 import {
   MapPin,
   Globe,
@@ -76,8 +77,8 @@ function UniversityCard({
   isRTL: boolean;
 }) {
   const bannerSrc =
-    university.bannerUrl ||
-    university.image1 ||
+    getImageUrl(university.bannerUrl) ||
+    getImageUrl(university.image1) ||
     figmaAssets.universityLogo1;
 
   return (
@@ -117,7 +118,7 @@ function UniversityCard({
               <div className="w-14 h-14 rounded-xl bg-white shadow-lg p-1.5 overflow-hidden">
                 <div className="relative w-full h-full">
                   <Image
-                    src={university.logoUrl}
+                    src={getImageUrl(university.logoUrl) || university.logoUrl || ""}
                     alt={`${university.name} logo`}
                     fill
                     className="object-contain p-0.5"

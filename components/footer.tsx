@@ -7,16 +7,26 @@ import { Phone, Mail, MapPin, Facebook, Youtube, Twitter, Instagram, MessageCirc
 import { figmaAssets } from "@/lib/figma-assets";
 import { t, getLanguage, type Language } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
+import { fetchPublicSiteSettings, type FooterContentSetting } from "@/lib/site-settings";
+import { getImageUrl } from "@/lib/image-utils";
 
 export function Footer() {
   const [currentLang, setCurrentLang] = useState<Language>("en");
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [footerLogoUrl, setFooterLogoUrl] = useState(figmaAssets.footerLogo);
+  const [footerContent, setFooterContent] = useState<FooterContentSetting | null>(null);
 
   useEffect(() => {
     setMounted(true);
     setCurrentLang(getLanguage());
+    fetchPublicSiteSettings()
+      .then((settings) => {
+        if (settings["site.footerLogoUrl"]) setFooterLogoUrl(getImageUrl(settings["site.footerLogoUrl"]) || figmaAssets.footerLogo);
+        if (settings["footer.content"]) setFooterContent(settings["footer.content"]);
+      })
+      .catch(() => {});
     const id = setInterval(() => setCurrentLang(getLanguage()), 300);
     return () => clearInterval(id);
   }, []);
@@ -33,22 +43,33 @@ export function Footer() {
     }
   };
 
-  const quickLinks = [
-    { name: tl("home"), href: "/" },
-    { name: tl("universities"), href: "/universities" },
-    { name: tl("faq"), href: "/faq" },
-    { name: tl("contact"), href: "/contact" },
-    { name: tl("termsPolicy"), href: "/terms" },
+  const quickLinks = footerContent?.quickLinks ?? [
+    { label: tl("home"), href: "/" },
+    { label: tl("universities"), href: "/universities" },
+    { label: tl("faq"), href: "/faq" },
+    { label: tl("contact"), href: "/contact" },
+    { label: tl("termsPolicy"), href: "/terms" },
   ];
 
   const programs = ["Engineering", "Business", "Medicine", "Law", "Computer Science", "Architecture"];
 
-  const socials = [
-    { Icon: Instagram, href: "#", label: "Instagram", color: "hover:bg-gradient-to-br hover:from-[#833ab4] hover:via-[#fd1d1d] hover:to-[#fcb045]" },
-    { Icon: Facebook,  href: "#", label: "Facebook",  color: "hover:bg-[#1877F2]" },
-    { Icon: Youtube,   href: "#", label: "YouTube",   color: "hover:bg-[#FF0000]" },
-    { Icon: Twitter,   href: "#", label: "Twitter",   color: "hover:bg-[#1DA1F2]" },
-  ];
+  const socials = (footerContent?.socialLinks ?? [
+    { platform: "Instagram", href: "#" },
+    { platform: "Facebook", href: "#" },
+    { platform: "YouTube", href: "#" },
+    { platform: "Twitter", href: "#" },
+  ]).map(({ platform, href }) => {
+    const map = {
+      Instagram: { Icon: Instagram, color: "hover:bg-gradient-to-br hover:from-[#833ab4] hover:via-[#fd1d1d] hover:to-[#fcb045]" },
+      Facebook: { Icon: Facebook, color: "hover:bg-[#1877F2]" },
+      YouTube: { Icon: Youtube, color: "hover:bg-[#FF0000]" },
+      Twitter: { Icon: Twitter, color: "hover:bg-[#1DA1F2]" },
+      WhatsApp: { Icon: MessageCircle, color: "hover:bg-[#25D366]" },
+    } as const;
+    const fallback = { Icon: Globe, color: "hover:bg-[#5260ce]" };
+    const entry = map[platform as keyof typeof map] ?? fallback;
+    return { ...entry, href, label: platform };
+  });
 
   return (
     <footer className="relative bg-[#0d1550] text-white overflow-hidden" dir={isRTL ? "rtl" : "ltr"}>
@@ -104,7 +125,7 @@ export function Footer() {
           <div className={`col-span-2 md:col-span-1 space-y-5 ${isRTL ? "text-right" : ""}`}>
             <div className="relative w-[90px] h-[55px]">
               <Image
-                src={figmaAssets.footerLogo}
+                src={footerLogoUrl}
                 alt="UniVolta"
                 fill
                 className="object-contain brightness-0 invert"
@@ -137,9 +158,9 @@ export function Footer() {
             </h4>
             <ul className="space-y-3">
               {quickLinks.map((link) => (
-                <li key={link.name}>
+                <li key={link.label}>
                   <Link href={link.href} className="footer-link">
-                    {link.name}
+                    {link.label}
                   </Link>
                 </li>
               ))}
@@ -169,10 +190,10 @@ export function Footer() {
             </h4>
             <div className="space-y-4">
               {[
-                { Icon: Phone,  text: "+00 000 000 00 67" },
-                { Icon: Mail,   text: "info@univolta.com" },
+                { Icon: Phone,  text: footerContent?.phone || "+00 000 000 00 67" },
+                { Icon: Mail,   text: footerContent?.email || "info@univolta.com" },
                 { Icon: Globe,  text: "www.univolta.com" },
-                { Icon: MapPin, text: "Brooklyn, New York, USA" },
+                { Icon: MapPin, text: footerContent?.address || "Brooklyn, New York, USA" },
               ].map(({ Icon, text }) => (
                 <div key={text} className={`flex items-start gap-3 ${isRTL ? "flex-row-reverse" : ""}`}>
                   <div className="w-8 h-8 rounded-lg bg-[#5260ce]/40 flex items-center justify-center shrink-0">
@@ -189,7 +210,9 @@ export function Footer() {
       {/* Bottom Bar */}
       <div className="relative border-t border-white/10 py-5">
         <div className={`max-w-[1280px] mx-auto px-4 md:px-5 flex flex-col md:flex-row justify-between items-center gap-2 ${isRTL ? "md:flex-row-reverse" : ""}`}>
-          <p className="text-white/40 text-xs font-montserrat-regular">{tl("allRightsReserved")}</p>
+          <p className="text-white/40 text-xs font-montserrat-regular">
+            {footerContent?.copyright || tl("allRightsReserved")}
+          </p>
           <p className="text-white/40 text-xs font-montserrat-regular">
             {tl("poweredBy")}{" "}
             <span className="text-[#75d3f7] font-montserrat-bold">Qeematech</span>
