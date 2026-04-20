@@ -9,14 +9,18 @@ import { ArrowRight, MessageCircle, Sparkles } from "lucide-react";
 import { t, getLanguage, type Language } from "@/lib/i18n";
 
 export function CtaSection() {
-  const [lang, setLang] = useState<Language>(getLanguage());
+  const [lang, setLang] = useState<Language>("en");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    setLang(getLanguage());
     const id = setInterval(() => setLang(getLanguage()), 300);
     return () => clearInterval(id);
   }, []);
 
-  const isRTL = lang === "ar";
+  const isRTL = mounted && lang === "ar";
+  const tl = (key: string) => t(key, lang);
 
   return (
     <section className="relative py-16 md:py-24 overflow-hidden">
@@ -49,16 +53,16 @@ export function CtaSection() {
           <div className={`flex justify-center mb-5 ${isRTL ? "rtl" : ""}`}>
             <Badge className="bg-[#75d3f7]/15 text-[#75d3f7] border border-[#75d3f7]/30 font-montserrat-semibold px-5 py-1.5 backdrop-blur-sm flex items-center gap-2">
               <Sparkles className="w-3.5 h-3.5" />
-              {t("ctaBadge")}
+              {tl("ctaBadge")}
             </Badge>
           </div>
 
           <h2 className="font-montserrat-bold text-3xl md:text-[48px] text-white leading-[1.2] mb-5 md:mb-6">
-            {t("ctaTitle")}
+            {tl("ctaTitle")}
           </h2>
 
           <p className="font-montserrat-regular text-white/75 text-base md:text-xl leading-relaxed mb-8 md:mb-10 max-w-[680px] mx-auto">
-            {t("ctaSubtitle")}
+            {tl("ctaSubtitle")}
           </p>
 
           <div className={`flex flex-col sm:flex-row gap-4 justify-center ${isRTL ? "sm:flex-row-reverse" : ""}`}>
@@ -67,7 +71,7 @@ export function CtaSection() {
               className="bg-white text-[#121c67] hover:bg-[#f0f4ff] font-montserrat-bold text-base h-[52px] px-8 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 transition-all duration-300"
             >
               <Link href="/universities" className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-                {t("ctaButton")}
+                {tl("ctaButton")}
                 <ArrowRight className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
               </Link>
             </Button>
@@ -79,7 +83,7 @@ export function CtaSection() {
             >
               <Link href="/contact" className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
                 <MessageCircle className="w-4 h-4" />
-                {t("ctaButtonSecondary")}
+                {tl("ctaButtonSecondary")}
               </Link>
             </Button>
           </div>

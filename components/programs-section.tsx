@@ -23,14 +23,18 @@ const PROGRAMS = [
 ] as const;
 
 export function ProgramsSection() {
-  const [lang, setLang] = useState<Language>(getLanguage());
+  const [lang, setLang] = useState<Language>("en");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    setLang(getLanguage());
     const id = setInterval(() => setLang(getLanguage()), 300);
     return () => clearInterval(id);
   }, []);
 
-  const isRTL = lang === "ar";
+  const isRTL = mounted && lang === "ar";
+  const tl = (key: string) => t(key, lang);
 
   return (
     <section className="relative py-16 md:py-24 bg-[#f9fafe] overflow-hidden">
@@ -42,13 +46,13 @@ export function ProgramsSection() {
         <ScrollReveal direction="up">
           <div className={`text-center max-w-2xl mx-auto mb-10 md:mb-14 ${isRTL ? "rtl" : ""}`}>
             <Badge className="mb-4 bg-[rgba(82,96,206,0.1)] text-[#5260ce] border border-[#5260ce]/20 font-montserrat-semibold px-4 py-1.5">
-              {t("programsSectionBadge")}
+              {tl("programsSectionBadge")}
             </Badge>
             <h2 className="font-montserrat-bold text-2xl md:text-[34px] text-[#121c67] leading-tight mb-4">
-              {t("programsSectionTitle")}
+              {tl("programsSectionTitle")}
             </h2>
             <p className="font-montserrat-regular text-[#65666f] text-base md:text-lg leading-relaxed">
-              {t("programsSectionSubtitle")}
+              {tl("programsSectionSubtitle")}
             </p>
           </div>
         </ScrollReveal>
@@ -62,7 +66,7 @@ export function ProgramsSection() {
                     <Icon className={`w-7 h-7 ${iconColor}`} />
                   </div>
                   <p className="font-montserrat-semibold text-sm md:text-[15px] text-[#121c67] leading-snug">
-                    {t(key)}
+                    {tl(key)}
                   </p>
                 </div>
               </Link>
@@ -77,7 +81,7 @@ export function ProgramsSection() {
               className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold px-8 py-3 h-auto rounded-xl shadow-[0_4px_24px_rgba(82,96,206,0.3)] hover:shadow-[0_8px_32px_rgba(82,96,206,0.4)] hover:-translate-y-0.5 transition-all duration-300"
             >
               <Link href="/universities" className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-                {t("programsViewAll")}
+                {tl("programsViewAll")}
                 <ArrowRight className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
               </Link>
             </Button>

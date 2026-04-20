@@ -45,12 +45,17 @@ const STATS = [
 ] as const;
 
 export function StatsSection() {
-  const [lang, setLang] = useState<Language>(getLanguage());
+  const [lang, setLang] = useState<Language>("en");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    setLang(getLanguage());
     const id = setInterval(() => setLang(getLanguage()), 300);
     return () => clearInterval(id);
   }, []);
+
+  const tl = (key: string) => t(key, lang);
 
   return (
     <section className="relative py-16 md:py-24 overflow-hidden">
@@ -67,12 +72,12 @@ export function StatsSection() {
 
       <div className="max-w-[1280px] mx-auto px-4 md:px-5 relative z-[1]">
         <ScrollReveal direction="up">
-          <div className={`text-center mb-12 md:mb-16 ${lang === "ar" ? "rtl" : ""}`}>
+          <div className={`text-center mb-12 md:mb-16 ${mounted && lang === "ar" ? "rtl" : ""}`}>
             <Badge className="mb-4 bg-white/10 text-white border border-white/20 font-montserrat-semibold px-4 py-1.5 backdrop-blur-sm">
-              {t("statsSectionBadge")}
+              {tl("statsSectionBadge")}
             </Badge>
             <h2 className="font-montserrat-bold text-2xl md:text-[36px] text-white leading-tight">
-              {t("statsSectionTitle")}
+              {tl("statsSectionTitle")}
             </h2>
           </div>
         </ScrollReveal>
@@ -88,7 +93,7 @@ export function StatsSection() {
                   <Counter end={endValue} suffix={suffix} />
                 </div>
                 <p className="font-montserrat-regular text-sm md:text-base text-white/75 leading-snug">
-                  {t(labelKey)}
+                  {tl(labelKey)}
                 </p>
               </div>
             </ScrollReveal>

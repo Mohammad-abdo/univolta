@@ -9,18 +9,20 @@ import { t, getLanguage, type Language } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 
 export function Footer() {
-  const [currentLang, setCurrentLang] = useState<Language>(getLanguage());
+  const [currentLang, setCurrentLang] = useState<Language>("en");
+  const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
-  const isRTL = currentLang === "ar";
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const lang = getLanguage();
-      if (lang !== currentLang) setCurrentLang(lang);
-    }, 100);
-    return () => clearInterval(interval);
-  }, [currentLang]);
+    setMounted(true);
+    setCurrentLang(getLanguage());
+    const id = setInterval(() => setCurrentLang(getLanguage()), 300);
+    return () => clearInterval(id);
+  }, []);
+
+  const isRTL = mounted && currentLang === "ar";
+  const tl = (key: string) => t(key, currentLang);
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,11 +34,11 @@ export function Footer() {
   };
 
   const quickLinks = [
-    { name: t("home"), href: "/" },
-    { name: t("universities"), href: "/universities" },
-    { name: t("faq"), href: "/faq" },
-    { name: t("contact"), href: "/contact" },
-    { name: t("termsPolicy"), href: "/terms" },
+    { name: tl("home"), href: "/" },
+    { name: tl("universities"), href: "/universities" },
+    { name: tl("faq"), href: "/faq" },
+    { name: tl("contact"), href: "/contact" },
+    { name: tl("termsPolicy"), href: "/terms" },
   ];
 
   const programs = ["Engineering", "Business", "Medicine", "Law", "Computer Science", "Architecture"];
@@ -68,9 +70,9 @@ export function Footer() {
             <div className={isRTL ? "text-right" : ""}>
               <div className="flex items-center gap-2 mb-1">
                 <GraduationCap className="w-5 h-5 text-[#75d3f7]" />
-                <h3 className="font-montserrat-bold text-lg text-white">Stay in the Loop</h3>
+                <h3 className="font-montserrat-bold text-lg text-white">{tl("footerNewsletterTitle")}</h3>
               </div>
-              <p className="font-montserrat-regular text-white/55 text-sm">Get the latest university news and scholarship opportunities</p>
+              <p className="font-montserrat-regular text-white/55 text-sm">{tl("footerNewsletterSubtitle")}</p>
             </div>
             <form
               onSubmit={handleSubscribe}
@@ -80,14 +82,14 @@ export function Footer() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder={tl("footerEmailPlaceholder")}
                 className="flex-1 md:w-72 bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white placeholder:text-white/40 text-sm focus:outline-none focus:border-[#75d3f7] transition-colors"
               />
               <Button
                 type="submit"
                 className="bg-[#5260ce] hover:bg-[#4350b0] text-white px-5 rounded-xl text-sm font-montserrat-semibold shrink-0 transition-all"
               >
-                {subscribed ? "✓ Subscribed!" : <><Send className="w-4 h-4 mr-1 inline" />Subscribe</>}
+                {subscribed ? tl("footerSubscribedBtn") : <><Send className="w-4 h-4 mr-1 inline" />{tl("footerSubscribeBtn")}</>}
               </Button>
             </form>
           </div>
@@ -110,7 +112,7 @@ export function Footer() {
               />
             </div>
             <p className="font-montserrat-regular text-white/55 text-sm leading-relaxed">
-              {t("footerDescription")}
+              {tl("footerDescription")}
             </p>
 
             {/* Social icons */}
@@ -131,7 +133,7 @@ export function Footer() {
           {/* Column 2: Quick Links */}
           <div className={isRTL ? "text-right" : ""}>
             <h4 className="font-montserrat-bold text-white mb-5 text-sm uppercase tracking-wider opacity-80">
-              {t("quickLinks")}
+              {tl("quickLinks")}
             </h4>
             <ul className="space-y-3">
               {quickLinks.map((link) => (
@@ -147,7 +149,7 @@ export function Footer() {
           {/* Column 3: Programs */}
           <div className={isRTL ? "text-right" : ""}>
             <h4 className="font-montserrat-bold text-white mb-5 text-sm uppercase tracking-wider opacity-80">
-              Programs
+              {tl("programs")}
             </h4>
             <ul className="space-y-3">
               {programs.map((p) => (
@@ -163,7 +165,7 @@ export function Footer() {
           {/* Column 4: Contact */}
           <div className={isRTL ? "text-right" : ""}>
             <h4 className="font-montserrat-bold text-white mb-5 text-sm uppercase tracking-wider opacity-80">
-              {t("contactInformation")}
+              {tl("contactInformation")}
             </h4>
             <div className="space-y-4">
               {[
@@ -187,9 +189,9 @@ export function Footer() {
       {/* Bottom Bar */}
       <div className="relative border-t border-white/10 py-5">
         <div className={`max-w-[1280px] mx-auto px-4 md:px-5 flex flex-col md:flex-row justify-between items-center gap-2 ${isRTL ? "md:flex-row-reverse" : ""}`}>
-          <p className="text-white/40 text-xs font-montserrat-regular">{t("allRightsReserved")}</p>
+          <p className="text-white/40 text-xs font-montserrat-regular">{tl("allRightsReserved")}</p>
           <p className="text-white/40 text-xs font-montserrat-regular">
-            {t("poweredBy")}{" "}
+            {tl("poweredBy")}{" "}
             <span className="text-[#75d3f7] font-montserrat-bold">Qeematech</span>
           </p>
         </div>

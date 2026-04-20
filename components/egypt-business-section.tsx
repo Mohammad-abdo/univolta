@@ -24,6 +24,7 @@ export function EgyptBusinessSection() {
   }, []);
 
   const isRTL = lang === "ar";
+  const tl = (key: string) => t(key, lang);
 
   return (
     <section className="relative py-14 md:py-20 bg-gradient-to-b from-[#f9fafe] via-white to-[#f9fafe] overflow-hidden">
@@ -39,13 +40,13 @@ export function EgyptBusinessSection() {
         <ScrollReveal direction="up">
           <div className="text-center max-w-3xl mx-auto mb-10 md:mb-14">
             <Badge className="mb-4 bg-[rgba(82,96,206,0.1)] text-[#5260ce] border border-[#5260ce]/20 font-montserrat-semibold px-4 py-1.5">
-              {t("businessModelBadge")}
+              {tl("businessModelBadge")}
             </Badge>
             <h2 className="font-montserrat-bold text-2xl md:text-[34px] text-[#121c67] leading-tight section-title-accent pb-1 inline-block">
-              {t("businessModelTitle")}
+              {tl("businessModelTitle")}
             </h2>
             <p className="mt-4 text-[#65666f] font-montserrat-regular text-base md:text-lg leading-relaxed">
-              {t("businessModelLead")}
+              {tl("businessModelLead")}
             </p>
           </div>
         </ScrollReveal>
@@ -58,7 +59,7 @@ export function EgyptBusinessSection() {
                   <Icon className="w-6 h-6 text-[#5260ce]" />
                 </div>
                 <p className="font-montserrat-regular text-sm md:text-[15px] text-[#2e2e2e] leading-relaxed">
-                  {t(key)}
+                  {tl(key)}
                 </p>
               </div>
             </ScrollReveal>
@@ -77,7 +78,7 @@ export function EgyptBusinessSection() {
                 href="/universities?country=Egypt"
                 className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
               >
-                {t("businessModelCta")}
+                {tl("businessModelCta")}
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
               </Link>
             </Button>
@@ -86,7 +87,7 @@ export function EgyptBusinessSection() {
               className="border-[#5260ce] text-[#5260ce] hover:bg-[#5260ce]/5 font-montserrat-semibold h-12 px-8 rounded-xl"
               asChild
             >
-              <Link href="/contact">{t("contact")}</Link>
+              <Link href="/contact">{tl("contact")}</Link>
             </Button>
           </div>
         </ScrollReveal>

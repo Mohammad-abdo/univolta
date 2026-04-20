@@ -8,41 +8,42 @@ import { useState, useEffect } from "react";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 
 export function HowItWorksSection() {
-  const [currentLang, setCurrentLang] = useState<Language>(getLanguage());
+  const [currentLang, setCurrentLang] = useState<Language>("en");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const lang = getLanguage();
-      if (lang !== currentLang) setCurrentLang(lang);
-    }, 100);
+    setMounted(true);
+    setCurrentLang(getLanguage());
+    const interval = setInterval(() => setCurrentLang(getLanguage()), 300);
     return () => clearInterval(interval);
-  }, [currentLang]);
+  }, []);
 
-  const isRTL = currentLang === "ar";
+  const isRTL = mounted && currentLang === "ar";
+  const tl = (key: string) => t(key, currentLang);
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
   const steps = [
     {
       number: "01",
       icon: Search,
-      title: t("exploreChoose"),
-      description: t("exploreChooseDesc"),
+      title: tl("exploreChoose"),
+      description: tl("exploreChooseDesc"),
       color: "#5260ce",
       bg: "rgba(82,96,206,0.08)",
     },
     {
       number: "02",
       icon: FileText,
-      title: t("applyOnline"),
-      description: t("applyOnlineDesc"),
+      title: tl("applyOnline"),
+      description: tl("applyOnlineDesc"),
       color: "#75d3f7",
       bg: "rgba(117,211,247,0.12)",
     },
     {
       number: "03",
       icon: Headphones,
-      title: t("getSupport"),
-      description: t("getSupportDesc"),
+      title: tl("getSupport"),
+      description: tl("getSupportDesc"),
       color: "#121c67",
       bg: "rgba(18,28,103,0.08)",
     },
@@ -73,7 +74,7 @@ export function HowItWorksSection() {
           <ScrollReveal direction={isRTL ? "right" : "left"} className={`space-y-4 md:space-y-6 ${isRTL ? "lg:order-2 text-right" : ""}`}>
             <div>
               <p className="text-sm md:text-base font-montserrat-regular text-[#5260ce] mb-2">
-                {t("howItWorks")}
+                {tl("howItWorks")}
               </p>
               <div className="relative w-[83px] h-[10px] mb-4 inline-block">
                 <Image src={figmaAssets.vector5} alt="" fill className="object-contain" unoptimized />
@@ -81,10 +82,10 @@ export function HowItWorksSection() {
             </div>
 
             <h2 className="text-2xl md:text-[34px] font-montserrat-bold text-[#121c67] leading-tight">
-              {t("howToApply")}
+              {tl("howToApply")}
             </h2>
             <p className="text-base md:text-[18px] font-montserrat-regular text-[#7c7b7c] leading-relaxed max-w-full md:max-w-[269px]">
-              {t("howToApplyDescription")}
+              {tl("howToApplyDescription")}
             </p>
 
             {/* Step count badge */}
@@ -95,7 +96,7 @@ export function HowItWorksSection() {
                 ))}
               </div>
               <span className="font-montserrat-semibold text-sm text-[#121c67]">
-                {steps.length} {t("stepsToApply")}
+                {steps.length} {tl("stepsToApply")}
               </span>
             </div>
 
@@ -168,7 +169,7 @@ export function HowItWorksSection() {
                       </p>
                       {!isLast && (
                         <div className={`flex items-center gap-1 mt-3 ${isRTL ? "flex-row-reverse justify-end" : ""}`}>
-                          <span className="text-xs font-montserrat-light text-[#8b8c9a]">{t("thenNext")}</span>
+                          <span className="text-xs font-montserrat-light text-[#8b8c9a]">{tl("thenNext")}</span>
                           <ArrowIcon className="w-3 h-3 text-[#8b8c9a]" />
                         </div>
                       )}
