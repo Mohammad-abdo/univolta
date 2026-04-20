@@ -29,12 +29,16 @@ export function WhyUsSection() {
   return (
     <section className="py-16 md:py-24 bg-white overflow-hidden">
       <div className="max-w-[1280px] mx-auto px-4 md:px-5">
-        <div className={`grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center`}>
+        {/*
+          Layout is FIXED: cards always LEFT column, text always RIGHT column.
+          Only text-alignment changes per language (text-left for EN, text-right for AR).
+        */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
-          {/* ── Left: heading + description ── */}
+          {/* ── Left: heading + description (always right column on desktop) ── */}
           <ScrollReveal
-            direction={isRTL ? "right" : "left"}
-            className={isRTL ? "text-right lg:order-2" : ""}
+            direction="right"
+            className={`lg:order-2 ${isRTL ? "text-right" : "text-left"}`}
           >
             <p className="text-sm md:text-base font-montserrat-regular text-[#5260ce] mb-2">
               {tl("whyUnivolta")}
@@ -59,8 +63,8 @@ export function WhyUsSection() {
             </div>
           </ScrollReveal>
 
-          {/* ── Right: 2×2 feature cards ── */}
-          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5 ${isRTL ? "lg:order-1" : ""}`}>
+          {/* ── Right: 2×2 feature cards (always left column on desktop) ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5 lg:order-1">
             {CARDS.map(({ icon: Icon, titleKey, descKey }, i) => (
               <ScrollReveal key={titleKey} direction="up" delay={i * 90}>
                 <div

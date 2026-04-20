@@ -55,8 +55,7 @@ export function HowItWorksSection() {
       <div
         className="absolute pointer-events-none"
         style={{
-          right: isRTL ? "auto" : "-5%",
-          left: isRTL ? "-5%" : "auto",
+          right: "-5%",
           bottom: "-10%",
           width: "500px",
           height: "500px",
@@ -68,10 +67,14 @@ export function HowItWorksSection() {
       />
 
       <div className="max-w-[1440px] mx-auto px-4 md:px-5">
-        <div className={`grid lg:grid-cols-2 gap-8 md:gap-12 items-start ${isRTL ? "lg:grid-cols-2" : ""}`}>
+        {/*
+          Layout FIXED: steps always in LEFT column (order-1), intro always in RIGHT column (order-2).
+          Matches Arabic design. Only text-alignment changes per language.
+        */}
+        <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-start">
 
-          {/* ── Left / Intro Content ── */}
-          <ScrollReveal direction={isRTL ? "right" : "left"} className={`space-y-4 md:space-y-6 ${isRTL ? "lg:order-2 text-right" : ""}`}>
+          {/* ── Intro Content — always RIGHT column ── */}
+          <ScrollReveal direction="right" className={`space-y-4 md:space-y-6 lg:order-2 ${isRTL ? "text-right" : "text-left"}`}>
             <div>
               <p className="text-sm md:text-base font-montserrat-regular text-[#5260ce] mb-2">
                 {tl("howItWorks")}
@@ -106,8 +109,8 @@ export function HowItWorksSection() {
             </div>
           </ScrollReveal>
 
-          {/* ── Right / Steps ── */}
-          <div className={`grid gap-0 ${isRTL ? "lg:order-1" : ""}`}>
+          {/* ── Steps — always LEFT column ── */}
+          <div className="grid gap-0 lg:order-1">
             {steps.map((step, index) => {
               const IconComponent = step.icon;
               const isLast = index === steps.length - 1;
