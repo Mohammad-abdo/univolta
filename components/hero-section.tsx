@@ -11,11 +11,13 @@ import { t, getLanguage, type Language } from "@/lib/i18n";
 import { RotatingText } from "@/components/ui/rotating-text";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 
+/* Three.js background loaded only on the client */
 const ParticleField = dynamic(
   () => import("@/components/ui/particle-field").then((m) => m.ParticleField),
   { ssr: false }
 );
 
+/* ── Slide data ─────────────────────────────────────────────────────────── */
 const SLIDES = [
   { image: "https://images.unsplash.com/photo-1562774053-701939374585?w=1600&q=80", badgeKey: "heroSlideBadge1" as const },
   { image: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1600&q=80", badgeKey: "heroSlideBadge2" as const },
@@ -25,23 +27,23 @@ const SLIDES = [
 
 const INTERVAL_MS = 5500;
 
+/* ── Component ──────────────────────────────────────────────────────────── */
 export function HeroSection() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentLang, setCurrentLang] = useState<Language>("en");
-  const [mounted, setMounted] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [prevSlide, setPrevSlide] = useState<number | null>(null);
-  const [paused, setPaused] = useState(false);
+  const [searchQuery,  setSearchQuery]  = useState("");
+  /* Always start with "en" → server and first client render match (hydration-safe) */
+  const [currentLang,  setCurrentLang]  = useState<Language>("en");
+  const [mounted,      setMounted]      = useState(false);
+  const [activeSlide,  setActiveSlide]  = useState(0);
+  const [prevSlide,    setPrevSlide]    = useState<number | null>(null);
+  const [paused,       setPaused]       = useState(false);
   const router = useRouter();
 
-  /*
-   * isRTL is ONLY used for text alignment & inline-flex ordering.
-   * The visual layout (image side, gradient direction, positions) is
-   * IDENTICAL for both languages — English layout used as the base.
-   */
+  /* isRTL is false until mounted → server HTML == initial client HTML */
   const isRTL = mounted && currentLang === "ar";
+  /* tl() passes React-state lang so every call is consistent with the server render */
   const tl = (key: string) => t(key, currentLang);
 
+  /* language sync */
   useEffect(() => {
     setMounted(true);
     setCurrentLang(getLanguage());
@@ -52,6 +54,7 @@ export function HeroSection() {
     return () => clearInterval(id);
   }, [currentLang]);
 
+  /* auto-play */
   const goTo = useCallback(
     (idx: number) => {
       setPrevSlide(activeSlide);
@@ -73,10 +76,19 @@ export function HeroSection() {
 
   const rotatingWords = [tl("heroWord1"), tl("heroWord2"), tl("heroWord3")];
   const stats = [
-    { target: 150, suffix: "+", label: tl("studentsStatLabel") },
-    { target: 50,  suffix: "+", label: tl("universitiesStatLabel") },
-    { target: 30,  suffix: "+", label: tl("heroThirdStatLabel") },
+    { target: 150, suffix: "+", label: tl("studentsStatLabel")      },
+    { target: 50,  suffix: "+", label: tl("universitiesStatLabel")  },
+    { target: 30,  suffix: "+", label: tl("heroThirdStatLabel")     },
   ];
+
+  /* ── Positional helpers — mirrors layout for RTL ──────────────────────── */
+  const side   = (lVal: string, rVal: string) => isRTL ? rVal : lVal; // left / right
+  const padSide = isRTL
+    ? { paddingLeft:  "clamp(0px, 52%, 760px)" }
+    : { paddingRight: "clamp(0px, 42%, 640px)" };
+  const gradient = isRTL
+    ? "linear-gradient(to left,  white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)"
+    : "linear-gradient(to right, white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)";
 
   return (
     <section
@@ -84,7 +96,7 @@ export function HeroSection() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* ── SLIDESHOW BACKGROUNDS ── */}
+      {/* ── BACKGROUND SLIDESHOW ─────────────────────────────────────────── */}
       {SLIDES.map((slide, idx) => {
         const isActive = idx === activeSlide;
         const wasPrev  = idx === prevSlide;
@@ -103,35 +115,25 @@ export function HeroSection() {
               className={`object-cover ${isActive ? "slide-ken" : ""}`}
               unoptimized
             />
-            {/*
-              Gradient is always "to right":
-              white on the LEFT (text content side), transparent on the RIGHT (image panel side).
-              Same direction in both English and Arabic — layout is fixed.
-            */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(to right, white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)",
-              }}
-            />
+            {/* White gradient on the text side, transparent on the image-panel side */}
+            <div className="absolute inset-0" style={{ background: gradient }} />
             <div className="absolute inset-0 bg-gradient-to-t from-white/60 to-transparent" />
           </div>
         );
       })}
 
-      {/* ── Particle background ── */}
+      {/* ── THREE.JS PARTICLE FIELD (z-2) ────────────────────────────────── */}
       <div className="absolute inset-0 z-[2] pointer-events-none">
         <ParticleField />
       </div>
 
-      {/* ── Soft radial glow — always LEFT side (where content lives) ── */}
+      {/* ── SOFT RADIAL GLOW ─────────────────────────────────────────────── */}
       <div
         className="absolute pointer-events-none z-[2]"
         style={{
-          left: "-10%",
-          top: "10%",
-          width: "600px",
+          [isRTL ? "right" : "left"]: "-10%",
+          top:    "10%",
+          width:  "600px",
           height: "600px",
           borderRadius: "50%",
           background: "radial-gradient(circle, rgba(82,96,206,0.10) 0%, transparent 70%)",
@@ -140,40 +142,40 @@ export function HeroSection() {
         aria-hidden="true"
       />
 
-      {/* ── MAIN CONTENT ── */}
+      {/* ── MAIN CONTENT CONTAINER (z-3) ─────────────────────────────────── */}
       <div className="max-w-[1440px] mx-auto relative h-full px-4 md:px-5 z-[3]">
 
-        {/* ── Desktop Decorative Elements — always RIGHT side, same for both languages ── */}
+        {/* ═══ Desktop Decorative Panel ═══════════════════════════════════ */}
         <div className="hidden lg:block">
 
           {/* Graduation cap */}
-          <div className="absolute left-[671px] top-[202px] w-[100px] h-[79px] flex items-center justify-center animate-float">
+          <div className={`absolute ${side("left-[671px]", "right-[671px]")} top-[202px] w-[100px] h-[79px] flex items-center justify-center animate-float`}>
             <div className="relative w-full h-full rotate-180 scale-y-[-100%]">
               <Image src={figmaAssets.heroGraduationCap} alt="" fill className="object-contain" unoptimized />
             </div>
           </div>
 
-          {/* Vector underline accent */}
-          <div className="absolute left-[80px] top-[312px] w-[141px] h-[10px]">
+          {/* Vector underline */}
+          <div className={`absolute ${side("left-[80px]", "right-[80px]")} top-[312px] w-[141px] h-[10px]`}>
             <div className="absolute inset-[-30%_-2.13%_-30.01%_-2.13%]">
               <Image src={figmaAssets.heroVector} alt="" fill className="object-contain" unoptimized />
             </div>
           </div>
 
-          {/* Hero frame */}
-          <div className="absolute left-[825px] top-[236px] w-[481px] h-[481px] z-[4]">
+          {/* Circular frame overlay */}
+          <div className={`absolute ${side("left-[825px]", "right-[825px]")} top-[236px] w-[481px] h-[481px] z-[4]`}>
             <Image src={figmaAssets.heroFrame} alt="" fill className="object-contain" unoptimized />
           </div>
 
-          {/* Masked slide images */}
-          <div className="absolute left-[824px] top-[149px] w-[481px] h-[580px] overflow-hidden z-[4]">
+          {/* Masked slide-image panel */}
+          <div className={`absolute ${side("left-[824px]", "right-[824px]")} top-[149px] w-[481px] h-[580px] overflow-hidden z-[4]`}>
             <div
-              className="absolute inset-0 transition-all duration-1000"
+              className="absolute inset-0"
               style={{
-                maskImage: `url('${figmaAssets.heroMainImageMask}')`,
-                maskSize: "481px 614px",
+                maskImage:    `url('${figmaAssets.heroMainImageMask}')`,
+                maskSize:     "481px 614px",
                 maskPosition: "-0.08px -45.304px",
-                maskRepeat: "no-repeat",
+                maskRepeat:   "no-repeat",
               }}
             >
               {SLIDES.map((slide, idx) => (
@@ -192,6 +194,7 @@ export function HeroSection() {
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#121c67]/10" />
                 </div>
               ))}
+              {/* Static fallback (invisible) */}
               <Image
                 src={figmaAssets.heroMainImage}
                 alt=""
@@ -203,17 +206,17 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Country Flag bubbles */}
+          {/* Country flag bubbles */}
           {[
-            { src: figmaAssets.flagFrance,  id: "f1", pos: "left-[1114px]", top: "top-[155px]",  delay: "0s"   },
-            { src: figmaAssets.flagUSA,     id: "f2", pos: "left-[816px]",  top: "top-[315px]",  delay: "0.8s" },
-            { src: figmaAssets.flagCanada,  id: "f3", pos: "left-[1210px]", top: "top-[281px]",  delay: "1.5s" },
-            { src: figmaAssets.flagUK,      id: "f4", pos: "left-[1271px]", top: "top-[418px]",  delay: "0.4s" },
-            { src: figmaAssets.flagGermany, id: "f5", pos: "left-[781px]",  top: "top-[470px]",  delay: "1.2s" },
-          ].map(({ src, id, pos, top, delay }) => (
+            { src: figmaAssets.flagFrance,  id: "f1", lp: "left-[1114px]", rp: "right-[1114px]", top: "top-[155px]",  delay: "0s"   },
+            { src: figmaAssets.flagUSA,     id: "f2", lp: "left-[816px]",  rp: "right-[816px]",  top: "top-[315px]",  delay: "0.8s" },
+            { src: figmaAssets.flagCanada,  id: "f3", lp: "left-[1210px]", rp: "right-[1210px]", top: "top-[281px]",  delay: "1.5s" },
+            { src: figmaAssets.flagUK,      id: "f4", lp: "left-[1271px]", rp: "right-[1271px]", top: "top-[418px]",  delay: "0.4s" },
+            { src: figmaAssets.flagGermany, id: "f5", lp: "left-[781px]",  rp: "right-[781px]",  top: "top-[470px]",  delay: "1.2s" },
+          ].map(({ src, id, lp, rp, top, delay }) => (
             <div
               key={id}
-              className={`absolute ${pos} ${top} w-[69px] h-[70px] bg-white rounded-[110px] p-3 flex items-center justify-center shadow-lg z-[5]`}
+              className={`absolute ${side(lp, rp)} ${top} w-[69px] h-[70px] bg-white rounded-[110px] p-3 flex items-center justify-center shadow-lg z-[5]`}
               style={{ animation: `float-gentle 5s ease-in-out infinite ${delay}` }}
             >
               <div className="relative w-11 h-11">
@@ -223,20 +226,22 @@ export function HeroSection() {
           ))}
 
           {/* Sparkle decorations */}
-          <div className="absolute left-[1124px] top-[597px] w-[214px] h-[95px] overflow-hidden z-[4]">
+          <div className={`absolute ${side("left-[1124px]", "right-[1124px]")} top-[597px] w-[214px] h-[95px] overflow-hidden z-[4]`}>
             <div className="absolute inset-0 rotate-[193.445deg]">
               <div className="relative w-full h-full">
                 <Image src={figmaAssets.heroVector3} alt="" fill className="object-contain" unoptimized />
               </div>
             </div>
           </div>
-          <div className="absolute left-[864px] top-[199px] w-[95px] h-[95px] overflow-hidden z-[4]">
-            <div className="absolute left-[15px] top-[5px] w-[66px] h-[66px]">
+
+          <div className={`absolute ${side("left-[864px]", "right-[864px]")} top-[199px] w-[95px] h-[95px] overflow-hidden z-[4]`}>
+            <div className={`absolute ${side("left-[15px]", "right-[15px]")} top-[5px] w-[66px] h-[66px]`}>
               <Image src={figmaAssets.heroSparkle} alt="" fill className="object-contain" unoptimized />
             </div>
           </div>
-          <div className="absolute left-[889px] top-[631px] w-[111px] h-[102px] overflow-hidden z-[4]">
-            <div className="absolute left-1/2 -translate-x-1/2 top-[9px] w-[84px] h-[83px]">
+
+          <div className={`absolute ${side("left-[889px]", "right-[889px]")} top-[631px] w-[111px] h-[102px] overflow-hidden z-[4]`}>
+            <div className={`absolute ${isRTL ? "right-1/2 translate-x-1/2" : "left-1/2 -translate-x-1/2"} top-[9px] w-[84px] h-[83px]`}>
               <div className="absolute inset-[20.04%_20.15%]">
                 <Image src={figmaAssets.heroStar} alt="" fill className="object-contain" unoptimized />
               </div>
@@ -244,24 +249,24 @@ export function HeroSection() {
           </div>
 
           {/* Slide indicator badge */}
-          <div className="absolute z-[6] left-[828px] top-[150px]">
+          <div className={`absolute z-[6] ${side("left-[828px]", "right-[828px]")} top-[150px]`}>
             <div className="bg-white/90 backdrop-blur-md text-[#5260ce] text-xs font-montserrat-semibold px-3 py-1.5 rounded-full shadow-md border border-[#5260ce]/10 animate-fade-up">
               {tl(SLIDES[activeSlide].badgeKey)}
             </div>
           </div>
         </div>
 
+        {/* ═══ TEXT CONTENT ═══════════════════════════════════════════════ */}
         {/*
-          ── TEXT CONTENT ──
-          Always in the LEFT portion of the screen (paddingRight pushes it away from the image).
-          isRTL only changes text-alignment and inline-flex ordering — NOT layout positions.
+          Content lives on the TEXT side (left in LTR, right in RTL).
+          padSide pushes it away from the decorative image panel.
+          isRTL controls text-alignment + inline flex ordering only.
         */}
         <div
           className={`relative z-[5] pt-8 md:pt-[249px] pb-12 md:pb-0 ${isRTL ? "text-right" : "text-left"}`}
-          style={{ paddingRight: "clamp(0px, 42%, 640px)" }}
+          style={padSide}
         >
-
-          {/* Discovery Badge */}
+          {/* Discovery badge */}
           <div className={`inline-flex items-center gap-2 glass-badge rounded-full px-4 py-1.5 mb-5 ${isRTL ? "flex-row-reverse" : ""}`}>
             <span className="text-base" aria-hidden="true">🌍</span>
             <span className="font-montserrat-regular text-sm text-[#65666f]">
@@ -280,10 +285,12 @@ export function HeroSection() {
             {tl("connectWithTopUniversities")}
           </p>
 
-          {/* Search Bar */}
+          {/* ── Search card ── */}
           <div className="bg-white/95 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-[0px_8px_48px_0px_rgba(82,96,206,0.12)] p-4 flex flex-col gap-4 w-full border border-[#5260ce]/8">
+
+            {/* Input + button */}
             <div className={`flex flex-col sm:flex-row gap-3 md:gap-5 items-stretch sm:items-center ${isRTL ? "sm:flex-row-reverse" : ""}`}>
-              <div className={`flex-1 flex items-center gap-2 md:gap-3 px-3 md:px-3.5 py-2.5 md:py-3.5 bg-gray-50 rounded-lg md:rounded-none ${isRTL ? "flex-row-reverse" : ""}`}>
+              <div className={`flex-1 flex items-center gap-2 md:gap-3 px-3 md:px-3.5 py-2.5 md:py-3.5 bg-gray-50 rounded-lg ${isRTL ? "flex-row-reverse" : ""}`}>
                 <Search className="w-5 h-5 md:w-6 md:h-6 text-[#8b8c9a] shrink-0" />
                 <input
                   type="text"
@@ -291,42 +298,50 @@ export function HeroSection() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      if (searchQuery.trim()) router.push(`/universities?search=${encodeURIComponent(searchQuery)}`);
-                      else router.push("/universities");
-                    }
+                    if (e.key !== "Enter") return;
+                    router.push(
+                      searchQuery.trim()
+                        ? `/universities?search=${encodeURIComponent(searchQuery)}`
+                        : "/universities"
+                    );
                   }}
                   className="flex-1 font-montserrat-light text-sm md:text-base text-[#8b8c9a] placeholder:text-[#8b8c9a] focus:outline-none bg-transparent"
                   dir={isRTL ? "rtl" : "ltr"}
                 />
               </div>
               <Button
-                onClick={() => {
-                  if (searchQuery.trim()) router.push(`/universities?search=${encodeURIComponent(searchQuery)}`);
-                  else router.push("/universities");
-                }}
+                onClick={() =>
+                  router.push(
+                    searchQuery.trim()
+                      ? `/universities?search=${encodeURIComponent(searchQuery)}`
+                      : "/universities"
+                  )
+                }
                 className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm md:text-base h-[48px] md:h-[52px] w-full sm:w-auto sm:min-w-[124px] rounded-lg md:rounded-xl shrink-0 transition-all duration-300 hover:shadow-[0_8px_24px_rgba(82,96,206,0.4)] hover:-translate-y-0.5"
               >
                 {tl("search")}
               </Button>
             </div>
 
-            {/* Quick Filters */}
+            {/* Quick filters */}
             <div className={`flex gap-1.5 items-center flex-wrap ${isRTL ? "flex-row-reverse" : ""}`}>
               {[
-                { key: "filterUSA",        value: "USA",         type: "country"        },
-                { key: "filterCanada",      value: "Canada",      type: "country"        },
-                { key: "filterMexico",      value: "Mexico",      type: "country"        },
-                { key: "filterMedicine",    value: "Medicine",    type: "specialization" },
-                { key: "filterEngineering", value: "Engineering", type: "specialization" },
-                { key: "filterEnglish",     value: "English",     type: "language"       },
+                { key: "filterUSA",         value: "USA",         type: "country"        },
+                { key: "filterCanada",       value: "Canada",      type: "country"        },
+                { key: "filterMexico",       value: "Mexico",      type: "country"        },
+                { key: "filterMedicine",     value: "Medicine",    type: "specialization" },
+                { key: "filterEngineering",  value: "Engineering", type: "specialization" },
+                { key: "filterEnglish",      value: "English",     type: "language"       },
               ].map((tag) => (
                 <button
                   key={tag.key}
                   onClick={() => {
-                    if (tag.type === "country") router.push(`/universities?country=${encodeURIComponent(tag.value)}`);
-                    else if (tag.type === "language") router.push(`/universities?language=${encodeURIComponent(tag.value)}`);
-                    else router.push(`/universities?specialization=${encodeURIComponent(tag.value)}`);
+                    const param = tag.type === "country"
+                      ? `country=${encodeURIComponent(tag.value)}`
+                      : tag.type === "language"
+                        ? `language=${encodeURIComponent(tag.value)}`
+                        : `specialization=${encodeURIComponent(tag.value)}`;
+                    router.push(`/universities?${param}`);
                   }}
                   className="px-2 py-1 text-sm md:text-base font-montserrat-light text-[#040404] bg-[#e0e6f1] rounded-[50px] hover:bg-[#5260ce] hover:text-white transition-all duration-200"
                 >
@@ -335,7 +350,7 @@ export function HeroSection() {
               ))}
             </div>
 
-            {/* Animated Stats Row */}
+            {/* Stats row */}
             <div className={`flex items-center pt-3 border-t border-gray-100 ${isRTL ? "flex-row-reverse" : ""}`}>
               {stats.map((stat, i) => (
                 <div key={stat.label} className="flex items-center flex-1">
@@ -353,13 +368,15 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Student Avatars */}
+          {/* Student avatars + caption */}
           <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-6 md:mt-7 ${isRTL ? "sm:flex-row-reverse" : ""}`}>
-            <div className="flex items-center pr-0 sm:pr-[26px]">
+            <div className={`flex items-center ${isRTL ? "pl-0 sm:pl-[26px]" : "pr-0 sm:pr-[26px]"}`}>
               {studentAvatars.map((avatar, index) => (
                 <div
                   key={index}
-                  className={`relative w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-white overflow-hidden ${index > 0 ? "-ml-4 md:-ml-[26px]" : ""}`}
+                  className={`relative w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-white overflow-hidden ${
+                    index > 0 ? (isRTL ? "-mr-4 md:-mr-[26px]" : "-ml-4 md:-ml-[26px]") : ""
+                  }`}
                 >
                   <div className="absolute inset-0 bg-[#d9d9d9] rounded-full" />
                   <Image
@@ -372,16 +389,14 @@ export function HeroSection() {
                 </div>
               ))}
             </div>
-            <div className="flex items-center py-2.5">
-              <p className="font-montserrat-regular text-sm md:text-[18px] leading-[1.4] text-[#2e2e2e] max-w-full md:max-w-[498px]">
-                {tl("studentsInUniversities")}
-              </p>
-            </div>
+            <p className="font-montserrat-regular text-sm md:text-[18px] leading-[1.4] text-[#2e2e2e] max-w-full md:max-w-[498px] py-2.5">
+              {tl("studentsInUniversities")}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Progress bar */}
+      {/* ── Progress bar ─────────────────────────────────────────────────── */}
       <div className="absolute bottom-0 left-0 right-0 h-[3px] z-[6] bg-gray-100/40">
         <div
           key={activeSlide}
