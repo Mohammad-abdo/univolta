@@ -100,7 +100,8 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
    * isRTL only controls text-alignment and inline flex direction — NOT positions.
    */
   const gradient = "linear-gradient(to right, white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)";
-  const padSide  = { paddingRight: "clamp(0px, 42%, 640px)" };
+  /* content ends at ~58% leaving ~3% gap before the circle at 61.2% */
+  const padSide  = { paddingRight: "clamp(0px, 45%, 660px)" };
 
   return (
     <section
@@ -157,79 +158,70 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
       {/* ── MAIN CONTENT CONTAINER (z-3) ─────────────────────────────────── */}
       <div className="max-w-[1440px] mx-auto relative h-full px-4 md:px-5 z-[3]">
 
-        {/* ═══ Desktop Decorative Panel ═══════════════════════════════════ */}
+        {/* ═══ Desktop Decorative Panel ═══════════════════════════════════
+             All left positions are % of the 1440px reference width so the
+             panel scales correctly on every viewport ≥ 1024 px.
+             Tops stay in px because the section height is fixed at 793px.
+        ════════════════════════════════════════════════════════════════ */}
         <div className="hidden lg:block">
 
-          {/* Graduation cap */}
-          <div className="absolute left-[671px] top-[202px] w-[100px] h-[79px] flex items-center justify-center animate-float">
-            <div className="relative w-full h-full rotate-180 scale-y-[-100%]">
+          {/* Graduation cap — shifted +4% right for breathing room */}
+          <div
+            className="absolute w-[100px] h-[79px] flex items-center justify-center animate-float z-[4]"
+            style={{ left: "50.6%", top: 202 }}
+          >
+            <div className="relative w-full h-full rotate-180 scale-y-[-1]">
               <Image src={figmaAssets.heroGraduationCap} alt="" fill className="object-contain" unoptimized />
             </div>
           </div>
 
-          {/* Vector underline */}
-          <div className="absolute left-[80px] top-[312px] w-[141px] h-[10px]">
+          {/* Vector underline — inside text column */}
+          <div className="absolute top-[312px] w-[141px] h-[10px] z-[4]" style={{ left: "5.56%" }}>
             <div className="absolute inset-[-30%_-2.13%_-30.01%_-2.13%]">
               <Image src={figmaAssets.heroVector} alt="" fill className="object-contain" unoptimized />
             </div>
           </div>
 
-          {/* Circular frame overlay */}
-          <div className="absolute left-[825px] top-[236px] w-[481px] h-[481px] z-[4]">
-            <Image src={figmaAssets.heroFrame} alt="" fill className="object-contain" unoptimized />
+          {/* Hero banner — perfect 360° circle (square clip + rounded-full) */}
+          <div
+            className="absolute z-[5] rounded-full overflow-hidden bg-[#e8ecf7] shadow-[0_16px_48px_rgba(18,28,103,0.22)] ring-[5px] ring-white"
+            style={{
+              left:   "61.2%",
+              top:    200,
+              width:  "min(481px, 40vw)",
+              height: "min(481px, 40vw)",
+            }}
+          >
+            {slides.map((slide, idx) => (
+              <div
+                key={slide.image}
+                className={`absolute inset-0 transition-opacity duration-1000 ${activeSlide === idx ? "opacity-100" : "opacity-0"}`}
+              >
+                <Image
+                  src={getImageUrl(slide.image) || slide.image}
+                  alt={tl("heroMaskedCampusAlt")}
+                  fill
+                  className={`object-cover ${activeSlide === idx ? "slide-ken" : ""}`}
+                  style={{ objectPosition: "center center" }}
+                  unoptimized
+                />
+                <div className="absolute inset-0 rounded-full bg-gradient-to-b from-transparent via-transparent to-[#121c67]/15 pointer-events-none" />
+              </div>
+            ))}
           </div>
 
-          {/* Masked slide-image panel */}
-          <div className="absolute left-[824px] top-[149px] w-[481px] h-[580px] overflow-hidden z-[4]">
-            <div
-              className="absolute inset-0"
-              style={{
-                maskImage:    `url('${figmaAssets.heroMainImageMask}')`,
-                maskSize:     "481px 614px",
-                maskPosition: "-0.08px -45.304px",
-                maskRepeat:   "no-repeat",
-              }}
-            >
-              {slides.map((slide, idx) => (
-                <div
-                  key={slide.image}
-                  className={`absolute inset-0 transition-opacity duration-1000 ${activeSlide === idx ? "opacity-100" : "opacity-0"}`}
-                >
-                  <Image
-                    src={getImageUrl(slide.image) || slide.image}
-                    alt={tl("heroMaskedCampusAlt")}
-                    fill
-                    className={`object-cover ${activeSlide === idx ? "slide-ken" : ""}`}
-                    style={{ objectPosition: "center top" }}
-                    unoptimized
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#121c67]/10" />
-                </div>
-              ))}
-              {/* Static fallback (invisible) */}
-              <Image
-                src={figmaAssets.heroMainImage}
-                alt=""
-                fill
-                className="object-cover opacity-0"
-                style={{ objectPosition: "left -12.14% top 1%" }}
-                unoptimized
-              />
-            </div>
-          </div>
-
-          {/* Country flag bubbles */}
+          {/* Country flag bubbles — positioned around the circular banner */}
           {[
-            { src: figmaAssets.flagFrance,  id: "f1", pos: "left-[1114px]", top: "top-[155px]",  delay: "0s"   },
-            { src: figmaAssets.flagUSA,     id: "f2", pos: "left-[816px]",  top: "top-[315px]",  delay: "0.8s" },
-            { src: figmaAssets.flagCanada,  id: "f3", pos: "left-[1210px]", top: "top-[281px]",  delay: "1.5s" },
-            { src: figmaAssets.flagUK,      id: "f4", pos: "left-[1271px]", top: "top-[418px]",  delay: "0.4s" },
-            { src: figmaAssets.flagGermany, id: "f5", pos: "left-[781px]",  top: "top-[470px]",  delay: "1.2s" },
-          ].map(({ src, id, pos, top, delay }) => (
+            { src: figmaAssets.flagFrance,  id: "f1", leftPct: "81.4%", top: 205, delay: "0s"   },
+            { src: figmaAssets.flagUSA,     id: "f2", leftPct: "60.7%", top: 335, delay: "0.8s" },
+            { src: figmaAssets.flagCanada,  id: "f3", leftPct: "88.0%", top: 300, delay: "1.5s" },
+            { src: figmaAssets.flagUK,      id: "f4", leftPct: "92.3%", top: 438, delay: "0.4s" },
+            { src: figmaAssets.flagGermany, id: "f5", leftPct: "58.2%", top: 490, delay: "1.2s" },
+          ].map(({ src, id, leftPct, top, delay }) => (
             <div
               key={id}
-              className={`absolute ${pos} ${top} w-[69px] h-[70px] bg-white rounded-[110px] p-3 flex items-center justify-center shadow-lg z-[5]`}
-              style={{ animation: `float-gentle 5s ease-in-out infinite ${delay}` }}
+              className="absolute w-[69px] h-[70px] bg-white rounded-[110px] p-3 flex items-center justify-center shadow-lg z-[5]"
+              style={{ left: leftPct, top, animation: `float-gentle 5s ease-in-out infinite ${delay}` }}
             >
               <div className="relative w-11 h-11">
                 <Image src={src} alt="" fill className="object-contain" unoptimized />
@@ -237,8 +229,11 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
             </div>
           ))}
 
-          {/* Sparkle decorations */}
-          <div className="absolute left-[1124px] top-[597px] w-[214px] h-[95px] overflow-hidden z-[4]">
+          {/* Sparkle vector */}
+          <div
+            className="absolute w-[214px] h-[95px] overflow-hidden z-[4]"
+            style={{ left: "82.1%", top: 597 }}
+          >
             <div className="absolute inset-0 rotate-[193.445deg]">
               <div className="relative w-full h-full">
                 <Image src={figmaAssets.heroVector3} alt="" fill className="object-contain" unoptimized />
@@ -246,13 +241,21 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
             </div>
           </div>
 
-          <div className="absolute left-[864px] top-[199px] w-[95px] h-[95px] overflow-hidden z-[4]">
+          {/* Sparkle star icon */}
+          <div
+            className="absolute w-[95px] h-[95px] overflow-hidden z-[4]"
+            style={{ left: "64.0%", top: 199 }}
+          >
             <div className="absolute left-[15px] top-[5px] w-[66px] h-[66px]">
               <Image src={figmaAssets.heroSparkle} alt="" fill className="object-contain" unoptimized />
             </div>
           </div>
 
-          <div className="absolute left-[889px] top-[631px] w-[111px] h-[102px] overflow-hidden z-[4]">
+          {/* Star decoration */}
+          <div
+            className="absolute w-[111px] h-[102px] overflow-hidden z-[4]"
+            style={{ left: "65.7%", top: 631 }}
+          >
             <div className="absolute left-1/2 -translate-x-1/2 top-[9px] w-[84px] h-[83px]">
               <div className="absolute inset-[20.04%_20.15%]">
                 <Image src={figmaAssets.heroStar} alt="" fill className="object-contain" unoptimized />
@@ -260,8 +263,8 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
             </div>
           </div>
 
-          {/* Slide indicator badge */}
-          <div className="absolute z-[6] left-[828px] top-[150px]">
+          {/* Slide indicator badge — sits on upper rim of circular banner */}
+          <div className="absolute z-[6]" style={{ left: "61.5%", top: 172 }}>
             <div className="bg-white/90 backdrop-blur-md text-[#5260ce] text-xs font-montserrat-semibold px-3 py-1.5 rounded-full shadow-md border border-[#5260ce]/10 animate-fade-up">
               {"badgeKey" in slides[activeSlide]
                 ? tl((slides[activeSlide] as { badgeKey: string }).badgeKey)
