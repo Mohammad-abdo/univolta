@@ -65,11 +65,21 @@ export default function DashboardLoginPage() {
         if (res.ok) {
           const user = await res.json();
           const role = user.role?.toLowerCase();
-          router.push(role === "university" || user.universityId ? "/dashboard/partner" : "/dashboard");
-          return;
+          const isAdminAreaUser = role === "admin" || role === "editor";
+          const isUniversityAreaUser = role === "university" || !!user.universityId;
+
+          // Only redirect users that belong to admin/university sections.
+          // Student users must stay on this login page and should not be redirected.
+          if (isAdminAreaUser || isUniversityAreaUser) {
+            router.push(isUniversityAreaUser ? "/dashboard/partner" : "/dashboard");
+            return;
+          }
         }
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+        // Only clear tokens when backend says token is invalid.
+        if (res.status === 401) {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+        }
       } catch { /* silent */ }
       finally { setCheckingAuth(false); }
     };

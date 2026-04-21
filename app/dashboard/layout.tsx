@@ -238,27 +238,32 @@ export default function DashboardLayout({
             const role = userData.role?.toLowerCase() as UserRole;
             const isPartnerUser = !!userData.universityId;
             const isUniversityRole = role === "university";
+            const isAdminAreaUser = role === "admin" || role === "editor";
+            const isUniversityAreaUser = isUniversityRole || isPartnerUser;
 
             // If user is authenticated, redirect to appropriate dashboard
-            if (role === "admin" || role === "editor" || role === "university" || isPartnerUser) {
-              if (role === "university" || isPartnerUser) {
+            if (isAdminAreaUser || isUniversityAreaUser) {
+              if (isUniversityAreaUser) {
                 router.push("/dashboard/partner");
               } else {
                 router.push("/dashboard");
               }
               return;
             }
+
+            // Student/other valid users: do NOT clear token and do NOT redirect.
+            // They can still access their own section (/profile).
+            setIsLoading(false);
+            return;
           }
 
           // Token is invalid, allow access to login page
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-        } catch (error) {
-          // Error checking auth, allow access to login page
-          if (typeof window !== "undefined") {
+          if (response.status === 401) {
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
           }
+        } catch (error) {
+          // Error checking auth: allow access to login page without forcing logout.
         } finally {
           setIsLoading(false);
         }
