@@ -31,6 +31,44 @@ import {
 import { API_BASE_URL } from "@/lib/constants";
 import { getDirection, getLanguage, t } from "@/lib/i18n";
 
+const egyptianCities = [
+  { en: "Cairo", ar: "القاهرة" },
+  { en: "Alexandria", ar: "الإسكندرية" },
+  { en: "Giza", ar: "الجيزة" },
+  { en: "Shubra El Kheima", ar: "شبرا الخيمة" },
+  { en: "Port Said", ar: "بورسعيد" },
+  { en: "Suez", ar: "السويس" },
+  { en: "Mansoura", ar: "المنصورة" },
+  { en: "Tanta", ar: "طنطا" },
+  { en: "Asyut", ar: "أسيوط" },
+  { en: "Ismailia", ar: "الإسماعيلية" },
+  { en: "Fayyum", ar: "الفيوم" },
+  { en: "Zagazig", ar: "الزقازيق" },
+  { en: "Aswan", ar: "أسوان" },
+  { en: "Damietta", ar: "دمياط" },
+  { en: "Damanhur", ar: "دمنهور" },
+  { en: "Minya", ar: "المنيا" },
+  { en: "Beni Suef", ar: "بني سويف" },
+  { en: "Qena", ar: "قنا" },
+  { en: "Sohag", ar: "سوهاج" },
+  { en: "Hurghada", ar: "الغردقة" },
+  { en: "6th of October", ar: "السادس من أكتوبر" },
+  { en: "Shibin El Kom", ar: "شبين الكوم" },
+  { en: "Banha", ar: "بنها" },
+  { en: "Kafr El Sheikh", ar: "كفر الشيخ" },
+  { en: "Arish", ar: "العريش" },
+  { en: "Mallawi", ar: "ملوي" },
+  { en: "Qalyub", ar: "قليوب" },
+  { en: "Obour", ar: "العبور" },
+  { en: "New Cairo", ar: "القاهرة الجديدة" },
+  { en: "New Administrative Capital", ar: "العاصمة الإدارية الجديدة" },
+  { en: "Luxor", ar: "الأقصر" },
+  { en: "Marsa Matruh", ar: "مرسى مطروح" },
+  { en: "Sharm El Sheikh", ar: "شرم الشيخ" },
+  { en: "El Mahalla El Kubra", ar: "المحلة الكبرى" },
+  { en: "Kafr El Dawwar", ar: "كفر الدوار" },
+];
+
 // Steps will be defined inside component to use translations
 
 function UniversityRegisterContent() {
@@ -760,10 +798,11 @@ function UniversityRegisterContent() {
                             className="input-enhanced"
                           >
                             <option value="">{t("selectRequiredCity")}</option>
-                            <option value="New York">New York</option>
-                            <option value="Los Angeles">Los Angeles</option>
-                            <option value="Chicago">Chicago</option>
-                            <option value="Boston">Boston</option>
+                            {egyptianCities.map((city) => (
+                              <option key={city.en} value={city.en}>
+                                {isRTL ? city.ar : city.en}
+                              </option>
+                            ))}
                           </select>
                         </div>
                         <div>
