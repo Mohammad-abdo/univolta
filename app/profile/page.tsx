@@ -1,234 +1,354 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
-import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import { apiPut } from "@/lib/api";
+import { StudentHeader } from "@/components/student-header";
+import { Settings } from "lucide-react";
 import { API_BASE_URL } from "@/lib/constants";
-import { User, Mail, Phone, MapPin, Save, CheckCircle, Shield } from "lucide-react";
-import { t } from "@/lib/i18n";
+import { getImageUrl } from "@/lib/image-utils";
+import { apiGet } from "@/lib/api";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 
-interface UserProfile {
+/* ─── Types ─────────────────────────────────────────────────────── */
+interface Application {
   id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  role: string;
-  profile?: { address?: string; city?: string; country?: string };
+  status: "PENDING" | "REVIEW" | "APPROVED" | "REJECTED";
+  createdAt: string;
+  university?: { name: string; slug: string; logoUrl?: string; country?: string };
+  program?: { name: string; degree?: string };
 }
+interface UserData { id: string; name: string; email: string }
 
-function ProfileInput({
-  label,
-  icon: Icon,
-  type = "text",
-  value,
-  onChange,
-  disabled,
-  note,
-  placeholder,
-}: {
-  label: string;
-  icon?: React.ComponentType<{ className?: string }>;
-  type?: string;
-  value: string;
-  onChange?: (v: string) => void;
-  disabled?: boolean;
-  note?: string;
-  placeholder?: string;
+const STATUS: Record<string, { label: string; cls: string }> = {
+  PENDING:  { label: "Pending",      cls: "bg-orange-50  text-orange-500  border-orange-100" },
+  REVIEW:   { label: "Under Review", cls: "bg-blue-50    text-blue-500    border-blue-100"   },
+  APPROVED: { label: "Accepted",     cls: "bg-green-50   text-green-600   border-green-100"  },
+  REJECTED: { label: "Rejected",     cls: "bg-red-50     text-red-500     border-red-100"    },
+};
+
+/* ─── Stat card config ───────────────────────────────────────────── */
+const STAT_CONFIG = [
+  {
+    key: "total",
+    label: "Total Applications",
+    accent: "#5260CE",
+    iconBg: "#EEF2FF",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" stroke="#5260CE" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <polyline points="10 9 9 9 8 9"/>
+      </svg>
+    ),
+  },
+  {
+    key: "pending",
+    label: "Pending Applications",
+    accent: "#F59E0B",
+    iconBg: "#FFFBEB",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" stroke="#F59E0B" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <circle cx="12" cy="14" r="3" strokeWidth="1.5"/>
+        <polyline points="12 13 12 14 13 14" strokeWidth="1.5"/>
+      </svg>
+    ),
+  },
+  {
+    key: "accepted",
+    label: "Accepted Applications",
+    accent: "#10B981",
+    iconBg: "#ECFDF5",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" stroke="#10B981" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <polyline points="9 15 11 17 15 12" strokeWidth="2"/>
+      </svg>
+    ),
+  },
+  {
+    key: "rejected",
+    label: "Rejected Applications",
+    accent: "#EF4444",
+    iconBg: "#FEF2F2",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" stroke="#EF4444" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="10" y1="12" x2="14" y2="16" strokeWidth="2"/>
+        <line x1="14" y1="12" x2="10" y2="16" strokeWidth="2"/>
+      </svg>
+    ),
+  },
+];
+
+/* ─── Stat Card ──────────────────────────────────────────────────── */
+function StatCard({ label, value, icon, accent, iconBg }: {
+  label: string; value: number; icon: React.ReactNode; accent: string; iconBg: string;
 }) {
   return (
-    <div>
-      <label className="flex items-center gap-1.5 font-montserrat-semibold text-sm text-[#121c67] mb-2">
-        {Icon && <Icon className="w-3.5 h-3.5 text-[#5260ce]" />}
-        {label}
-      </label>
-      <input
-        type={type}
-        value={value}
-        onChange={onChange ? (e) => onChange(e.target.value) : undefined}
-        disabled={disabled}
-        placeholder={placeholder}
-        className="input-enhanced disabled:bg-[#f9fafe] disabled:text-[#8b8c9a] disabled:cursor-not-allowed"
-      />
-      {note && <p className="text-xs text-[#8b8c9a] mt-1">{note}</p>}
+    <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-4 relative overflow-hidden">
+      {/* Colored left accent bar */}
+      <div className="absolute left-0 top-4 bottom-4 w-1 rounded-r-full" style={{ background: accent }} />
+      <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: iconBg }}>
+        {icon}
+      </div>
+      <div>
+        <p className="text-[12px] text-[#9CA3AF] leading-tight">{label}</p>
+        <p className="text-[34px] font-bold leading-none mt-0.5" style={{ color: accent }}>{value}</p>
+      </div>
     </div>
   );
 }
 
+/* ─── Eye icon ──────────────────────────────────────────────────── */
+function EyeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5" stroke="currentColor" strokeWidth="2">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  );
+}
+
+/* ─── Page ──────────────────────────────────────────────────────── */
 export default function ProfilePage() {
-  const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "", email: "", phone: "", address: "", city: "", country: "",
-  });
+  const router  = useRouter();
+  const fetchedRef = useRef(false);   // prevent double-fetch in StrictMode
 
-  const set = (key: string) => (v: string) => setFormData((prev) => ({ ...prev, [key]: v }));
+  const [user, setUser]         = useState<UserData | null>(null);
+  const [applications, setApps] = useState<Application[]>([]);
+  const [ready, setReady]       = useState(false);
+  const [loading, setLoading]   = useState(true);
 
-  useEffect(() => { checkAuth(); }, []);
+  useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
 
-  const checkAuth = async () => {
-    try {
-      const accessToken = localStorage.getItem("accessToken");
-      if (!accessToken) { router.push("/login"); return; }
-      const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+    const token = localStorage.getItem("accessToken");
+    if (!token) { router.replace("/login?redirect=%2Fprofile"); return; }
+
+    fetch(`${API_BASE_URL}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(async (r) => {
+        if (r.status === 401) {
+          // Token is definitively invalid — log out
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          router.replace("/login?redirect=%2Fprofile");
+          return;
+        }
+        if (!r.ok) {
+          // Network/server error — show page anyway (don't log out)
+          setReady(true);
+          setLoading(false);
+          return;
+        }
+        const userData = await r.json();
+        setUser(userData);
+        setReady(true);
+        apiGet<Application[]>("/applications")
+          .then((d) => setApps(Array.isArray(d) ? d : []))
+          .catch(() => setApps([]))
+          .finally(() => setLoading(false));
+      })
+      .catch(() => {
+        // Network error — don't redirect, just show the page with cached state
+        setReady(true);
+        setLoading(false);
       });
-      if (response.ok) {
-        const userData = await response.json();
-        setProfile(userData);
-        setFormData({
-          name:    userData.name || "",
-          email:   userData.email || "",
-          phone:   userData.phone || userData.profile?.phone || "",
-          address: userData.profile?.address || "",
-          city:    userData.profile?.city || "",
-          country: userData.profile?.country || "",
-        });
-      } else {
-        router.push("/login");
-      }
-    } catch {
-      router.push("/login");
-    } finally {
-      setLoading(false);
-    }
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    router.push("/");
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await apiPut("/users/me", {
-        name: formData.name,
-        phone: formData.phone,
-        profile: { address: formData.address, city: formData.city, country: formData.country },
-      });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    } catch {
-      /* silent */
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (loading) {
+  /* ── Auth loading ── */
+  if (!ready) {
     return (
-      <div className="min-h-screen bg-[#f9fafe]">
-        <Navbar />
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#5260ce]" />
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-[#5260ce] border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-[#A0AEC0]">Loading your dashboard…</p>
         </div>
-        <Footer />
       </div>
     );
   }
 
+  const total    = applications.length;
+  const pending  = applications.filter((a) => a.status === "PENDING" || a.status === "REVIEW").length;
+  const accepted = applications.filter((a) => a.status === "APPROVED").length;
+  const rejected = applications.filter((a) => a.status === "REJECTED").length;
+  const statValues = { total, pending, accepted, rejected };
+
   return (
-    <div className="min-h-screen bg-[#f9fafe] pb-16 md:pb-0">
-      <Navbar />
-      <main className="pt-0 md:pt-[120px] pb-8 md:pb-24">
-        <div className="max-w-[820px] mx-auto px-4 md:px-5">
+    <div className="min-h-screen bg-white pb-20 md:pb-0">
+      <StudentHeader user={user} onLogout={handleLogout} activePage="dashboard" />
 
-          {/* Page Header */}
-          <ScrollReveal direction="up">
-            <div className="mb-6 md:mb-8 py-6 border-b border-gray-100">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-[#5260ce]/10 flex items-center justify-center">
-                  <User className="w-5 h-5 text-[#5260ce]" />
-                </div>
-                <h1 className="font-montserrat-bold text-2xl md:text-3xl text-[#121c67]">
-                  {t("myProfile")}
-                </h1>
-              </div>
-              <p className="text-sm text-[#65666f] font-montserrat-regular">{t("manageAccount")}</p>
+      <main style={{ paddingTop: 64 }}>
+        <div className="max-w-[1100px] mx-auto px-5 md:px-10 py-8">
+
+          {/* ── Welcome banner ──────────────────────────────────────── */}
+          <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-[26px] md:text-[30px] font-bold text-[#1B2559] leading-tight">
+                Welcome back, {user?.name?.split(" ")[0] || "Student"}! 👋
+              </h1>
+              <p className="text-sm text-[#A0AEC0] mt-1.5">
+                Track your applications and manage your documents
+              </p>
             </div>
-          </ScrollReveal>
-
-          {/* Avatar + Role Badge */}
-          <ScrollReveal direction="up" delay={100}>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-5 flex items-center gap-5">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#5260ce] to-[#75d3f7] flex items-center justify-center text-white font-montserrat-bold text-2xl shrink-0">
-                {formData.name ? formData.name[0].toUpperCase() : "U"}
-              </div>
-              <div>
-                <h2 className="font-montserrat-bold text-xl text-[#121c67]">{formData.name || "User"}</h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <Shield className="w-3.5 h-3.5 text-[#5260ce]" />
-                  <span className="text-xs font-montserrat-semibold text-[#5260ce] capitalize">{profile?.role || "student"}</span>
-                </div>
-              </div>
-            </div>
-          </ScrollReveal>
-
-          {/* Personal Information */}
-          <ScrollReveal direction="up" delay={150}>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-5">
-              <h2 className="font-montserrat-bold text-lg text-[#121c67] mb-5 section-title-accent">
-                {t("personalInfo")}
-              </h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <ProfileInput label={t("fullName")}  icon={User}  value={formData.name}  onChange={set("name")}  placeholder="Your full name" />
-                <ProfileInput label={t("email")}     icon={Mail}  value={formData.email} disabled note={t("emailCannotChange")} />
-                <ProfileInput label={t("phone")}     icon={Phone} value={formData.phone} onChange={set("phone")} type="tel" placeholder="+1 234 567 890" />
-                <ProfileInput label={t("role")}      value={profile?.role || ""} disabled />
-              </div>
-            </div>
-          </ScrollReveal>
-
-          {/* Address Information */}
-          <ScrollReveal direction="up" delay={200}>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-              <h2 className="font-montserrat-bold text-lg text-[#121c67] mb-5 section-title-accent">
-                {t("addressInfo")}
-              </h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <ProfileInput label={t("address")} icon={MapPin} value={formData.address} onChange={set("address")} placeholder="Street address" />
-                </div>
-                <ProfileInput label={t("city")}    value={formData.city}    onChange={set("city")}    placeholder="City" />
-                <ProfileInput label={t("country")} value={formData.country} onChange={set("country")} placeholder="Country" />
-              </div>
-            </div>
-          </ScrollReveal>
-
-          {/* Save Button */}
-          <ScrollReveal direction="up" delay={250}>
-            <div className="flex items-center gap-4">
-              <Button
-                onClick={handleSave}
-                disabled={saving}
-                className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold rounded-xl px-8 h-11 shadow-[0_4px_16px_rgba(82,96,206,0.25)] hover:shadow-[0_6px_24px_rgba(82,96,206,0.35)] transition-all"
+            <div className="flex items-center gap-2 shrink-0">
+              <Button variant="outline"
+                className="border-gray-200 text-[#4A5568] hover:bg-[#F0F4FF] hover:text-[#5260ce] hover:border-[#5260ce]/30 rounded-xl h-10 px-4 text-sm font-semibold flex items-center gap-2"
+                asChild
               >
-                {saving ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                    {t("saving")}
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <Save className="w-4 h-4" />
-                    {t("saveChanges")}
-                  </span>
-                )}
+                <Link href="/profile/settings"><Settings className="w-4 h-4" /> Settings</Link>
               </Button>
-              {saved && (
-                <span className="flex items-center gap-2 text-green-600 font-montserrat-semibold text-sm animate-fade-up">
-                  <CheckCircle className="w-4 h-4" />
-                  Changes saved!
-                </span>
+              <Button
+                className="bg-[#5260ce] hover:bg-[#4350b0] text-white rounded-xl h-10 px-5 text-sm font-semibold"
+                asChild
+              >
+                <Link href="/universities">Browse Universities</Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* ── Stat Cards ─────────────────────────────────────────── */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {STAT_CONFIG.map((cfg) => (
+              <StatCard
+                key={cfg.key}
+                label={cfg.label}
+                value={statValues[cfg.key as keyof typeof statValues]}
+                icon={cfg.icon}
+                accent={cfg.accent}
+                iconBg={cfg.iconBg}
+              />
+            ))}
+          </div>
+
+          {/* ── Recent Applications ──────────────────────────────────── */}
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="text-[16px] font-bold text-[#1B2559]">Recent Applications</h2>
+              {applications.length > 0 && (
+                <span className="text-xs text-[#A0AEC0]">{applications.length} total</span>
               )}
             </div>
-          </ScrollReveal>
+
+            {loading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="w-8 h-8 border-4 border-[#5260ce] border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : applications.length === 0 ? (
+              <div className="py-16 text-center px-4">
+                <div className="w-16 h-16 rounded-2xl bg-[#EEF2FF] flex items-center justify-center mx-auto mb-4">
+                  <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8" stroke="#5260CE" strokeWidth="1.5">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                  </svg>
+                </div>
+                <p className="text-[#1B2559] font-semibold mb-1">No applications yet</p>
+                <p className="text-[#A0AEC0] text-sm mb-5">Start your journey by browsing universities</p>
+                <Button className="bg-[#5260ce] hover:bg-[#4350b0] text-white rounded-xl" asChild>
+                  <Link href="/universities">Browse Universities</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-[#FAFBFF]">
+                      <th className="text-left px-6 py-3 text-xs text-[#A0AEC0] font-medium">University</th>
+                      <th className="text-left px-4 py-3 text-xs text-[#A0AEC0] font-medium">Program</th>
+                      <th className="text-left px-4 py-3 text-xs text-[#A0AEC0] font-medium">Degree</th>
+                      <th className="text-left px-4 py-3 text-xs text-[#A0AEC0] font-medium">Status</th>
+                      <th className="text-left px-4 py-3 text-xs text-[#A0AEC0] font-medium">Submission date</th>
+                      <th className="text-left px-4 py-3 text-xs text-[#A0AEC0] font-medium">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {applications.map((app) => {
+                      const s    = STATUS[app.status] ?? STATUS.PENDING;
+                      const logo = getImageUrl(app.university?.logoUrl || "");
+                      return (
+                        <tr key={app.id} className="border-b border-gray-50 last:border-0 hover:bg-[#FAFBFF] transition-colors group">
+
+                          {/* University */}
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              {logo ? (
+                                <div className="relative w-9 h-9 rounded-full border border-gray-100 overflow-hidden shrink-0 bg-white">
+                                  <Image src={logo} alt="" fill className="object-contain p-1" unoptimized />
+                                </div>
+                              ) : (
+                                <div className="w-9 h-9 rounded-full bg-[#EEF2FF] flex items-center justify-center shrink-0 text-[#5260ce] font-bold text-xs">
+                                  {app.university?.name?.charAt(0) || "U"}
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-semibold text-[#1B2559] text-sm">{app.university?.name || "—"}</p>
+                                {app.university?.country && (
+                                  <p className="text-xs text-[#A0AEC0]">{app.university.country}</p>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Program */}
+                          <td className="px-4 py-4 text-[#4A5568] text-sm max-w-[200px]">
+                            <span className="line-clamp-2">{app.program?.name || "—"}</span>
+                          </td>
+
+                          {/* Degree */}
+                          <td className="px-4 py-4 text-[#718096] text-sm whitespace-nowrap">{app.program?.degree || "—"}</td>
+
+                          {/* Status */}
+                          <td className="px-4 py-4">
+                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${s.cls}`}>
+                              {s.label}
+                            </span>
+                          </td>
+
+                          {/* Date */}
+                          <td className="px-4 py-4 text-[#718096] text-sm whitespace-nowrap">
+                            {new Date(app.createdAt).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" })}
+                          </td>
+
+                          {/* Action */}
+                          <td className="px-4 py-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-[#5260ce]/30 text-[#5260ce] hover:bg-[#5260ce] hover:text-white hover:border-[#5260ce] rounded-lg text-xs h-8 px-3.5 transition-all"
+                              asChild
+                            >
+                              <Link href={`/my-applications/${app.id}`} className="flex items-center gap-1.5">
+                                <EyeIcon />
+                                View Details
+                              </Link>
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       </main>
-      <Footer />
+
       <MobileBottomNav />
     </div>
   );

@@ -72,11 +72,6 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
     return () => clearInterval(id);
   }, [activeSlide, paused, goTo]);
 
-  const studentAvatars = [
-    figmaAssets.student1, figmaAssets.student2, figmaAssets.student3,
-    figmaAssets.student4, figmaAssets.student5,
-  ];
-
   const rotatingWords = [tl("heroWord1"), tl("heroWord2"), tl("heroWord3")];
   const currentSlideData = slides[activeSlide] as HeroSlideSetting | (typeof SLIDES)[number];
   const slideTitle =
@@ -94,18 +89,21 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
   ];
 
   /*
-   * Layout is FIXED (identical for English and Arabic):
-   *   LEFT  → text content (white gradient cover)
-   *   RIGHT → decorative image panel (transparent gradient, visible photo)
-   * isRTL only controls text-alignment and inline flex direction — NOT positions.
+   * Layout mirrors between LTR and RTL:
+   *   LTR → text LEFT,  image RIGHT
+   *   RTL → text RIGHT, image LEFT  (decorative panel scaleX-flipped)
    */
-  const gradient = "linear-gradient(to right, white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)";
-  /* content ends at ~58% leaving ~3% gap before the circle at 61.2% */
-  const padSide  = { paddingRight: "clamp(0px, 45%, 660px)" };
+  const gradient = isRTL
+    ? "linear-gradient(to left,  white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)"
+    : "linear-gradient(to right, white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)";
+  const padSide = isRTL
+    ? { paddingLeft:  "clamp(0px, 45%, 660px)" }
+    : { paddingRight: "clamp(0px, 45%, 660px)" };
 
   return (
     <section
       className="relative min-h-[600px] md:h-[793px] overflow-hidden pt-20 md:pt-0"
+      dir={isRTL ? "rtl" : "ltr"}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -140,11 +138,11 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
         <ParticleField />
       </div>
 
-      {/* ── SOFT RADIAL GLOW — always left side (text side) ─────────────── */}
+      {/* ── SOFT RADIAL GLOW — follows text side ───────────────────────── */}
       <div
         className="absolute pointer-events-none z-[2]"
         style={{
-          left: "-10%",
+          [isRTL ? "right" : "left"]: "-10%",
           top:  "10%",
           width:  "600px",
           height: "600px",
@@ -163,7 +161,8 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
              panel scales correctly on every viewport ≥ 1024 px.
              Tops stay in px because the section height is fixed at 793px.
         ════════════════════════════════════════════════════════════════ */}
-        <div className="hidden lg:block">
+        {/* scaleX(-1) mirrors the entire decorative panel for RTL */}
+        <div className="hidden lg:block" style={{ transform: isRTL ? "scaleX(-1)" : "none" }}>
 
           {/* Graduation cap — shifted +4% right for breathing room */}
           <div
@@ -388,31 +387,6 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
             </div>
           </div>
 
-          {/* Student avatars + caption */}
-          <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-6 md:mt-7 ${isRTL ? "sm:flex-row-reverse" : ""}`}>
-            <div className={`flex items-center ${isRTL ? "pl-0 sm:pl-[26px]" : "pr-0 sm:pr-[26px]"}`}>
-              {studentAvatars.map((avatar, index) => (
-                <div
-                  key={index}
-                  className={`relative w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-white overflow-hidden ${
-                    index > 0 ? (isRTL ? "-mr-4 md:-mr-[26px]" : "-ml-4 md:-ml-[26px]") : ""
-                  }`}
-                >
-                  <div className="absolute inset-0 bg-[#d9d9d9] rounded-full" />
-                  <Image
-                    src={avatar}
-                    alt={tl("heroStudentAvatarAlt").replace("{n}", String(index + 1))}
-                    fill
-                    className="object-cover rounded-full"
-                    unoptimized
-                  />
-                </div>
-              ))}
-            </div>
-            <p className="font-montserrat-regular text-sm md:text-[18px] leading-[1.4] text-[#2e2e2e] max-w-full md:max-w-[498px] py-2.5">
-              {tl("studentsInUniversities")}
-            </p>
-          </div>
         </div>
       </div>
 

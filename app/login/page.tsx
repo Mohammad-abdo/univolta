@@ -49,7 +49,7 @@ function LoginContent() {
       } else if (data.user?.role?.toLowerCase() === "university" || data.user?.universityId) {
         router.push("/dashboard/partner");
       } else {
-        router.push("/");
+        router.push("/profile");
       }
       router.refresh();
     } catch {

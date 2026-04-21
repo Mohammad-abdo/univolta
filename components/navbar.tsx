@@ -290,7 +290,8 @@ export function Navbar() {
                     {tl("myApplications", "My Applications")}
                   </Link>
                   <Link href="/profile" className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 text-sm text-[#2e2e2e] transition-colors" onClick={() => setUserMenuOpen(false)}>
-                    {tl("profile", "Profile")}
+                    <User className="w-4 h-4 text-[#5260ce]" />
+                    {tl("myDashboard", "My Dashboard")}
                   </Link>
                   <div className="border-t border-gray-100">
                     <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-2 text-red-600 text-sm transition-colors">
