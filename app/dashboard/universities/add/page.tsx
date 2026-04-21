@@ -34,6 +34,9 @@ export default function AddUniversityPage() {
     admissionRequirements: [] as string[],
     services: [] as string[],
     tourImages: [] as string[],
+    admissionStatus: "OPEN" as "OPEN" | "CLOSED",
+    admissionDeadline: "",
+    admissionStartDate: "",
     isActive: true,
   });
 
@@ -189,6 +192,9 @@ export default function AddUniversityPage() {
             : undefined,
         services: formData.services.length > 0 ? formData.services : undefined,
         tourImages,
+        admissionStatus: formData.admissionStatus,
+        admissionDeadline: formData.admissionDeadline ? new Date(formData.admissionDeadline).toISOString() : null,
+        admissionStartDate: formData.admissionStartDate ? new Date(formData.admissionStartDate).toISOString() : null,
       });
 
       showToast.success("University created successfully!");
@@ -642,6 +648,39 @@ export default function AddUniversityPage() {
                 </Button>
               </div>
             </div>
+          </div>
+
+          {/* Admission Status */}
+          <div>
+            <label className="block font-montserrat-semibold text-sm mb-1.5">Admission Status</label>
+            <select
+              value={formData.admissionStatus}
+              onChange={(e) => setFormData({ ...formData, admissionStatus: e.target.value as "OPEN" | "CLOSED" })}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
+            >
+              <option value="OPEN">🟢 Admission Open</option>
+              <option value="CLOSED">🔴 Admission Closed</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block font-montserrat-semibold text-sm mb-1.5">Admission Deadline (auto-close on this date)</label>
+            <input
+              type="date"
+              value={formData.admissionDeadline}
+              onChange={(e) => setFormData({ ...formData, admissionDeadline: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
+            />
+          </div>
+
+          <div>
+            <label className="block font-montserrat-semibold text-sm mb-1.5">Admission Start Date (optional)</label>
+            <input
+              type="date"
+              value={formData.admissionStartDate}
+              onChange={(e) => setFormData({ ...formData, admissionStartDate: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
+            />
           </div>
 
           <div className="md:col-span-2">

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { figmaAssets } from "@/lib/figma-assets";
 import { notFound } from "next/navigation";
-import { Check, MapPin, DollarSign, Search, Trophy, Globe, Users, GraduationCap, Calendar, BarChart3, ArrowRight, BookOpen } from "lucide-react";
+import { Check, MapPin, DollarSign, Search, Trophy, Globe, Users, GraduationCap, Calendar, BarChart3, ArrowRight, BookOpen, CircleDot } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getLanguage, t, tServer, type Language } from "@/lib/i18n";
@@ -225,7 +225,34 @@ export default async function UniversityDetailPage({
             </div>
 
             {/* CTA bottom-right */}
-            <div className="absolute right-5 bottom-5 md:right-10 md:bottom-8">
+            <div className="absolute right-5 bottom-5 md:right-10 md:bottom-8 flex flex-col items-end gap-2">
+              {/* Admission status badge */}
+              {(() => {
+                const isOpen = university.admissionStatus !== "CLOSED";
+                return (
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold shadow-md backdrop-blur-sm border ${
+                      isOpen
+                        ? "bg-green-500/90 text-white border-green-400"
+                        : "bg-red-500/90 text-white border-red-400"
+                    }`}
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full inline-block ${isOpen ? "bg-white animate-ping" : "bg-white/70"}`}
+                      style={isOpen ? { animationDuration: "1.2s" } : {}}
+                    />
+                    <span className="relative -ml-3.5">
+                      <span className={`w-2 h-2 rounded-full inline-block ${isOpen ? "bg-white" : "bg-white/70"}`} />
+                    </span>
+                    {isOpen ? "Admission Open" : "Admission Closed"}
+                    {isOpen && university.admissionDeadline && (
+                      <span className="opacity-80">
+                        &nbsp;· until {new Date(university.admissionDeadline).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                      </span>
+                    )}
+                  </span>
+                );
+              })()}
               <Button
                 className="bg-white hover:bg-gray-50 text-[#5260ce] font-montserrat-semibold text-sm md:text-base h-10 md:h-12 px-5 md:px-7 rounded-xl shadow-lg transition-all hover:shadow-xl"
                 asChild

@@ -25,6 +25,8 @@ import {
   Edit,
   Save,
   X,
+  Send,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 import { t } from "@/lib/i18n";
@@ -102,6 +104,29 @@ export default function ApplicationDetailPage() {
   const [savingNotes, setSavingNotes] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [statusReason, setStatusReason] = useState("");
+  const [rejectionPreset, setRejectionPreset] = useState("");
+  const [customRejection, setCustomRejection] = useState("");
+
+  // Missing documents
+  const DOCUMENT_OPTIONS = [
+    "High School Certificate / شهادة الثانوية",
+    "Passport / جواز السفر",
+    "Personal Photos / صور شخصية",
+    "Language Certificate / شهادة لغة",
+    "Birth Certificate / شهادة الميلاد",
+    "Transcript / كشف الدرجات",
+    "Other / أخرى",
+  ];
+  const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+  const [sendingDocs, setSendingDocs] = useState(false);
+
+  // Rejection preset reasons
+  const REJECTION_REASONS = [
+    "Insufficient GPA / المعدل غير كافي",
+    "Missing documents / نقص مستندات",
+    "University requirements not met / شروط الجامعة غير مستوفاة",
+    "Other / أخرى",
+  ];
 
   useEffect(() => {
     const applicationId = typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : null;
@@ -152,20 +177,51 @@ export default function ApplicationDetailPage() {
 
   const updateStatus = async (newStatus: Application["status"]) => {
     if (!application) return;
+    const finalReason =
+      newStatus === "REJECTED"
+        ? rejectionPreset === "Other / أخرى" || rejectionPreset === ""
+          ? customRejection || statusReason || undefined
+          : rejectionPreset
+        : statusReason || undefined;
 
     setUpdatingStatus(true);
     try {
       await apiPut(`/applications/${application.id}/status`, {
         status: newStatus,
-        reason: statusReason || undefined,
+        reason: finalReason,
       });
       await fetchApplication();
       setStatusReason("");
+      setRejectionPreset("");
+      setCustomRejection("");
       showToast.success("Status updated successfully!");
     } catch (error: any) {
       showToast.error(error.message || "Failed to update status");
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  const sendMissingDocs = async () => {
+    if (!application || selectedDocs.length === 0) return;
+    setSendingDocs(true);
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const res = await fetch(`${API_BASE_URL}/applications/${application.id}/missing-documents`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ documents: selectedDocs }),
+      });
+      if (!res.ok) throw new Error("Failed to send missing documents email");
+      setSelectedDocs([]);
+      showToast.success("Missing documents email sent to student!");
+    } catch (error: any) {
+      showToast.error(error.message || "Failed to send email");
+    } finally {
+      setSendingDocs(false);
     }
   };
 
@@ -534,33 +590,109 @@ export default function ApplicationDetailPage() {
         <div className="lg:col-span-1 space-y-6">
           {/* Status Update */}
           {canUpdate && (
-            <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
-              <h3 className="text-lg font-montserrat-bold text-[#121c67] mb-4">
+            <div className="bg-white rounded-lg shadow border border-gray-200 p-6 space-y-4">
+              <h3 className="text-lg font-montserrat-bold text-[#121c67]">
                 {t("updateStatus")}
               </h3>
-              <div className="space-y-3">
-                <select
-                  value={application.status}
-                  onChange={(e) => updateStatus(e.target.value as Application["status"])}
-                  disabled={updatingStatus}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5260ce]"
-                >
-                  <option value="PENDING">{t("pendingReview")}</option>
-                  <option value="REVIEW">{t("underReview")}</option>
-                  <option value="APPROVED">{t("approved")}</option>
-                  <option value="REJECTED">{t("rejected")}</option>
-                </select>
+
+              {/* Status selector */}
+              <select
+                value={application.status}
+                onChange={(e) => {
+                  const val = e.target.value as Application["status"];
+                  setRejectionPreset("");
+                  setCustomRejection("");
+                  setStatusReason("");
+                  updateStatus(val);
+                }}
+                disabled={updatingStatus}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5260ce]"
+              >
+                <option value="PENDING">{t("pendingReview")}</option>
+                <option value="REVIEW">{t("underReview")}</option>
+                <option value="APPROVED">{t("approved")}</option>
+                <option value="REJECTED">{t("rejected")}</option>
+              </select>
+
+              {/* Rejection reason (only shown when REJECTED) */}
+              {application.status === "REJECTED" && (
+                <div className="space-y-2 border border-red-200 rounded-lg p-3 bg-red-50">
+                  <p className="text-xs font-semibold text-red-700 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> Rejection Reason
+                  </p>
+                  <select
+                    value={rejectionPreset}
+                    onChange={(e) => setRejectionPreset(e.target.value)}
+                    className="w-full p-2 text-sm border border-red-300 rounded-lg focus:ring-2 focus:ring-red-400"
+                  >
+                    <option value="">— Select reason —</option>
+                    {REJECTION_REASONS.map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                  {(rejectionPreset === "Other / أخرى" || !rejectionPreset) && (
+                    <textarea
+                      value={customRejection}
+                      onChange={(e) => setCustomRejection(e.target.value)}
+                      placeholder="Enter custom rejection reason…"
+                      className="w-full p-2 text-sm border border-red-300 rounded-lg focus:ring-2 focus:ring-red-400"
+                      rows={2}
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* Generic reason for non-rejection statuses */}
+              {application.status !== "REJECTED" && (
                 <textarea
                   value={statusReason}
                   onChange={(e) => setStatusReason(e.target.value)}
                   placeholder={t("reasonForChange")}
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5260ce] text-sm"
-                  rows={3}
+                  rows={2}
                 />
-                {updatingStatus && (
-                  <p className="text-sm text-gray-500">{t("updating")}</p>
-                )}
+              )}
+
+              {updatingStatus && (
+                <p className="text-sm text-gray-500 animate-pulse">{t("updating")}</p>
+              )}
+            </div>
+          )}
+
+          {/* Missing Documents */}
+          {canUpdate && (
+            <div className="bg-white rounded-lg shadow border border-amber-200 p-6 space-y-3">
+              <h3 className="text-lg font-montserrat-bold text-[#121c67] flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                Request Missing Documents
+              </h3>
+              <p className="text-xs text-gray-500">Select documents then send — student receives an email instantly.</p>
+              <div className="space-y-2">
+                {DOCUMENT_OPTIONS.map((doc) => (
+                  <label key={doc} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedDocs.includes(doc)}
+                      onChange={(e) =>
+                        setSelectedDocs((prev) =>
+                          e.target.checked ? [...prev, doc] : prev.filter((d) => d !== doc)
+                        )
+                      }
+                      className="accent-[#5260ce] w-4 h-4"
+                    />
+                    <span className="text-gray-700">{doc}</span>
+                  </label>
+                ))}
               </div>
+              <Button
+                onClick={sendMissingDocs}
+                disabled={selectedDocs.length === 0 || sendingDocs}
+                size="sm"
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+              >
+                <Send className="w-4 h-4 mr-1" />
+                {sendingDocs ? "Sending…" : `Send Email (${selectedDocs.length} selected)`}
+              </Button>
             </div>
           )}
 

@@ -486,8 +486,29 @@ function UniversityRegisterContent() {
             </div>
           </div>
 
+          {/* Admission Closed Warning */}
+          {university && university.admissionStatus === "CLOSED" && (
+            <div className="mb-6 bg-red-50 border border-red-300 rounded-2xl p-5 flex items-start gap-4">
+              <span className="mt-0.5 w-5 h-5 rounded-full bg-red-500 shrink-0 animate-pulse" />
+              <div>
+                <p className="font-montserrat-bold text-red-700 text-base mb-1">Admission Closed</p>
+                <p className="text-sm text-red-600">
+                  Applications to <strong>{university.name}</strong> are currently closed.
+                  You cannot submit a new application at this time.
+                  Please check back later or explore other universities.
+                </p>
+                <a
+                  href="/universities"
+                  className="inline-block mt-3 text-sm text-white bg-red-500 hover:bg-red-600 px-4 py-1.5 rounded-lg font-montserrat-semibold transition-colors"
+                >
+                  Browse Other Universities
+                </a>
+              </div>
+            </div>
+          )}
+
           {/* Main Container */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-[20px] md:rounded-[28px] border border-gray-100 shadow-sm">
+          <div className={`bg-white/70 backdrop-blur-sm rounded-[20px] md:rounded-[28px] border border-gray-100 shadow-sm ${university?.admissionStatus === "CLOSED" ? "pointer-events-none opacity-50 select-none" : ""}`}>
             <div className="grid lg:grid-cols-4 gap-4 md:gap-8">
               {/* Left Sidebar */}
               <div className="lg:col-span-1">
