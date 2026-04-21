@@ -21,7 +21,12 @@ interface Program {
   language?: string;
   tuition?: string;
   isActive: boolean;
-  university: { name: string };
+  university: {
+    name: string;
+    admissionStatus?: "OPEN" | "CLOSED";
+    admissionStartDate?: string | null;
+    admissionDeadline?: string | null;
+  };
 }
 
 const DEGREE_STYLES: Record<string, { bg: string; text: string; border: string }> = {
@@ -244,6 +249,23 @@ export default function ProgramsPage() {
                   <div className="flex items-center gap-1.5 text-xs text-gray-500">
                     <Building2 size={10} className="text-gray-400 shrink-0" />
                     <span className="truncate">{prog.university?.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
+                        prog.university?.admissionStatus === "OPEN"
+                          ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+                          : "text-rose-700 bg-rose-50 border-rose-200"
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${prog.university?.admissionStatus === "OPEN" ? "bg-emerald-500" : "bg-rose-500"}`} />
+                      {prog.university?.admissionStatus === "OPEN" ? "Admission Open" : "Admission Closed"}
+                    </span>
+                    {prog.university?.admissionDeadline && (
+                      <span className="text-[10px] text-gray-400">
+                        {new Date(prog.university.admissionDeadline).toLocaleDateString("en-US")}
+                      </span>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {prog.duration && (

@@ -23,7 +23,12 @@ export default function Home() {
   useEffect(() => {
     fetchPublicSiteSettings()
       .then((settings) => {
-        if (Array.isArray(settings["hero.slides"])) setHeroSlides(settings["hero.slides"]);
+        if (Array.isArray(settings["hero.slides"])) {
+          const validSlides = settings["hero.slides"].filter(
+            (slide) => !!slide?.image && String(slide.image).trim().length > 0
+          );
+          if (validSlides.length > 0) setHeroSlides(validSlides);
+        }
         if (Array.isArray(settings["home.sections"])) setHomeSections(settings["home.sections"]);
       })
       .catch(() => {});

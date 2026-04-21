@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { settingsApi, HeroSlide, HomeSectionConfig } from "@/lib/admin-api";
 import { getImageUrl } from "@/lib/image-utils";
+import { API_BASE_URL } from "@/lib/constants";
 import {
   Save, Plus, Trash2, Eye, EyeOff, RefreshCw,
   CheckCircle, AlertCircle, ChevronUp, ChevronDown,
@@ -91,7 +92,7 @@ export default function HomepageManager() {
   const uploadImage = async (file: File): Promise<string | null> => {
     setUploading(true);
     const token = localStorage.getItem("accessToken");
-    const base  = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000/api/v1";
+    const base  = API_BASE_URL;
     const fd    = new FormData();
     fd.append("image", file);                            // ← field: "image"
     try {

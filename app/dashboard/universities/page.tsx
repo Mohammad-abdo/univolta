@@ -21,6 +21,9 @@ interface University {
   city: string;
   language: string;
   isActive: boolean;
+  admissionStatus?: "OPEN" | "CLOSED";
+  admissionStartDate?: string | null;
+  admissionDeadline?: string | null;
 }
 
 const GRADIENTS = [
@@ -236,6 +239,23 @@ export default function UniversitiesPage() {
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <Globe size={11} className="text-gray-400 shrink-0" />
                         <span>{uni.language}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-xs">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border font-semibold ${
+                          uni.admissionStatus === "OPEN"
+                            ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+                            : "text-rose-700 bg-rose-50 border-rose-200"
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${uni.admissionStatus === "OPEN" ? "bg-emerald-500" : "bg-rose-500"}`} />
+                        Admission {uni.admissionStatus === "OPEN" ? "Open" : "Closed"}
+                      </span>
+                    </div>
+                    {uni.admissionDeadline && (
+                      <div className="text-[11px] text-gray-400">
+                        Deadline: {new Date(uni.admissionDeadline).toLocaleDateString("en-US")}
                       </div>
                     )}
                   </div>
