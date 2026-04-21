@@ -29,6 +29,9 @@ interface University {
   admissionRequirements?: string[];
   services?: string[];
   tourImages?: string[];
+  admissionStatus?: "OPEN" | "CLOSED";
+  admissionStartDate?: string;
+  admissionDeadline?: string;
   isActive: boolean;
 }
 
@@ -56,6 +59,9 @@ export default function UniversityProfilePage() {
     admissionRequirements: [] as string[],
     services: [] as string[],
     tourImages: [] as string[],
+    admissionStatus: "OPEN" as "OPEN" | "CLOSED",
+    admissionStartDate: "",
+    admissionDeadline: "",
     isActive: true,
   });
 
@@ -110,6 +116,9 @@ export default function UniversityProfilePage() {
           : [],
         services: Array.isArray(university.services) ? university.services : [],
         tourImages: Array.isArray(university.tourImages) ? university.tourImages : [],
+        admissionStatus: university.admissionStatus || "OPEN",
+        admissionStartDate: university.admissionStartDate ? new Date(university.admissionStartDate).toISOString().slice(0, 10) : "",
+        admissionDeadline: university.admissionDeadline ? new Date(university.admissionDeadline).toISOString().slice(0, 10) : "",
         isActive: university.isActive !== undefined ? university.isActive : true,
       });
 
@@ -251,6 +260,9 @@ export default function UniversityProfilePage() {
         admissionRequirements: formData.admissionRequirements.length > 0 ? formData.admissionRequirements : undefined,
         services: formData.services.length > 0 ? formData.services : undefined,
         tourImages,
+        admissionStatus: formData.admissionStatus,
+        admissionStartDate: formData.admissionStartDate || null,
+        admissionDeadline: formData.admissionDeadline || null,
       });
 
       showToast.success("University profile updated successfully!");
@@ -568,6 +580,53 @@ export default function UniversityProfilePage() {
                 disabled={uploading === "tour"}
               />
             </label>
+          </div>
+        </div>
+
+        {/* Admission Requirements */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-montserrat-bold text-[#121c67] border-b pb-2">Admission Control</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block font-montserrat-semibold text-sm mb-2">
+                Admission Status
+              </label>
+              <select
+                value={formData.admissionStatus}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    admissionStatus: e.target.value as "OPEN" | "CLOSED",
+                  })
+                }
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
+              >
+                <option value="OPEN">Admission Open</option>
+                <option value="CLOSED">Admission Closed</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-montserrat-semibold text-sm mb-2">
+                Admission Start Date
+              </label>
+              <input
+                type="date"
+                value={formData.admissionStartDate}
+                onChange={(e) => setFormData({ ...formData, admissionStartDate: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
+              />
+            </div>
+            <div>
+              <label className="block font-montserrat-semibold text-sm mb-2">
+                Admission Deadline
+              </label>
+              <input
+                type="date"
+                value={formData.admissionDeadline}
+                onChange={(e) => setFormData({ ...formData, admissionDeadline: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
+              />
+            </div>
           </div>
         </div>
 
