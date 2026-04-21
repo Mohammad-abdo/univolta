@@ -101,6 +101,7 @@ export function Footer() {
             >
               <input
                 type="email"
+                suppressHydrationWarning
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={tl("footerEmailPlaceholder")}
@@ -108,6 +109,7 @@ export function Footer() {
               />
               <Button
                 type="submit"
+                suppressHydrationWarning
                 className="bg-[#5260ce] hover:bg-[#4350b0] text-white px-5 rounded-xl text-sm font-montserrat-semibold shrink-0 transition-all"
               >
                 {subscribed ? tl("footerSubscribedBtn") : <><Send className="w-4 h-4 mr-1 inline" />{tl("footerSubscribeBtn")}</>}

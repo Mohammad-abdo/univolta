@@ -311,6 +311,7 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
                 <Search className="w-5 h-5 md:w-6 md:h-6 text-[#8b8c9a] shrink-0" />
                 <input
                   type="text"
+                  suppressHydrationWarning
                   placeholder={tl("searchUniversities")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -327,6 +328,7 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
                 />
               </div>
               <Button
+                suppressHydrationWarning
                 onClick={() =>
                   router.push(
                     searchQuery.trim()
@@ -352,6 +354,7 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
               ].map((tag) => (
                 <button
                   key={tag.key}
+                  suppressHydrationWarning
                   onClick={() => {
                     const param = tag.type === "country"
                       ? `country=${encodeURIComponent(tag.value)}`
