@@ -193,40 +193,8 @@ export default async function UniversityDetailPage({
             <div className="absolute inset-0 bg-gradient-to-r from-[#121c67]/80 via-[#121c67]/50 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-            {/* Ranking badge top-right */}
-            {university.worldRanking && (
-              <div className="absolute top-4 right-4">
-                <Badge className="bg-[#5260ce]/90 text-white text-xs font-montserrat-semibold shadow-md backdrop-blur-sm border-0 px-3 py-1.5">
-                  <Trophy className="w-3 h-3 mr-1.5" />
-                  #{university.worldRanking} World Ranking
-                </Badge>
-              </div>
-            )}
-
-            {/* Logo + Name bottom-left */}
-            <div className="absolute left-5 bottom-5 md:left-10 md:bottom-8 flex items-end gap-4">
-              {(university.logoUrl || university.logo) && (
-                <div className="relative w-16 h-16 md:w-[110px] md:h-[110px] border-4 border-white rounded-2xl overflow-hidden shrink-0 bg-white shadow-xl">
-                  <Image
-                    src={getImageUrlOrFallback(university.logoUrl || university.logo, figmaAssets.logo)}
-                    alt={university.name}
-                    fill
-                    className="object-contain p-1 md:p-2"
-                    unoptimized
-                  />
-                </div>
-              )}
-              <div className="pb-1">
-                <p className="text-white/70 text-xs md:text-sm font-montserrat-regular mb-1">{university.country}</p>
-                <h1 className="font-montserrat-bold text-xl md:text-[36px] leading-tight text-white drop-shadow-lg">
-                  {university.name}
-                </h1>
-              </div>
-            </div>
-
-            {/* CTA bottom-right */}
-            <div className="absolute right-5 bottom-5 md:right-10 md:bottom-8 flex flex-col items-end gap-2">
-              {/* Admission status badge */}
+            {/* Admission status badge top-left */}
+            <div className="absolute top-4 left-4">
               {(() => {
                 const isOpen = university.admissionStatus !== "CLOSED";
                 return (
@@ -253,15 +221,59 @@ export default async function UniversityDetailPage({
                   </span>
                 );
               })()}
-              <Button
-                className="bg-white hover:bg-gray-50 text-[#5260ce] font-montserrat-semibold text-sm md:text-base h-10 md:h-12 px-5 md:px-7 rounded-xl shadow-lg transition-all hover:shadow-xl"
-                asChild
+            </div>
+
+            {/* Ranking badge top-right */}
+            {university.worldRanking && (
+              <div className="absolute top-4 right-4">
+                <Badge className="bg-[#5260ce]/90 text-white text-xs font-montserrat-semibold shadow-md backdrop-blur-sm border-0 px-3 py-1.5">
+                  <Trophy className="w-3 h-3 mr-1.5" />
+                  #{university.worldRanking} World Ranking
+                </Badge>
+              </div>
+            )}
+
+            {/* Bottom content row (separated blocks) */}
+            <div
+              className={`absolute left-5 right-5 bottom-5 md:left-10 md:right-10 md:bottom-8 flex items-end justify-between gap-4 ${
+                lang === "ar" ? "flex-row-reverse" : "flex-row"
+              }`}
+            >
+              <div
+                className={`flex items-end gap-3 md:gap-4 min-w-0 max-w-[65%] ${
+                  lang === "ar" ? "flex-row-reverse text-right" : "text-left"
+                }`}
               >
-                <Link href={`/universities/${slug}/programs`} className="flex items-center gap-2">
-                  {t("viewAcademicPrograms")}
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </Button>
+                {(university.logoUrl || university.logo) && (
+                  <div className="relative w-16 h-16 md:w-[110px] md:h-[110px] border-4 border-white rounded-2xl overflow-hidden shrink-0 bg-white shadow-xl">
+                    <Image
+                      src={getImageUrlOrFallback(university.logoUrl || university.logo, figmaAssets.logo)}
+                      alt={university.name}
+                      fill
+                      className="object-contain p-1 md:p-2"
+                      unoptimized
+                    />
+                  </div>
+                )}
+                <div className="pb-1 min-w-0">
+                  <p className="text-white/70 text-xs md:text-sm font-montserrat-regular mb-1 truncate">{university.country}</p>
+                  <h1 className="font-montserrat-bold text-xl md:text-[36px] leading-tight text-white drop-shadow-lg line-clamp-2 md:line-clamp-1">
+                    {university.name}
+                  </h1>
+                </div>
+              </div>
+
+              <div className={`shrink-0 ${lang === "ar" ? "text-left" : "text-right"}`}>
+                <Button
+                  className="bg-white hover:bg-gray-50 text-[#5260ce] font-montserrat-semibold text-sm md:text-base h-10 md:h-12 px-4 md:px-7 rounded-xl shadow-lg transition-all hover:shadow-xl"
+                  asChild
+                >
+                  <Link href={`/universities/${slug}/programs`} className="flex items-center gap-2">
+                    {t("viewAcademicPrograms")}
+                    <ArrowRight className={`w-4 h-4 ${lang === "ar" ? "rotate-180" : ""}`} />
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
 
