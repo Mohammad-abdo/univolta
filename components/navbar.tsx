@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronDown, User, LogOut, Globe } from "lucide-react";
+import { Menu, X, ChevronDown, User, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { figmaAssets } from "@/lib/figma-assets";
 import { usePathname } from "next/navigation";
@@ -43,17 +43,22 @@ export function Navbar() {
       })
       .catch(() => {});
 
-    const interval = setInterval(() => {
-      const lang = getLanguage();
-      setCurrentLang(lang);
-    }, 100);
-
     const onScroll = () => setScrolled(window.scrollY > 50);
+    const refreshLanguage = () => setCurrentLang(getLanguage());
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") refreshLanguage();
+    };
+
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("focus", refreshLanguage);
+    window.addEventListener("storage", refreshLanguage);
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
-      clearInterval(interval);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("focus", refreshLanguage);
+      window.removeEventListener("storage", refreshLanguage);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, []);
 
@@ -102,6 +107,12 @@ export function Navbar() {
   // Safe: returns English until mounted so server HTML == first client render
   const tl = (key: string, fallback: string) => (mounted ? t(key) : fallback);
   const isRTL = mounted && currentLang === "ar";
+  const currentLanguageMeta =
+    languages.find((lang) => lang.code === currentLang) || languages[0];
+  const getFlagIconUrl = (langCode: Language) =>
+    langCode === "ar"
+      ? "https://flagcdn.com/w40/sa.png"
+      : "https://flagcdn.com/w40/gb.png";
 
   const navItems = [
     { href: "/", label: tl("home", "Home"), active: pathname === "/" },
@@ -169,19 +180,13 @@ export function Navbar() {
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <Link
-                href="/login"
-                className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-montserrat-medium text-[#5260ce] hover:text-[#4350b0] transition-colors"
-              >
-                {mounted ? t("login") : "Login"}
-              </Link>
+            <div className="flex items-center gap-2 sm:gap-3">
               <Button
-                className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-xs h-8 px-2 sm:px-3 rounded-lg"
+                className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-xs h-8 px-2 sm:px-3 rounded-lg shadow-[0_4px_14px_rgba(82,96,206,0.35)]"
                 asChild
               >
-                <Link href="/signup">
-                  {mounted ? t("signUp") : "Sign Up"}
+                <Link href="/login">
+                  {mounted ? t("login") : "Login"}
                 </Link>
               </Button>
             </div>
@@ -205,7 +210,7 @@ export function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center shrink-0 group">
           <div className="relative w-[50px] h-[30px] md:w-[78px] md:h-[48px] transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_2px_8px_rgba(82,96,206,0.3)]">
-            <Image src={siteLogoUrl} alt="UniVolta Logo" fill className="object-contain" unoptimized />
+            <Image src={siteLogoUrl} alt="UniVolta Logo" fill className="object-contain" unoptimized priority />
           </div>
         </Link>
 
@@ -237,7 +242,13 @@ export function Navbar() {
               onClick={() => setLangMenuOpen(!langMenuOpen)}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[#65666f] font-montserrat-regular text-sm hover:text-[#5260ce] hover:bg-[rgba(82,96,206,0.06)] transition-all"
             >
-              <Globe className="w-4 h-4 shrink-0" />
+              <img
+                src={getFlagIconUrl(currentLanguageMeta.code)}
+                alt={`${currentLanguageMeta.name} flag`}
+                className="w-[18px] h-[12px] rounded-[2px] object-cover shrink-0"
+                loading="eager"
+                referrerPolicy="no-referrer"
+              />
               <span className="font-montserrat-semibold">{currentLang.toUpperCase()}</span>
               <ChevronDown className={`w-3.5 h-3.5 transition-transform ${langMenuOpen ? "rotate-180" : ""}`} />
             </button>
@@ -255,7 +266,13 @@ export function Navbar() {
                           : "text-gray-700 hover:bg-gray-50"
                       }`}
                     >
-                      <span className="text-xl">{lang.flag}</span>
+                      <img
+                        src={getFlagIconUrl(lang.code)}
+                        alt={`${lang.name} flag`}
+                        className="w-[20px] h-[14px] rounded-[2px] object-cover shrink-0"
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                      />
                       <span className="text-sm font-montserrat-regular">{lang.name}</span>
                     </button>
                   ))}
@@ -304,17 +321,11 @@ export function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <Link
-                href="/login"
-                className="text-[#2e2e2e] font-montserrat-regular text-sm hover:text-[#5260ce] transition-colors px-2 py-1"
-              >
-                {mounted ? t("login") : "Login"}
-              </Link>
               <Button
                 className="nav-cta-shine text-white font-montserrat-semibold text-sm h-[40px] px-5 rounded-xl relative overflow-hidden shadow-[0_4px_14px_rgba(82,96,206,0.35)] hover:shadow-[0_6px_20px_rgba(82,96,206,0.5)] hover:-translate-y-0.5 transition-all duration-200"
                 asChild
               >
-                <Link href="/signup">{mounted ? t("signUp") : "Sign Up"}</Link>
+                <Link href="/login">{mounted ? t("login") : "Login"}</Link>
               </Button>
             </div>
           )}
@@ -371,7 +382,13 @@ export function Navbar() {
                           : "bg-white text-gray-700 border-gray-300 hover:border-[#5260ce] active:scale-95"
                       }`}
                     >
-                      <span className="text-base mr-1">{lang.flag}</span>
+                      <img
+                        src={getFlagIconUrl(lang.code)}
+                        alt={`${lang.name} flag`}
+                        className="w-[18px] h-[12px] rounded-[2px] object-cover shrink-0 mr-1"
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                      />
                       <span>{lang.name}</span>
                     </button>
                   ))}
@@ -416,21 +433,12 @@ export function Navbar() {
                 </div>
               ) : (
                 <div className="px-4 py-2 space-y-3">
-                  <Button 
-                    variant="outline" 
-                    className="w-full text-base h-12 font-montserrat-semibold border-2 border-gray-300 hover:border-[#5260ce] active:scale-95 transition-all" 
-                    asChild
-                  >
-                    <Link href="/login" onClick={() => setIsOpen(false)}>
-                      {t("login")}
-                    </Link>
-                  </Button>
                   <Button
                     className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white text-base h-12 font-montserrat-semibold shadow-md active:scale-95 transition-all"
                     asChild
                   >
-                    <Link href="/signup" onClick={() => setIsOpen(false)}>
-                      {t("signUp")}
+                    <Link href="/login" onClick={() => setIsOpen(false)}>
+                      {t("login")}
                     </Link>
                   </Button>
                 </div>

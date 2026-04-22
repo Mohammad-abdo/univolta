@@ -118,8 +118,14 @@ export default function AboutPage() {
                     <ArrowRight className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
                   </Link>
                 </Button>
-                <Button asChild variant="outline" className="border-white/30 text-white hover:bg-white/10 font-montserrat-semibold h-[52px] px-8 rounded-xl backdrop-blur-sm hover:-translate-y-0.5 transition-all duration-300">
-                  <Link href="/contact">{t("ctaButtonSecondary")}</Link>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white font-montserrat-semibold h-[52px] px-8 rounded-xl backdrop-blur-sm shadow-[0_8px_24px_rgba(0,0,0,0.2)] hover:-translate-y-0.5 transition-all duration-300"
+                >
+                  <Link href="/contact" className="!text-white">
+                    {t("ctaButtonSecondary")}
+                  </Link>
                 </Button>
               </div>
             </div>

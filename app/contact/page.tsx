@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
@@ -24,6 +24,7 @@ import { t } from "@/lib/i18n";
 import { contactApi } from "@/lib/admin-api";
 
 export default function ContactPage() {
+  const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -33,16 +34,22 @@ export default function ContactPage() {
   });
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const tt = (key: string, fallback: string) => (mounted ? t(key) : fallback);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       await contactApi.submit(formData);
-      showToast.success(t("messageSentSuccess"));
+      showToast.success(tt("messageSentSuccess", "Message sent successfully! We'll get back to you soon."));
       setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
     } catch (error: any) {
-      showToast.error(error.message || t("errorOccurred"));
+      showToast.error(error.message || tt("errorOccurred", "An error occurred"));
     } finally {
       setLoading(false);
     }
@@ -83,7 +90,7 @@ export default function ContactPage() {
                     <span className="text-white/90 text-xs font-montserrat-semibold tracking-wider uppercase">Get in Touch</span>
                   </div>
                   <h1 className="text-white text-2xl md:text-[44px] font-montserrat-bold leading-tight animate-fade-up-d100 drop-shadow-lg">
-                    {t("reachOutToUs")}
+                    {tt("reachOutToUs", "Reach Out to Us")}
                   </h1>
                   <p className="text-white/75 text-sm md:text-lg font-montserrat-regular mt-3 animate-fade-up-d200 max-w-md">
                     We&apos;re here to help with your academic journey
@@ -112,7 +119,7 @@ export default function ContactPage() {
           <div className="absolute left-0 top-[140px] hidden xl:flex -translate-y-1/2 z-10">
             <div className="flex flex-col items-center gap-3 rounded-r-[12px] bg-white p-3 shadow-[0px_4px_20px_rgba(82,96,206,0.12)]">
               <div className="rotate-90 bg-[#75d3f7] px-2 py-0.5 rounded text-sm font-montserrat-regular text-[#5260ce] whitespace-nowrap">
-                {t("followUs")}
+                        {tt("followUs", "Follow Us")}
               </div>
               <a
                 href="#"
@@ -147,30 +154,30 @@ export default function ContactPage() {
                   <div className="space-y-6 max-w-[520px]">
                     <div className="space-y-4">
                       <p className="text-[#5260ce] text-base font-montserrat-regular">
-                        {t("contact")}
+                        {tt("contact", "Contact")}
                       </p>
                       <h2 className="text-[#121c67] text-[34px] font-montserrat-bold leading-[1.4]">
-                        {t("contactOurSupport")}
+                        {tt("contactOurSupport", "Contact our support team, we are here to help you 🤝")}
                       </h2>
                       <p className="text-[#7c7b7c] text-[18px] font-montserrat-regular leading-relaxed">
-                        {t("contactDescription")}
+                        {tt("contactDescription", "We're here to answer your questions and assist you every step of the way. Feel free to contact us at any time!")}
                       </p>
                     </div>
 
                     <div className="space-y-5">
                       <ContactInfo
                         icon={Phone}
-                        label={t("phone")}
+                        label={tt("phone", "Phone")}
                         value="+00 000 000 00 67"
                       />
                       <ContactInfo
                         icon={Mail}
-                        label={t("email")}
+                        label={tt("email", "Email")}
                         value="info@univolta.com"
                       />
                       <ContactInfo
                         icon={MapPin}
-                        label={t("office")}
+                        label={tt("office", "Office")}
                         value="Mert, Rainbow Center, Floor: 3, Office: 12B, Brooklyn, New York, USA, Spring St. No:5, 11215, USA"
                       />
                     </div>
@@ -183,27 +190,27 @@ export default function ContactPage() {
                   <form onSubmit={handleSubmit} className="space-y-5">
                     <div className="grid gap-6 sm:grid-cols-2">
                       <FormField
-                        label={t("fullName")}
+                        label={tt("fullName", "Full Name")}
                         htmlFor="name"
-                        placeholder={t("fullNamePlaceholder")}
+                        placeholder={tt("fullNamePlaceholder", "Full Name")}
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         required
                       />
                       <FormField
-                        label={t("email")}
+                        label={tt("email", "Email")}
                         htmlFor="email"
                         type="email"
-                        placeholder={t("emailPlaceholder")}
+                        placeholder={tt("emailPlaceholder", "Email address")}
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         required
                       />
                     </div>
                     <FormField
-                      label={t("message")}
+                      label={tt("message", "Message")}
                       htmlFor="message"
-                      placeholder={t("messagePlaceholder")}
+                      placeholder={tt("messagePlaceholder", "Tell us about your project....")}
                       as="textarea"
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
@@ -217,12 +224,12 @@ export default function ContactPage() {
                       {loading ? (
                         <span className="flex items-center gap-2">
                           <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                          {t("sending")}
+                          {tt("sending", "Sending...")}
                         </span>
                       ) : (
                         <span className="flex items-center gap-2">
                           <Send className="w-4 h-4" />
-                          {t("sendMessage")}
+                          {tt("sendMessage", "Send Message")}
                         </span>
                       )}
                     </Button>
@@ -248,17 +255,17 @@ export default function ContactPage() {
               <div className="relative grid gap-12 lg:grid-cols-2 items-center px-6 py-16 md:px-10">
                 <div className="space-y-6">
                   <h2 className="text-[34px] font-montserrat-bold">
-                    {t("startUniversityJourney")}
+                    {tt("startUniversityJourney", "Start your university journey now! 🚀")}
                   </h2>
                   <p className="max-w-[451px] text-lg font-montserrat-light text-white/90 leading-relaxed">
-                    {t("startJourneyDescription")}
+                    {tt("startJourneyDescription", "Submit your application in just 3 easy steps, benefit from scholarships of up to 100%, and become part of an outstanding academic community.")}
                   </p>
                   <Button
                     asChild
                     size="lg"
                     className="rounded-xl bg-white px-8 text-base font-montserrat-semibold text-[#5260ce] hover:bg-gray-100"
                   >
-                    <Link href="/universities">{t("browseUniversitiesButton")}</Link>
+                    <Link href="/universities">{tt("browseUniversitiesButton", "Browse universities")}</Link>
                   </Button>
                 </div>
                 <div className="relative hidden lg:block h-[420px] w-full">
