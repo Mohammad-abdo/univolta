@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { API_BASE_URL } from "@/lib/constants";
+import { getImageUrl } from "@/lib/image-utils";
 import { getLanguage, t, type Language } from "@/lib/i18n";
 
 type ServiceItem = {
@@ -79,7 +80,13 @@ export function ServicesSection() {
               <Link href={`/services/${service.id}`} className="block h-full">
                 <article className="group relative h-[330px] overflow-hidden rounded-2xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_40px_rgba(82,96,206,0.22)]">
                   <div className="absolute inset-0 bg-gray-100">
-                    {service.mainImage ? <img src={service.mainImage} alt={service.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /> : null}
+                    {getImageUrl(service.mainImage) ?
+                      <img
+                        src={getImageUrl(service.mainImage)}
+                        alt={service.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    : null}
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0f1230]/90 via-[#1f2a6e]/45 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 space-y-2 p-4 text-white">

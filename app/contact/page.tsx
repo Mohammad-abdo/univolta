@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
@@ -24,6 +25,7 @@ import { t } from "@/lib/i18n";
 import { contactApi } from "@/lib/admin-api";
 
 export default function ContactPage() {
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -37,6 +39,23 @@ export default function ContactPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!mounted || pathname !== "/contact") return;
+    const id =
+      typeof window !== "undefined" ?
+        new URLSearchParams(window.location.search).get("serviceId")
+      : null;
+    if (!id) return;
+    setFormData((prev) => {
+      if (prev.subject.trim() !== "" || prev.message.trim() !== "") return prev;
+      const subject = t("contactServiceInquirySubject");
+      const rawMsg = t("contactServiceInquiryMessage");
+      const message =
+        rawMsg.includes("{{id}}") ? rawMsg.replace(/\{\{id\}\}/g, id) : `${rawMsg} (${id})`;
+      return { ...prev, subject, message };
+    });
+  }, [mounted, pathname]);
 
   const tt = (key: string, fallback: string) => (mounted ? t(key) : fallback);
 

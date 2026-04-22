@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { API_BASE_URL } from "@/lib/constants";
+import { getImageUrl } from "@/lib/image-utils";
 import { getLanguage, t, type Language } from "@/lib/i18n";
 import { ArrowUpRight, Search } from "lucide-react";
 
@@ -92,8 +93,12 @@ export default function ServicesPage() {
             <Link key={service.id} href={`/services/${service.id}`} className="block">
               <article className="group relative h-[360px] overflow-hidden rounded-2xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_40px_rgba(82,96,206,0.22)]">
                 <div className="absolute inset-0 bg-gray-100">
-                  {service.mainImage ? (
-                    <img src={service.mainImage} alt={service.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  {getImageUrl(service.mainImage) ? (
+                    <img
+                      src={getImageUrl(service.mainImage)}
+                      alt={service.title}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
                   ) : null}
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0f1230]/90 via-[#1f2a6e]/45 to-transparent" />

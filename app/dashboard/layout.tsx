@@ -3,30 +3,45 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/constants";
 import { canAccess, type UserRole } from "@/lib/permissions";
 import {
   LayoutDashboard,
-  Home,
+  LayoutGrid,
+  Images,
+  Globe2,
+  PanelBottom,
+  Inbox,
   GraduationCap,
   BookOpen,
-  FileText,
-  MessageSquare,
+  ClipboardList,
   HelpCircle,
   Users,
   LogOut,
-  Menu,
   X,
-  Shield,
-  DollarSign,
   Bell,
   BarChart3,
-  Settings,
+  Layers,
+  Wallet,
+  Star,
+  KeyRound,
+  UsersRound,
+  DollarSign,
+  Building2,
+  FolderTree,
+  Calendar,
+  CalendarRange,
+  Award,
+  SlidersHorizontal,
 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { t, getLanguage } from "@/lib/i18n";
 import { Toaster } from "react-hot-toast";
+import { figmaAssets } from "@/lib/figma-assets";
+import { fetchPublicSiteSettings } from "@/lib/site-settings";
+import { getImageUrl } from "@/lib/image-utils";
 
 interface MenuItem {
   href: string;
@@ -40,61 +55,61 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
   // Partner/University menu items
   if (isPartner || role === "university") {
     return [
-      { href: "/dashboard/partner", label: t("dashboard") || "Dashboard", icon: LayoutDashboard },
+      { href: "/dashboard/partner", label: t("dashboard"), icon: LayoutDashboard },
       {
         href: "/dashboard/partner/students",
-        label: t("students") || "Students",
-        icon: Users,
+        label: t("students"),
+        icon: UsersRound,
       },
       {
         href: "/dashboard/partner/payments",
-        label: t("payments") || "Payments",
-        icon: DollarSign,
+        label: t("payments"),
+        icon: Wallet,
       },
       {
         href: "/dashboard/partner/programs",
-        label: t("programs") || "Programs",
+        label: t("programs"),
         icon: BookOpen,
       },
       {
         href: "/dashboard/partner/departments",
-        label: t("departments") || "Departments",
-        icon: GraduationCap,
+        label: t("departments"),
+        icon: FolderTree,
       },
       {
         href: "/dashboard/partner/semesters",
-        label: t("semesters") || "Semesters",
-        icon: FileText,
+        label: t("semesters"),
+        icon: Calendar,
       },
       {
         href: "/dashboard/partner/educational-years",
-        label: t("educationalYears") || "Educational Years",
-        icon: BookOpen,
+        label: t("educationalYears"),
+        icon: CalendarRange,
       },
       {
         href: "/dashboard/partner/degrees",
-        label: t("degrees") || "Degrees",
-        icon: GraduationCap,
+        label: t("degrees"),
+        icon: Award,
       },
       {
         href: "/dashboard/partner/reports",
-        label: t("reports") || "Reports",
+        label: t("reports"),
         icon: BarChart3,
       },
       {
         href: "/dashboard/partner/profile",
-        label: t("universityProfile") || "University Profile",
-        icon: Settings,
+        label: t("universityProfile"),
+        icon: Building2,
       },
       {
         href: "/dashboard/partner/alerts",
-        label: t("notifications") || "Notifications",
+        label: t("notifications"),
         icon: Bell,
       },
       {
         href: "/dashboard/partner/settings",
-        label: t("settings") || "Settings",
-        icon: Settings,
+        label: t("settings"),
+        icon: SlidersHorizontal,
       },
     ];
   }
@@ -104,28 +119,28 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
     { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
     {
       href: "/dashboard/cms",
-      label: "CMS Dashboard",
-      icon: LayoutDashboard,
+      label: t("sidebarCmsOverview"),
+      icon: LayoutGrid,
     },
     {
       href: "/dashboard/cms/homepage",
-      label: "CMS Home Page",
-      icon: Home,
+      label: t("sidebarCmsHomepage"),
+      icon: Images,
     },
     {
       href: "/dashboard/cms/site-settings",
-      label: "CMS Site Settings",
-      icon: Settings,
+      label: t("sidebarCmsSiteSettings"),
+      icon: Globe2,
     },
     {
       href: "/dashboard/cms/footer",
-      label: "CMS Footer",
-      icon: Settings,
+      label: t("sidebarCmsFooter"),
+      icon: PanelBottom,
     },
     {
       href: "/dashboard/cms/messages",
-      label: "CMS Messages",
-      icon: MessageSquare,
+      label: t("sidebarCmsMessages"),
+      icon: Inbox,
     },
     {
       href: "/dashboard/universities",
@@ -141,14 +156,14 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
     },
     {
       href: "/dashboard/services",
-      label: "Services",
-      icon: Settings,
+      label: t("servicesSectionBadge"),
+      icon: Layers,
       permission: { resource: "services", action: "read" },
     },
     {
       href: "/dashboard/applications",
       label: t("applications"),
-      icon: FileText,
+      icon: ClipboardList,
       permission: { resource: "applications", action: "read" },
     },
     {
@@ -160,7 +175,7 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
     {
       href: "/dashboard/testimonials",
       label: t("testimonials"),
-      icon: MessageSquare,
+      icon: Star,
       permission: { resource: "testimonials", action: "read" },
     },
     {
@@ -178,13 +193,13 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
     {
       href: "/dashboard/permissions",
       label: t("permissions"),
-      icon: Shield,
+      icon: KeyRound,
       permission: { resource: "users", action: "read" },
     },
     {
       href: "/dashboard/roles",
       label: t("roles"),
-      icon: Shield,
+      icon: UsersRound,
       permission: { resource: "users", action: "read" },
     },
   ];
@@ -201,21 +216,36 @@ export default function DashboardLayout({
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isPartner, setIsPartner] = useState(false);
   const [currentLang, setCurrentLang] = useState<string>("en");
+  const [siteLogoUrl, setSiteLogoUrl] = useState<string>(figmaAssets.logo);
   const router = useRouter();
   const pathname = usePathname();
   const isLoginPage = pathname === "/dashboard/login";
 
   useEffect(() => {
     setCurrentLang(getLanguage());
-    // Listen for language changes
-    const interval = setInterval(() => {
-      const lang = getLanguage();
-      if (lang !== currentLang) {
-        setCurrentLang(lang);
-      }
-    }, 100);
-    return () => clearInterval(interval);
-  }, [currentLang]);
+    const refreshLanguage = () => setCurrentLang(getLanguage());
+    window.addEventListener("focus", refreshLanguage);
+    window.addEventListener("storage", refreshLanguage);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") refreshLanguage();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", refreshLanguage);
+      window.removeEventListener("storage", refreshLanguage);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
+
+  useEffect(() => {
+    fetchPublicSiteSettings()
+      .then((settings) => {
+        if (settings["site.logoUrl"]) {
+          setSiteLogoUrl(getImageUrl(settings["site.logoUrl"]) || figmaAssets.logo);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     // For login page, check if user is already authenticated and redirect
@@ -391,23 +421,42 @@ export default function DashboardLayout({
       />
 
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:block fixed left-0 rtl:left-auto rtl:right-0 top-0 h-full w-64 bg-white border-r rtl:border-r-0 rtl:border-l border-gray-200 z-40">
-        <div className="p-4 md:p-6">
-          <h1 className="text-xl md:text-2xl font-montserrat-bold text-[#121c67]">
-            UniVolta{" "}
-            {userRole === "admin"
-              ? t("admin") || "Admin"
-              : userRole === "university" || isPartner
-              ? t("university") || "University"
-              : t("editor") || "Editor"}
-          </h1>
-          <p className="text-xs text-gray-500 mt-1 capitalize">
+      <aside
+        className="hidden md:flex md:flex-col fixed left-0 rtl:left-auto rtl:right-0 top-0 z-40 h-full w-64 border-r border-[#e4e8f6] bg-gradient-to-b from-[#f6f8ff] via-white to-[#fafbff] shadow-[inset_-1px_0_0_rgba(82,96,206,0.06)] rtl:border-r-0 rtl:border-l"
+        dir={currentLang === "ar" ? "rtl" : "ltr"}
+      >
+        <div className="border-b border-[#e8ebf7]/90 bg-white/75 px-4 py-5 backdrop-blur-[2px]">
+          <div className="relative mx-auto mb-4 h-12 w-full max-w-[200px]">
+            <Image
+              src={siteLogoUrl}
+              alt="Logo"
+              fill
+              className="object-contain object-left rtl:object-right"
+              sizes="200px"
+              unoptimized
+              priority
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex rounded-full bg-[rgba(82,96,206,0.12)] px-3 py-1 text-xs font-montserrat-semibold text-[#5260ce]">
+              {userRole === "admin"
+                ? t("admin")
+                : userRole === "university" || isPartner
+                  ? t("university")
+                  : t("editor")}
+            </span>
+          </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-gray-500">
             {userRole === "university" || isPartner
-              ? t("universityControlPanel") || "University Control Panel"
-              : userRole}
+              ? t("universityControlPanel")
+              : userRole === "admin"
+                ? t("sidebarSubtitleAdmin")
+                : userRole === "editor"
+                  ? t("sidebarSubtitleEditor")
+                  : ""}
           </p>
         </div>
-        <nav className="px-2 md:px-4 overflow-y-auto h-[calc(100vh-200px)]">
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -415,25 +464,31 @@ export default function DashboardLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 mb-1 md:mb-2 rounded-lg transition-colors text-sm md:text-base ${
+                className={`mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all ${
                   isActive
-                    ? "bg-[rgba(82,96,206,0.1)] text-[#5260ce] font-montserrat-semibold"
-                    : "hover:bg-[rgba(82,96,206,0.1)] text-[#2e2e2e] font-montserrat-regular"
+                    ? "bg-white font-montserrat-semibold text-[#5260ce] shadow-sm ring-1 ring-[#5260ce]/15"
+                    : "font-montserrat-regular text-[#374151] hover:bg-white/90 hover:text-[#5260ce]"
                 }`}
               >
-                <Icon className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
-                <span className="truncate">{item.label}</span>
+                <span
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                    isActive ? "bg-[rgba(82,96,206,0.12)] text-[#5260ce]" : "bg-transparent text-[#6b7280]"
+                  }`}
+                >
+                  <Icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.25 : 2} />
+                </span>
+                <span className="min-w-0 flex-1 truncate">{item.label}</span>
               </Link>
             );
           })}
         </nav>
-        <div className="absolute bottom-4 left-4 right-4 hidden md:block">
+        <div className="mt-auto border-t border-[#e8ebf7] bg-white/80 p-4">
           <Button
             onClick={handleLogout}
             variant="outline"
-            className="w-full flex items-center gap-2"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border-[#dce2ff] text-[#5260ce] hover:bg-[rgba(82,96,206,0.08)]"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="h-4 w-4" />
             {t("logout")}
           </Button>
         </div>
@@ -446,35 +501,49 @@ export default function DashboardLayout({
           onClick={() => setIsMobileMenuOpen(false)}
         >
           <aside
-            className={`fixed ${currentLang === "ar" ? "right-0" : "left-0"} top-16 h-[calc(100vh-4rem)] w-64 bg-white z-40 transform transition-transform duration-300 ease-in-out shadow-xl`}
+            className={`fixed ${currentLang === "ar" ? "right-0" : "left-0"} top-16 z-40 flex h-[calc(100vh-4rem)] w-64 flex-col border-r border-[#e4e8f6] bg-gradient-to-b from-[#f6f8ff] via-white to-[#fafbff] shadow-xl transition-transform duration-300 ease-in-out rtl:border-r-0 rtl:border-l`}
+            dir={currentLang === "ar" ? "rtl" : "ltr"}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-xl font-montserrat-bold text-[#121c67]">
-                    UniVolta{" "}
-                    {userRole === "admin"
-                      ? t("admin") || "Admin"
-                      : userRole === "university" || isPartner
-                      ? t("university") || "University"
-                      : t("editor") || "Editor"}
-                  </h1>
-                  <p className="text-xs text-gray-500 mt-1 capitalize">
-                    {userRole === "university" || isPartner
-                      ? t("universityControlPanel") || "University Control Panel"
-                      : userRole}
-                  </p>
+            <div className="flex items-start justify-between gap-2 border-b border-[#e8ebf7] bg-white/75 px-4 py-4">
+              <div className="min-w-0 flex-1">
+                <div className="relative mx-auto mb-3 h-10 w-full max-w-[180px]">
+                  <Image
+                    src={siteLogoUrl}
+                    alt="Logo"
+                    fill
+                    className="object-contain object-left rtl:object-right"
+                    sizes="180px"
+                    unoptimized
+                  />
                 </div>
-                <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <span className="inline-flex rounded-full bg-[rgba(82,96,206,0.12)] px-2.5 py-0.5 text-[11px] font-montserrat-semibold text-[#5260ce]">
+                  {userRole === "admin"
+                    ? t("admin")
+                    : userRole === "university" || isPartner
+                      ? t("university")
+                      : t("editor")}
+                </span>
+                <p className="mt-1.5 text-[10px] leading-snug text-gray-500">
+                  {userRole === "university" || isPartner
+                    ? t("universityControlPanel")
+                    : userRole === "admin"
+                      ? t("sidebarSubtitleAdmin")
+                      : userRole === "editor"
+                        ? t("sidebarSubtitleEditor")
+                        : ""}
+                </p>
               </div>
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="shrink-0 rounded-lg p-2 hover:bg-gray-100"
+                aria-label={currentLang === "ar" ? "إغلاق القائمة" : "Close menu"}
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            <nav className="px-2 overflow-y-auto h-[calc(100vh-250px)]">
+            <nav className="flex-1 overflow-y-auto px-3 py-3">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
@@ -482,26 +551,32 @@ export default function DashboardLayout({
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-3 px-3 py-3 mb-1 rounded-lg transition-colors text-sm ${
+                    className={`mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all ${
                       isActive
-                        ? "bg-[rgba(82,96,206,0.1)] text-[#5260ce] font-montserrat-semibold"
-                        : "hover:bg-[rgba(82,96,206,0.1)] text-[#2e2e2e] font-montserrat-regular"
+                        ? "bg-white font-montserrat-semibold text-[#5260ce] shadow-sm ring-1 ring-[#5260ce]/15"
+                        : "font-montserrat-regular text-[#374151] hover:bg-white/90 hover:text-[#5260ce]"
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <Icon className="w-5 h-5 flex-shrink-0" />
-                    <span className="truncate">{item.label}</span>
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                        isActive ? "bg-[rgba(82,96,206,0.12)] text-[#5260ce]" : "bg-transparent text-[#6b7280]"
+                      }`}
+                    >
+                      <Icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.25 : 2} />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
                   </Link>
                 );
               })}
             </nav>
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
+            <div className="border-t border-[#e8ebf7] bg-white/90 p-4">
               <Button
                 onClick={handleLogout}
                 variant="outline"
-                className="w-full flex items-center gap-2"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border-[#dce2ff] text-[#5260ce] hover:bg-[rgba(82,96,206,0.08)]"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="h-4 w-4" />
                 {t("logout")}
               </Button>
             </div>

@@ -81,7 +81,12 @@ export function DashboardHeader({ onMenuToggle, isMobileMenuOpen }: DashboardHea
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 md:left-64 h-14 md:h-16 bg-white border-b border-gray-200 z-30 shadow-sm">
+    <header
+      className={`fixed top-0 h-14 md:h-16 bg-white border-b border-gray-200 z-30 shadow-sm left-0 right-0 ${
+        currentLang === "ar" ? "md:right-64 md:left-0" : "md:left-64 md:right-0"
+      }`}
+      dir={currentLang === "ar" ? "rtl" : "ltr"}
+    >
       <div className="h-full px-2 md:px-6 flex items-center justify-between gap-1 md:gap-2">
         {/* Left side - Mobile menu button and search */}
         <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
@@ -140,12 +145,12 @@ export function DashboardHeader({ onMenuToggle, isMobileMenuOpen }: DashboardHea
                 <ChevronDown className="w-3 h-3 text-gray-700 hidden lg:block" />
               </button>
               {langMenuOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                <div className={`absolute ${currentLang === "ar" ? "left-0" : "right-0"} mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50`}>
                   {languages.map((lang) => (
                     <button
                       key={lang.code}
                       onClick={() => handleLanguageChange(lang.code)}
-                      className={`w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 ${
+                      className={`w-full ${currentLang === "ar" ? "text-right" : "text-left"} px-4 py-2 hover:bg-gray-100 flex items-center gap-2 ${
                         currentLang === lang.code
                           ? "bg-blue-50 text-[#5260ce]"
                           : "text-gray-700"
@@ -172,7 +177,7 @@ export function DashboardHeader({ onMenuToggle, isMobileMenuOpen }: DashboardHea
               <div className="w-7 h-7 md:w-8 md:h-8 bg-[#5260ce] rounded-full flex items-center justify-center text-white font-montserrat-semibold text-xs md:text-sm flex-shrink-0">
                 {user?.name?.charAt(0)?.toUpperCase() || "U"}
               </div>
-              <div className="hidden xl:block text-left">
+              <div className={`hidden xl:block ${currentLang === "ar" ? "text-right" : "text-left"}`}>
                 <p className="text-sm font-montserrat-semibold text-gray-900 truncate max-w-[100px]">
                   {user?.name || t("user") || "User"}
                 </p>
@@ -190,7 +195,7 @@ export function DashboardHeader({ onMenuToggle, isMobileMenuOpen }: DashboardHea
                     setShowUserMenu(false);
                     router.push("/profile");
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                  className={`w-full px-4 py-2 ${currentLang === "ar" ? "text-right" : "text-left"} text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors`}
                 >
                   <User className="w-4 h-4" />
                   {t("profile")}
@@ -200,7 +205,7 @@ export function DashboardHeader({ onMenuToggle, isMobileMenuOpen }: DashboardHea
                     setShowUserMenu(false);
                     router.push("/dashboard/settings");
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                  className={`w-full px-4 py-2 ${currentLang === "ar" ? "text-right" : "text-left"} text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors`}
                 >
                   <Settings className="w-4 h-4" />
                   {t("settings")}
@@ -208,7 +213,7 @@ export function DashboardHeader({ onMenuToggle, isMobileMenuOpen }: DashboardHea
                 <div className="border-t border-gray-200 my-1"></div>
                 <button
                   onClick={handleLogout}
-                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                  className={`w-full px-4 py-2 ${currentLang === "ar" ? "text-right" : "text-left"} text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors`}
                 >
                   <LogOut className="w-4 h-4" />
                   {t("logout")}
