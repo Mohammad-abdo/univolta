@@ -7,14 +7,31 @@ import { Footer } from "@/components/footer";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { API_BASE_URL } from "@/lib/constants";
 import { getLanguage, t, type Language } from "@/lib/i18n";
-import { Search } from "lucide-react";
+import { ArrowUpRight, Search } from "lucide-react";
 
 type ServiceItem = {
   id: string;
   title: string;
+  titleAr?: string;
   description: string;
+  descriptionAr?: string;
   price: string;
   mainImage?: string | null;
+};
+
+const serviceArabicFallback: Record<string, { titleAr: string; descriptionAr: string }> = {
+  "Admission Guidance": {
+    titleAr: "إرشاد القبول الجامعي",
+    descriptionAr: "دعم كامل من اختيار الجامعة حتى تقديم الطلب ومتابعة القبول.",
+  },
+  "Accommodation & Arrival": {
+    titleAr: "السكن والاستقبال",
+    descriptionAr: "مساعدة في السكن والاستقبال لضمان بداية آمنة وسلسة في مصر.",
+  },
+  "Full Student Package": {
+    titleAr: "الباقة الشاملة للطالب",
+    descriptionAr: "باقة متكاملة تشمل القبول والتأشيرة والسكن والمتابعة بعد الوصول.",
+  },
 };
 
 const formatPrice = (value: string | number | null | undefined) => {
@@ -73,18 +90,28 @@ export default function ServicesPage() {
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((service) => (
             <Link key={service.id} href={`/services/${service.id}`} className="block">
-              <article className="overflow-hidden rounded-2xl border bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg">
-                <div className="h-44 w-full bg-gray-100">
+              <article className="group relative h-[360px] overflow-hidden rounded-2xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_40px_rgba(82,96,206,0.22)]">
+                <div className="absolute inset-0 bg-gray-100">
                   {service.mainImage ? (
-                    <img src={service.mainImage} alt={service.title} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-gray-400">No Image</div>
-                  )}
+                    <img src={service.mainImage} alt={service.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  ) : null}
                 </div>
-                <div className="space-y-2 p-4">
-                  <h2 className="line-clamp-1 text-lg font-semibold text-[#121c67]">{service.title}</h2>
-                  <p className="line-clamp-2 text-sm text-gray-600">{service.description}</p>
-                  <p className="font-semibold text-[#5260ce]">{formatPrice(service.price)}</p>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f1230]/90 via-[#1f2a6e]/45 to-transparent" />
+                <div className={`absolute inset-x-0 bottom-0 space-y-2 p-4 text-white ${lang === "ar" ? "text-right" : "text-left"}`}>
+                  <p className="text-sm font-semibold text-white/90">{formatPrice(service.price)}</p>
+                  <h2 className="line-clamp-1 text-lg font-semibold">{service.title}</h2>
+                  <p className="line-clamp-1 text-sm text-white/90" dir="rtl">
+                    {service.titleAr || serviceArabicFallback[service.title]?.titleAr || service.title}
+                  </p>
+                  <p className="line-clamp-2 text-xs text-white/80">
+                    {service.descriptionAr || serviceArabicFallback[service.title]?.descriptionAr || service.description}
+                  </p>
+                  <div className={`flex items-center justify-between pt-1 ${lang === "ar" ? "flex-row-reverse" : ""}`}>
+                    <span className="text-xs font-semibold tracking-wide text-white/90">{t("servicesSeeMore")}</span>
+                    <span className="rounded-full bg-white/20 p-2">
+                      <ArrowUpRight className="h-4 w-4 text-white" />
+                    </span>
+                  </div>
                 </div>
               </article>
             </Link>

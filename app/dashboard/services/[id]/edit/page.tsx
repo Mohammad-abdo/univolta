@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import ServiceForm, { ServicePayload } from "../../_components/service-form";
 import { apiGet } from "@/lib/api";
 import { showToast } from "@/lib/toast";
+import { ArrowLeft, PencilRuler, ShieldCheck } from "lucide-react";
 
 type ServiceApi = {
   id: string;
@@ -52,8 +54,26 @@ export default function EditServicePage() {
   if (!initial) return <div className="py-20 text-center text-red-500">Service not found.</div>;
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-3xl font-montserrat-bold text-[#121c67]">Edit Service</h1>
+    <div className="space-y-5">
+      <div className="rounded-2xl border border-[#dce2ff] bg-gradient-to-r from-[#f4f6ff] to-white p-5">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h1 className="flex items-center gap-2 text-3xl font-montserrat-bold text-[#121c67]">
+            <PencilRuler className="h-7 w-7 text-[#5260ce]" />
+            Edit Service
+          </h1>
+          <Link href="/dashboard/services" className="inline-flex items-center gap-2 rounded-lg border border-[#cad4ff] bg-white px-3 py-2 text-sm font-semibold text-[#4350b0] hover:bg-[#f3f5ff]">
+            <ArrowLeft className="h-4 w-4 text-[#5260ce]" />
+            Back to services
+          </Link>
+        </div>
+        <p className="mb-3 text-sm text-gray-600">
+          Update service details, images, points, and sub-services with a modern editing experience.
+        </p>
+        <div className="inline-flex items-center gap-2 rounded-full bg-[#edf2ff] px-3 py-1.5 text-xs font-semibold text-[#4350b0]">
+          <ShieldCheck className="h-3.5 w-3.5 text-[#5260ce]" />
+          Editing ID: {params.id}
+        </div>
+      </div>
       <ServiceForm mode="edit" serviceId={params.id} initialData={initial} />
     </div>
   );

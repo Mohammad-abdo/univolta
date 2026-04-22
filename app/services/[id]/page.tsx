@@ -13,13 +13,30 @@ import { CheckCircle2, ChevronLeft } from "lucide-react";
 type ServiceDetails = {
   id: string;
   title: string;
+  titleAr?: string;
   description: string;
+  descriptionAr?: string;
   price: string;
   discount: string;
   mainImage?: string | null;
   images?: string[];
   points?: Array<{ title: string; description: string }>;
   subServices?: Array<{ id: string; title: string; description: string; price: string; images: string[] }>;
+};
+
+const serviceArabicFallback: Record<string, { titleAr: string; descriptionAr: string }> = {
+  "Admission Guidance": {
+    titleAr: "إرشاد القبول الجامعي",
+    descriptionAr: "دعم كامل من اختيار الجامعة حتى تقديم الطلب ومتابعة القبول.",
+  },
+  "Accommodation & Arrival": {
+    titleAr: "السكن والاستقبال",
+    descriptionAr: "مساعدة في السكن والاستقبال لضمان بداية آمنة وسلسة في مصر.",
+  },
+  "Full Student Package": {
+    titleAr: "الباقة الشاملة للطالب",
+    descriptionAr: "باقة متكاملة تشمل القبول والتأشيرة والسكن والمتابعة بعد الوصول.",
+  },
 };
 
 const formatPrice = (value: string | number | null | undefined) => {
@@ -69,7 +86,13 @@ export default function ServiceDetailsPage() {
               </div>
               <div className="space-y-3 p-6 md:p-8">
                 <h1 className="text-3xl font-montserrat-bold text-[#121c67]">{service.title}</h1>
+                <p className="text-lg font-semibold text-[#2f3b87]" dir="rtl">
+                  {service.titleAr || serviceArabicFallback[service.title]?.titleAr || service.title}
+                </p>
                 <p className="text-[#5f6377]">{service.description}</p>
+                <p className="text-[#5f6377]" dir="rtl">
+                  {service.descriptionAr || serviceArabicFallback[service.title]?.descriptionAr || service.description}
+                </p>
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="rounded-full bg-[#EEF2FF] px-4 py-1.5 font-semibold text-[#4350b0]">
                     {formatPrice(service.price)}

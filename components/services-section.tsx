@@ -5,17 +5,39 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { API_BASE_URL } from "@/lib/constants";
 import { getLanguage, t, type Language } from "@/lib/i18n";
 
 type ServiceItem = {
   id: string;
   title: string;
+  titleAr?: string;
   description: string;
+  descriptionAr?: string;
   price: string;
   mainImage?: string | null;
-  points?: Array<{ title: string; description: string }>;
+};
+
+const serviceArabicFallback: Record<string, { titleAr: string; descriptionAr: string }> = {
+  "Admission Guidance": {
+    titleAr: "إرشاد القبول الجامعي",
+    descriptionAr: "دعم كامل من اختيار الجامعة حتى تقديم الطلب ومتابعة القبول.",
+  },
+  "Accommodation & Arrival": {
+    titleAr: "السكن والاستقبال",
+    descriptionAr: "مساعدة في السكن والاستقبال لضمان بداية آمنة وسلسة في مصر.",
+  },
+  "Full Student Package": {
+    titleAr: "الباقة الشاملة للطالب",
+    descriptionAr: "باقة متكاملة تشمل القبول والتأشيرة والسكن والمتابعة بعد الوصول.",
+  },
+};
+
+const formatPrice = (value: string | number | null | undefined) => {
+  const numeric = Number(value ?? 0);
+  if (!Number.isFinite(numeric)) return "$0";
+  return `$${numeric.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 };
 
 export function ServicesSection() {
@@ -55,25 +77,27 @@ export function ServicesSection() {
           {services.map((service, index) => (
             <ScrollReveal key={service.id} direction="up" delay={index * 70}>
               <Link href={`/services/${service.id}`} className="block h-full">
-                <article className="h-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_40px_rgba(82,96,206,0.12)]">
-                  <div className="h-44 w-full bg-gray-100">
-                    {service.mainImage ? (
-                      <img src={service.mainImage} alt={service.title} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-sm text-gray-400">No Image</div>
-                    )}
+                <article className="group relative h-[330px] overflow-hidden rounded-2xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_40px_rgba(82,96,206,0.22)]">
+                  <div className="absolute inset-0 bg-gray-100">
+                    {service.mainImage ? <img src={service.mainImage} alt={service.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /> : null}
                   </div>
-                  <div className="space-y-3 p-5">
-                    <h3 className="line-clamp-1 font-montserrat-semibold text-lg text-[#121c67]">{service.title}</h3>
-                    <p className="line-clamp-2 text-sm text-gray-600">{service.description}</p>
-                    <p className="font-montserrat-semibold text-[#4350b0]">${service.price}</p>
-                    <div className="space-y-1">
-                      {(service.points || []).slice(0, 2).map((point, idx) => (
-                        <div key={`${service.id}-point-${idx}`} className="flex items-center gap-2 text-xs text-gray-600">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-[#5260ce]" />
-                          <span className="line-clamp-1">{point.title}</span>
-                        </div>
-                      ))}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0f1230]/90 via-[#1f2a6e]/45 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 space-y-2 p-4 text-white">
+                    <p className="text-sm font-semibold text-white/90">{formatPrice(service.price)}</p>
+                    <h3 className="line-clamp-1 font-montserrat-semibold text-lg">
+                      {service.title}
+                    </h3>
+                    <p className="line-clamp-1 text-sm text-white/90" dir="rtl">
+                      {service.titleAr || serviceArabicFallback[service.title]?.titleAr || service.title}
+                    </p>
+                    <p className="line-clamp-2 text-xs text-white/80">
+                      {service.descriptionAr || serviceArabicFallback[service.title]?.descriptionAr || service.description}
+                    </p>
+                    <div className={`flex items-center justify-between pt-1 ${isRTL ? "flex-row-reverse" : ""}`}>
+                      <span className="text-xs font-semibold tracking-wide text-white/90">{t("servicesSeeMore")}</span>
+                      <span className="rounded-full bg-white/20 p-2">
+                        <ArrowUpRight className="h-4 w-4 text-white" />
+                      </span>
                     </div>
                   </div>
                 </article>
