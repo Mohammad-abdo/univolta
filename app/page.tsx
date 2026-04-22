@@ -6,7 +6,7 @@ import { HeroSection } from "@/components/hero-section";
 import { WhyUsSection } from "@/components/why-us-section";
 import { StatsSection } from "@/components/stats-section";
 import { UniversitiesSection } from "@/components/universities-section";
-import { ProgramsSection } from "@/components/programs-section";
+import { ServicesSection } from "@/components/services-section";
 import { EgyptBusinessSection } from "@/components/egypt-business-section";
 import { HowItWorksSection } from "@/components/how-it-works-section";
 import { TestimonialsSection } from "@/components/testimonials-section";
@@ -39,7 +39,8 @@ export default function Home() {
       whyUs: <WhyUsSection />,
       stats: <StatsSection />,
       universities: <UniversitiesSection />,
-      programs: <ProgramsSection />,
+      programs: <ServicesSection />,
+      services: <ServicesSection />,
       egyptBusiness: <EgyptBusinessSection />,
       howItWorks: <HowItWorksSection />,
       testimonials: <TestimonialsSection />,
@@ -55,7 +56,7 @@ export default function Home() {
         "whyUs",
         "stats",
         "universities",
-        "programs",
+        "services",
         "egyptBusiness",
         "howItWorks",
         "testimonials",

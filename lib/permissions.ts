@@ -2,6 +2,7 @@
 
 export type Resource = 
   | "universities"
+  | "services"
   | "programs"
   | "applications"
   | "testimonials"
@@ -22,6 +23,10 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     "universities:read",
     "universities:update",
     "universities:delete",
+    "services:create",
+    "services:read",
+    "services:update",
+    "services:delete",
     "programs:create",
     "programs:read",
     "programs:update",
@@ -51,6 +56,10 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     "universities:create",
     "universities:read",
     "universities:update",
+    "services:create",
+    "services:read",
+    "services:update",
+    "services:delete",
     "programs:create",
     "programs:read",
     "programs:update",

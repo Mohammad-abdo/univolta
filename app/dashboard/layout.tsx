@@ -140,6 +140,12 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
       permission: { resource: "programs", action: "read" },
     },
     {
+      href: "/dashboard/services",
+      label: "Services",
+      icon: Settings,
+      permission: { resource: "services", action: "read" },
+    },
+    {
       href: "/dashboard/applications",
       label: t("applications"),
       icon: FileText,
