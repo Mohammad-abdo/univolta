@@ -607,3 +607,65 @@ img.object-cover{
 .step-connector-animate {
   animation: step-progress 1.2s ease-out forwards;
 }
+
+/* ─── Dashboard shell (sidebar + main + header) ───────────────────────────
+   Uses logical properties so LTR/RTL work without Tailwind rtl: variants.
+   Sidebar width is one token: change --dashboard-sidebar-w to resize all. */
+.dashboard {
+  --dashboard-sidebar-w: 16rem;
+  overflow-x: clip;
+  max-width: 100%;
+}
+
+.dashboard-sidebar-desktop {
+  display: none;
+  position: fixed;
+  top: 0;
+  inset-inline-start: 0;
+  z-index: 40;
+  height: 100%;
+  width: var(--dashboard-sidebar-w);
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .dashboard-sidebar-desktop {
+    display: flex;
+  }
+}
+
+.dashboard-header-panel {
+  position: fixed;
+  top: 0;
+  z-index: 30;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+}
+
+@media (min-width: 768px) {
+  .dashboard-header-panel {
+    inset-inline-start: var(--dashboard-sidebar-w);
+  }
+}
+
+.dashboard-main-panel {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-inline-start: 0;
+  overflow-x: auto;
+}
+
+@media (min-width: 768px) {
+  .dashboard-main-panel {
+    margin-inline-start: var(--dashboard-sidebar-w);
+  }
+}
+
+.dashboard-main-inner {
+  width: 100%;
+  max-width: min(100%, 100rem);
+  min-width: 0;
+  margin-inline: auto;
+}

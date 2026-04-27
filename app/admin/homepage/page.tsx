@@ -196,7 +196,7 @@ export default function HomepageManager() {
   ════════════════════════════════════════════════════════════ */
   if (view === "edit" && editSlide) {
     return (
-      <div className="space-y-5 max-w-3xl">
+      <div className="mx-auto w-full min-w-0 max-w-full space-y-5 md:max-w-3xl">
         {/* Toast */}
         {toast && (
           <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl text-sm font-semibold
@@ -380,7 +380,7 @@ export default function HomepageManager() {
         </div>
 
         {/* Action bar */}
-        <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t border-gray-100 -mx-6 px-6 py-4 flex items-center justify-between gap-3">
+        <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-gray-100 bg-white/95 py-4 backdrop-blur-sm">
           <button
             onClick={cancelEdit}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold text-sm transition-all"
@@ -404,7 +404,7 @@ export default function HomepageManager() {
      VIEW: LIST
   ════════════════════════════════════════════════════════════ */
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 max-w-full space-y-5">
       {/* Toast */}
       {toast && (
         <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl text-sm font-semibold
@@ -441,7 +441,7 @@ export default function HomepageManager() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100/80 p-1 rounded-2xl inline-flex">
+      <div className="inline-flex max-w-full flex-wrap gap-1 rounded-2xl bg-gray-100/80 p-1">
         {([
           { key: "slides",   label: "Hero Banners",  icon: <Layers size={15} /> },
           { key: "sections", label: "Page Sections", icon: <Layout size={15} /> },
@@ -603,12 +603,15 @@ export default function HomepageManager() {
             </div>
             <div className="divide-y divide-gray-50">
               {sections.map((sec, idx) => (
-                <div key={sec.id} className={`flex items-center gap-4 px-5 py-4 transition-all ${!sec.enabled ? "opacity-50" : ""}`}>
-                  <GripVertical size={16} className="text-gray-300 shrink-0" />
-                  <span className="w-7 h-7 rounded-xl bg-indigo-50 text-indigo-600 text-xs font-bold flex items-center justify-center shrink-0">
+                <div
+                  key={sec.id}
+                  className={`flex min-w-0 flex-wrap items-center gap-3 px-4 py-4 transition-all sm:gap-4 sm:px-5 ${!sec.enabled ? "opacity-50" : ""}`}
+                >
+                  <GripVertical size={16} className="shrink-0 text-gray-300" />
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-xs font-bold text-indigo-600">
                     {idx + 1}
                   </span>
-                  <p className="flex-1 text-sm font-semibold text-gray-700">{sec.label}</p>
+                  <p className="min-w-0 flex-1 basis-[min(100%,12rem)] text-sm font-semibold text-gray-700 sm:basis-auto">{sec.label}</p>
                   <div className="flex gap-1">
                     <button onClick={() => moveSection(sec.id, -1)} disabled={idx === 0}
                       className="w-7 h-7 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 flex items-center justify-center transition-colors">

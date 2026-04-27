@@ -82,7 +82,7 @@ export function DashboardHeader({ onMenuToggle, isMobileMenuOpen }: DashboardHea
 
   return (
     <header
-      className="fixed top-0 z-30 h-14 border-b border-gray-200 bg-white shadow-sm start-0 end-0 md:h-16 md:start-64"
+      className="dashboard-header-panel h-14 border-b border-gray-200 bg-white shadow-sm md:h-16"
       dir={currentLang === "ar" ? "rtl" : "ltr"}
     >
       <div className="h-full px-2 md:px-6 flex items-center justify-between gap-1 md:gap-2">

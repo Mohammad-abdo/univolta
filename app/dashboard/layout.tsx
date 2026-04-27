@@ -215,7 +215,9 @@ export default function DashboardLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isPartner, setIsPartner] = useState(false);
-  const [currentLang, setCurrentLang] = useState<string>("en");
+  const [currentLang, setCurrentLang] = useState<string>(() =>
+    typeof window !== "undefined" && getLanguage() === "ar" ? "ar" : "en"
+  );
   const [siteLogoUrl, setSiteLogoUrl] = useState<string>(figmaAssets.logo);
   const router = useRouter();
   const pathname = usePathname();
@@ -422,9 +424,9 @@ export default function DashboardLayout({
         isMobileMenuOpen={isMobileMenuOpen}
       />
 
-      {/* Sidebar - Desktop (inline-start = left in LTR, right in RTL) */}
+      {/* Sidebar - Desktop (position + width from globals.css .dashboard-sidebar-desktop) */}
       <aside
-        className="fixed start-0 top-0 z-40 hidden h-full w-64 flex-col border-e border-[#e4e8f6] bg-gradient-to-b from-[#f6f8ff] via-white to-[#fafbff] shadow-[inset_-1px_0_0_rgba(82,96,206,0.06)] md:flex"
+        className="dashboard-sidebar-desktop border-e border-[#e4e8f6] bg-gradient-to-b from-[#f6f8ff] via-white to-[#fafbff] shadow-[inset_-1px_0_0_rgba(82,96,206,0.06)]"
         dir={layoutDir}
       >
         <div className="border-b border-[#e8ebf7]/90 bg-white/75 px-4 py-5 backdrop-blur-[2px]">
@@ -586,9 +588,9 @@ export default function DashboardLayout({
         </div>
       )}
 
-      {/* Main content: margin-inline-start reserves space for fixed w-64 sidebar on md+ */}
-      <main className="mt-14 min-h-[calc(100vh-3.5rem)] w-full min-w-0 max-w-full overflow-x-auto px-2 py-3 md:mt-16 md:min-h-[calc(100vh-4rem)] md:ms-64 md:px-6 md:py-6">
-        <div className="mx-auto min-w-0 max-w-[1600px]">{children}</div>
+      {/* Main content — offset via .dashboard-main-panel (logical margin) */}
+      <main className="dashboard-main-panel mt-14 min-h-[calc(100vh-3.5rem)] px-2 py-3 md:mt-16 md:min-h-[calc(100vh-4rem)] md:px-6 md:py-6">
+        <div className="dashboard-main-inner">{children}</div>
       </main>
 
       {/* Toast Notifications */}
