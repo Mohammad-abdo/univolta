@@ -412,18 +412,20 @@ export default function DashboardLayout({
     );
   });
 
+  const layoutDir = currentLang === "ar" ? "rtl" : "ltr";
+
   return (
-    <div className="dashboard min-h-screen bg-gray-50">
-      {/* Header */}
+    <div className="dashboard min-h-screen bg-gray-50" dir={layoutDir}>
+      {/* Header — inset after sidebar using logical props (works with dir on root) */}
       <DashboardHeader
         onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         isMobileMenuOpen={isMobileMenuOpen}
       />
 
-      {/* Sidebar - Desktop */}
+      {/* Sidebar - Desktop (inline-start = left in LTR, right in RTL) */}
       <aside
-        className="hidden md:flex md:flex-col fixed left-0 rtl:left-auto rtl:right-0 top-0 z-40 h-full w-64 border-r border-[#e4e8f6] bg-gradient-to-b from-[#f6f8ff] via-white to-[#fafbff] shadow-[inset_-1px_0_0_rgba(82,96,206,0.06)] rtl:border-r-0 rtl:border-l"
-        dir={currentLang === "ar" ? "rtl" : "ltr"}
+        className="fixed start-0 top-0 z-40 hidden h-full w-64 flex-col border-e border-[#e4e8f6] bg-gradient-to-b from-[#f6f8ff] via-white to-[#fafbff] shadow-[inset_-1px_0_0_rgba(82,96,206,0.06)] md:flex"
+        dir={layoutDir}
       >
         <div className="border-b border-[#e8ebf7]/90 bg-white/75 px-4 py-5 backdrop-blur-[2px]">
           <div className="relative mx-auto mb-4 h-12 w-full max-w-[200px]">
@@ -431,7 +433,7 @@ export default function DashboardLayout({
               src={siteLogoUrl}
               alt="Logo"
               fill
-              className="object-contain object-left rtl:object-right"
+              className="object-contain object-start"
               sizes="200px"
               unoptimized
               priority
@@ -501,8 +503,8 @@ export default function DashboardLayout({
           onClick={() => setIsMobileMenuOpen(false)}
         >
           <aside
-            className={`fixed ${currentLang === "ar" ? "right-0" : "left-0"} top-16 z-40 flex h-[calc(100vh-4rem)] w-64 flex-col border-r border-[#e4e8f6] bg-gradient-to-b from-[#f6f8ff] via-white to-[#fafbff] shadow-xl transition-transform duration-300 ease-in-out rtl:border-r-0 rtl:border-l`}
-            dir={currentLang === "ar" ? "rtl" : "ltr"}
+            className="fixed start-0 top-16 z-40 flex h-[calc(100vh-4rem)] w-64 flex-col border-e border-[#e4e8f6] bg-gradient-to-b from-[#f6f8ff] via-white to-[#fafbff] shadow-xl transition-transform duration-300 ease-in-out"
+            dir={layoutDir}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-2 border-b border-[#e8ebf7] bg-white/75 px-4 py-4">
@@ -512,7 +514,7 @@ export default function DashboardLayout({
                     src={siteLogoUrl}
                     alt="Logo"
                     fill
-                    className="object-contain object-left rtl:object-right"
+                    className="object-contain object-start"
                     sizes="180px"
                     unoptimized
                   />
@@ -584,11 +586,9 @@ export default function DashboardLayout({
         </div>
       )}
 
-      {/* Main Content */}
-      <main className={`ml-0 rtl:ml-0 rtl:mr-0 mt-16 md:mt-16 md:ml-64 rtl:md:ml-0 rtl:md:mr-64 px-2 py-3 md:p-6 min-h-[calc(100vh-4rem)] overflow-x-hidden ${currentLang === "ar" ? "rtl" : "ltr"}`}>
-        <div className="max-w-full overflow-x-hidden">
-          {children}
-        </div>
+      {/* Main content: margin-inline-start reserves space for fixed w-64 sidebar on md+ */}
+      <main className="mt-14 min-h-[calc(100vh-3.5rem)] w-full min-w-0 max-w-full overflow-x-auto px-2 py-3 md:mt-16 md:min-h-[calc(100vh-4rem)] md:ms-64 md:px-6 md:py-6">
+        <div className="mx-auto min-w-0 max-w-[1600px]">{children}</div>
       </main>
 
       {/* Toast Notifications */}
