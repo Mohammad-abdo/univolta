@@ -121,6 +121,7 @@ export function Navbar() {
     { href: "/about", label: tl("aboutNavLink", "About"), active: pathname === "/about" },
     { href: "/faq", label: tl("faq", "FAQ"), active: pathname === "/faq" },
     { href: "/contact", label: tl("contact", "Contact"), active: pathname === "/contact" },
+    { href: "/terms", label: tl("termsPolicy", "Terms & Policy"), active: pathname === "/terms" },
   ];
 
 

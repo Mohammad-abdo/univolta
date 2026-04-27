@@ -383,6 +383,7 @@ const translations: Record<Language, Record<string, string>> = {
     allRightsReserved: "All rights reserved by UNIVOLTA2025©",
     // Terms Page
     termsOfUse: "Terms of Use",
+    termsHeroSubtitle: "Please read these terms carefully before using our services.",
     termsAndConditions: "Terms & Conditions",
     termsWelcomeMessage: "Welcome to UniVolta. By accessing and using our website, you agree to comply with the following terms and conditions. Please read them carefully.",
     termsSection1Title: "1. About the Platform",
@@ -1116,6 +1117,7 @@ const translations: Record<Language, Record<string, string>> = {
     footerSubscribeBtn: "اشترك",
     footerSubscribedBtn: "✓ تم الاشتراك!",
     termsPolicy: "الشروط والسياسة",
+    termsHeroSubtitle: "يرجى قراءة هذه الشروط بعناية قبل استخدام خدماتنا.",
     poweredBy: "مدعوم من",
     allRightsReserved: "جميع الحقوق محفوظة لـ UNIVOLTA2025©",
     // FAQ Page

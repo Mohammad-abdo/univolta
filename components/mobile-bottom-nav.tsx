@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Home, GraduationCap, HelpCircle, Mail, Menu, X, User, LogOut, Globe, ChevronDown } from "lucide-react";
+import { Home, GraduationCap, HelpCircle, Mail, Menu, X, User, LogOut, Globe, ChevronDown, FileText } from "lucide-react";
 import { t, getLanguage, setLanguage, languages, type Language } from "@/lib/i18n";
 import { API_BASE_URL } from "@/lib/constants";
 
@@ -160,7 +160,19 @@ export function MobileBottomNav() {
                   </Link>
                 );
               })}
-              
+              <Link
+                href="/terms"
+                className={`flex items-center gap-3 py-3.5 px-4 rounded-xl transition-all ${
+                  pathname === "/terms"
+                    ? "text-[#5260ce] font-montserrat-bold bg-[rgba(82,96,206,0.1)]"
+                    : "text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100"
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <FileText className="h-5 w-5 shrink-0 text-[#5260ce]" aria-hidden />
+                <span className="text-base">{t("termsPolicy")}</span>
+              </Link>
+
               {/* Divider */}
               <div className="my-4 border-t border-gray-200"></div>
               

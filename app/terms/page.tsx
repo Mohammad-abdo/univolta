@@ -1,14 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import { figmaAssets } from "@/lib/figma-assets";
 import { t, getLanguage, type Language } from "@/lib/i18n";
+
+const TERMS_HERO_PATTERN =
+  "url(\"data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.12'%3E%3Cpath d='M40 40c0-11.046 8.954-20 20-20s20 8.954 20 20-8.954 20-20 20S40 51.046 40 40zm-40 0c0-11.046 8.954-20 20-20s20 8.954 20 20-8.954 20-20 20S0 51.046 0 40z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")";
 import Link from "next/link";
 
 export default function TermsPage() {
@@ -92,44 +93,27 @@ export default function TermsPage() {
 
           <div className="relative mx-auto max-w-[1280px] px-4 md:px-5">
             <ScrollReveal direction="fade">
-            <div className="relative h-[200px] md:h-[320px] overflow-hidden rounded-[16px] md:rounded-[28px] shadow-[0px_20px_80px_rgba(82,96,206,0.15)] animate-hero-reveal">
-              <Image
-                src={figmaAssets.termsHeroBackground}
-                alt="Students studying in a classroom"
-                fill
-                className="object-cover"
-                priority
-                unoptimized
-              />
-              <Image
-                src={figmaAssets.termsHeroForeground}
-                alt=""
-                fill
-                className="object-cover"
-                aria-hidden="true"
-                priority
-                unoptimized
-              />
-              <Image
-                src={figmaAssets.termsHeroOverlay}
-                alt=""
-                fill
-                className="object-cover"
-                aria-hidden="true"
-                priority
-                unoptimized
-              />
-              <div className="absolute inset-0 bg-[#121c67]/45" aria-hidden="true" />
-
-              <div className="absolute inset-0 flex flex-col items-center justify-center px-4 md:px-8 text-center">
-                <h1 className="text-white text-2xl md:text-[40px] font-montserrat-bold leading-tight animate-fade-up">
-                  {t("termsPolicy")}
-                </h1>
-                <p className="text-white/70 text-sm md:text-base mt-2 font-montserrat-regular animate-fade-up-d100">
-                  Please read these terms carefully before using our services
-                </p>
+              <div
+                className="relative flex min-h-[200px] flex-col items-center justify-center overflow-hidden rounded-2xl px-4 py-12 shadow-[0px_20px_80px_rgba(82,96,206,0.15)] md:min-h-[280px] md:rounded-[28px] md:px-8 md:py-16"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #121c67 0%, #5260ce 45%, #3d4a9e 100%)",
+                }}
+              >
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-30"
+                  style={{ backgroundImage: TERMS_HERO_PATTERN }}
+                  aria-hidden
+                />
+                <div className="relative z-[1] max-w-3xl text-center">
+                  <h1 className="font-montserrat-bold text-2xl leading-tight text-white md:text-[40px]">
+                    {t("termsPolicy")}
+                  </h1>
+                  <p className="mt-3 font-montserrat-regular text-sm text-white/80 md:mt-4 md:text-base">
+                    {t("termsHeroSubtitle")}
+                  </p>
+                </div>
               </div>
-            </div>
             </ScrollReveal>
           </div>
         </section>
@@ -184,41 +168,21 @@ export default function TermsPage() {
                   backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
                 }}
               />
-              <div className="relative grid gap-6 md:gap-12 items-center px-4 md:px-6 py-8 md:py-16 lg:px-10 lg:grid-cols-2">
-                <div className="space-y-4 md:space-y-6">
-                  <div className="relative inline-block h-[4px] md:h-[5px] w-[60px] md:w-[80px]">
-                    <Image
-                      src={figmaAssets.vector5}
-                      alt=""
-                      fill
-                      className="object-contain"
-                      aria-hidden="true"
-                      unoptimized
-                    />
-                  </div>
-                  <h2 className="text-2xl md:text-[34px] font-montserrat-bold leading-[1.4]">
-                    {t("startYourUniversityJourney")} 🚀
-                  </h2>
-                  <p className="max-w-full md:max-w-[451px] text-sm md:text-lg font-montserrat-light text-white/90 leading-relaxed">
-                    {t("termsCTADescription")}
-                  </p>
-                  <Button
-                    size="lg"
-                    className="rounded-xl bg-white px-6 md:px-8 text-sm md:text-base font-montserrat-semibold text-[#5260ce] hover:bg-gray-100"
-                    asChild
-                  >
-                    <Link href="/universities">{t("browseUniversities")}</Link>
-                  </Button>
-                </div>
-                <div className="relative hidden w-full h-[300px] md:h-[420px] lg:block">
-                  <Image
-                    src={figmaAssets.faqCtaIllustration}
-                    alt="Students exploring universities"
-                    fill
-                    className="object-contain"
-                    unoptimized
-                  />
-                </div>
+              <div className="relative max-w-3xl space-y-4 px-4 py-8 md:space-y-6 md:px-6 md:py-16 lg:px-10">
+                <div className="h-1 w-16 rounded-full bg-white/90 md:w-20" aria-hidden />
+                <h2 className="text-2xl font-montserrat-bold leading-[1.4] md:text-[34px]">
+                  {t("startYourUniversityJourney")} 🚀
+                </h2>
+                <p className="max-w-full text-sm font-montserrat-light leading-relaxed text-white/90 md:max-w-[451px] md:text-lg">
+                  {t("termsCTADescription")}
+                </p>
+                <Button
+                  size="lg"
+                  className="rounded-xl bg-white px-6 text-sm font-montserrat-semibold text-[#5260ce] hover:bg-gray-100 md:px-8 md:text-base"
+                  asChild
+                >
+                  <Link href="/universities">{t("browseUniversities")}</Link>
+                </Button>
               </div>
             </div>
           </div>

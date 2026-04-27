@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Phone, Mail, MapPin, Facebook, Youtube, Twitter, Instagram, MessageCircle, Send, GraduationCap, Globe } from "lucide-react";
 import { figmaAssets } from "@/lib/figma-assets";
 import { t, getLanguage, type Language } from "@/lib/i18n";
@@ -43,13 +43,31 @@ export function Footer() {
     }
   };
 
-  const quickLinks = footerContent?.quickLinks ?? [
-    { label: tl("home"), href: "/" },
-    { label: tl("universities"), href: "/universities" },
-    { label: tl("faq"), href: "/faq" },
-    { label: tl("contact"), href: "/contact" },
-    { label: tl("termsPolicy"), href: "/terms" },
-  ];
+  const defaultQuickLinks = useMemo(
+    () => [
+      { label: tl("home"), href: "/" },
+      { label: tl("universities"), href: "/universities" },
+      { label: tl("faq"), href: "/faq" },
+      { label: tl("contact"), href: "/contact" },
+      { label: tl("termsPolicy"), href: "/terms" },
+    ],
+    [currentLang]
+  );
+
+  /** CMS `quickLinks` replaces defaults entirely when set — merge so `/terms` (and other defaults) are never dropped. */
+  const quickLinks = useMemo(() => {
+    const fromCms = footerContent?.quickLinks;
+    if (!fromCms?.length) return defaultQuickLinks;
+    const seen = new Set(fromCms.map((l) => (l.href || "").trim()).filter(Boolean));
+    const merged = [...fromCms];
+    for (const link of defaultQuickLinks) {
+      if (link.href && !seen.has(link.href)) {
+        merged.push(link);
+        seen.add(link.href);
+      }
+    }
+    return merged;
+  }, [footerContent?.quickLinks, defaultQuickLinks]);
 
   const programs = ["Engineering", "Business", "Medicine", "Law", "Computer Science", "Architecture"];
 
