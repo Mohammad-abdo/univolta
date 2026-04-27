@@ -610,11 +610,15 @@ img.object-cover{
 
 /* ─── Dashboard shell (sidebar + main + header) ───────────────────────────
    Uses logical properties so LTR/RTL work without Tailwind rtl: variants.
-   Sidebar width is one token: change --dashboard-sidebar-w to resize all. */
+   Tokens: --dashboard-sidebar-w (aside width), --dashboard-main-gap (gutter
+   between sidebar and main/header; keeps width math in sync, no overflow). */
 .dashboard {
   --dashboard-sidebar-w: 16rem;
-  overflow-x: clip;
+  /* Space between fixed sidebar and main/header (logical; works LTR + RTL) */
+  --dashboard-main-gap: 1rem;
+  width: 100%;
   max-width: 100%;
+  overflow-x: hidden;
 }
 
 .dashboard-sidebar-desktop {
@@ -644,22 +648,34 @@ img.object-cover{
 
 @media (min-width: 768px) {
   .dashboard-header-panel {
-    inset-inline-start: var(--dashboard-sidebar-w);
+    inset-inline-start: calc(
+      var(--dashboard-sidebar-w) + var(--dashboard-main-gap)
+    );
   }
 }
 
 .dashboard-main-panel {
   box-sizing: border-box;
+  min-width: 0;
   width: 100%;
   max-width: 100%;
-  min-width: 0;
   margin-inline-start: 0;
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
+/* Critical: do not use width:100% + margin on same axis — it overflows the viewport.
+   Main column width = viewport minus sidebar. */
 @media (min-width: 768px) {
   .dashboard-main-panel {
-    margin-inline-start: var(--dashboard-sidebar-w);
+    margin-inline-start: calc(
+      var(--dashboard-sidebar-w) + var(--dashboard-main-gap)
+    );
+    width: calc(
+      100% - var(--dashboard-sidebar-w) - var(--dashboard-main-gap)
+    );
+    max-width: calc(
+      100% - var(--dashboard-sidebar-w) - var(--dashboard-main-gap)
+    );
   }
 }
 

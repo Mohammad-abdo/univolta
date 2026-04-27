@@ -439,11 +439,11 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="min-w-0 max-w-full space-y-6 animate-in fade-in duration-500">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-[#5260ce] to-[#4350b0] rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 text-white shadow-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 min-w-0">
+      <div className="rounded-xl bg-gradient-to-r from-[#5260ce] to-[#4350b0] p-4 text-white shadow-lg md:rounded-2xl md:p-6 lg:p-8">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-montserrat-bold mb-2">
               {t("welcomeBack")} 👋
             </h1>
@@ -458,14 +458,14 @@ export default function DashboardPage() {
               Website
             </Link>
           </div>
-          <div className="hidden md:block flex-shrink-0 ml-4">
-            <TrendingUp className="w-20 h-20 lg:w-24 lg:h-24 text-blue-200 opacity-50" />
+          <div className="hidden shrink-0 md:block md:ms-4">
+            <TrendingUp className="h-20 w-20 text-blue-200 opacity-50 lg:h-24 lg:w-24" />
           </div>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      {/* Stats Grid — min-w-0 on children prevents grid blowout past main column */}
+      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 md:gap-6 [&>*]:min-w-0">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -500,8 +500,8 @@ export default function DashboardPage() {
 
       {/* Revenue & Applications Overview Cards */}
       {userRole && canAccess(userRole, "applications", "read") && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-md p-6 border border-green-200">
+        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 md:gap-6 [&>*]:min-w-0">
+          <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-green-100 p-6 shadow-md">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-montserrat-regular text-green-700">{t("totalRevenue")}</p>
               <DollarSign className="w-5 h-5 text-green-600" />
@@ -546,16 +546,17 @@ export default function DashboardPage() {
 
       {/* Charts Row 1: Applications & Revenue Trends */}
       {userRole && canAccess(userRole, "applications", "read") && chartData.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-2 [&>*]:min-w-0">
           {/* Applications Trend Line Chart */}
-          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-montserrat-bold text-[#121c67] flex items-center gap-2">
-                <Activity className="w-5 h-5 text-purple-600" />
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-md">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-xl font-montserrat-bold text-[#121c67]">
+                <Activity className="h-5 w-5 text-purple-600" />
                 {t("applicationsTrend")}
               </h2>
             </div>
-            <ResponsiveContainer width="100%" height={300}>
+            <div className="h-[300px] w-full min-w-0 max-w-full">
+            <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis 
@@ -601,17 +602,19 @@ export default function DashboardPage() {
                 />
               </LineChart>
             </ResponsiveContainer>
+            </div>
           </div>
 
           {/* Revenue Trend Area Chart */}
-          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-montserrat-bold text-[#121c67] flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-600" />
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-md">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-xl font-montserrat-bold text-[#121c67]">
+                <TrendingUp className="h-5 w-5 text-green-600" />
                 {t("revenueTrend")}
               </h2>
             </div>
-            <ResponsiveContainer width="100%" height={300}>
+            <div className="h-[300px] w-full min-w-0 max-w-full">
+            <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
@@ -649,23 +652,25 @@ export default function DashboardPage() {
                 />
               </AreaChart>
             </ResponsiveContainer>
+            </div>
           </div>
         </div>
       )}
 
       {/* Charts Row 2: Distribution Charts */}
       {userRole && canAccess(userRole, "applications", "read") && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-2 [&>*]:min-w-0">
           {/* Application Status Pie Chart */}
-          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-montserrat-bold text-[#121c67] flex items-center gap-2">
-                <PieChart className="w-5 h-5 text-blue-600" />
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-md">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-xl font-montserrat-bold text-[#121c67]">
+                <PieChart className="h-5 w-5 text-blue-600" />
                 {t("applicationStatusDistribution")}
               </h2>
             </div>
             {applicationStatusData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <div className="h-[300px] w-full min-w-0 max-w-full">
+              <ResponsiveContainer width="100%" height="100%">
                 <RechartsPieChart>
                   <Pie
                     data={applicationStatusData}
@@ -684,8 +689,9 @@ export default function DashboardPage() {
                   <Tooltip />
                 </RechartsPieChart>
               </ResponsiveContainer>
+              </div>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-gray-500">
+              <div className="flex h-[300px] items-center justify-center text-gray-500">
                 {t("noApplicationDataAvailable")}
               </div>
             )}
@@ -693,15 +699,16 @@ export default function DashboardPage() {
 
           {/* Programs by Degree Bar Chart */}
           {userRole && canAccess(userRole, "programs", "read") && (
-            <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-montserrat-bold text-[#121c67] flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-green-600" />
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-md">
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 text-xl font-montserrat-bold text-[#121c67]">
+                  <BarChart3 className="h-5 w-5 text-green-600" />
                   {t("programsByDegreeType")}
                 </h2>
               </div>
               {programsByDegreeData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
+                <div className="h-[300px] w-full min-w-0 max-w-full">
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={programsByDegreeData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                     <XAxis 
@@ -727,8 +734,9 @@ export default function DashboardPage() {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
+                </div>
               ) : (
-                <div className="flex items-center justify-center h-[300px] text-gray-500">
+                <div className="flex h-[300px] items-center justify-center text-gray-500">
                   {t("noProgramDataAvailable")}
                 </div>
               )}
@@ -739,24 +747,25 @@ export default function DashboardPage() {
 
       {/* Charts Row 3: Top Universities & Programs by Country */}
       {userRole && canAccess(userRole, "universities", "read") && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-2 [&>*]:min-w-0">
           {/* Top Universities Bar Chart */}
           {topUniversities.length > 0 && (
-            <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-montserrat-bold text-[#121c67] flex items-center gap-2">
-                  <GraduationCap className="w-5 h-5 text-blue-600" />
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-md">
+              <div className="mb-6 flex items-center justify-between gap-2">
+                <h2 className="flex min-w-0 items-center gap-2 text-xl font-montserrat-bold text-[#121c67]">
+                  <GraduationCap className="h-5 w-5 shrink-0 text-blue-600" />
                   {t("topUniversitiesByPrograms")}
                 </h2>
                 <Link
                   href="/dashboard/universities"
-                  className="text-sm text-[#5260ce] hover:underline font-montserrat-semibold flex items-center gap-1"
+                  className="flex shrink-0 items-center gap-1 text-sm font-montserrat-semibold text-[#5260ce] hover:underline"
                 >
                   {t("viewAll")}
-                  <ArrowRight className={`w-4 h-4 ${currentLang === "ar" ? "rotate-180" : ""}`} />
+                  <ArrowRight className={`h-4 w-4 ${currentLang === "ar" ? "rotate-180" : ""}`} />
                 </Link>
               </div>
-              <ResponsiveContainer width="100%" height={300}>
+              <div className="h-[300px] w-full min-w-0 max-w-full">
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart 
                   data={topUniversities.slice(0, 8)}
                   layout="vertical"
@@ -780,19 +789,21 @@ export default function DashboardPage() {
                   <Bar dataKey="programCount" radius={[0, 8, 8, 0]} fill="#5260ce" />
                 </BarChart>
               </ResponsiveContainer>
+              </div>
             </div>
           )}
 
           {/* Programs by Country Bar Chart */}
           {programsByCountry.length > 0 && (
-            <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-montserrat-bold text-[#121c67] flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-purple-600" />
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-md">
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 text-xl font-montserrat-bold text-[#121c67]">
+                  <BarChart3 className="h-5 w-5 text-purple-600" />
                   {t("programsByCountry")}
                 </h2>
               </div>
-              <ResponsiveContainer width="100%" height={300}>
+              <div className="h-[300px] w-full min-w-0 max-w-full">
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={programsByCountry}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis 
@@ -817,6 +828,7 @@ export default function DashboardPage() {
                   <Bar dataKey="count" radius={[8, 8, 0, 0]} fill="#8b5cf6" />
                 </BarChart>
               </ResponsiveContainer>
+              </div>
             </div>
           )}
         </div>
@@ -884,7 +896,7 @@ export default function DashboardPage() {
         <h2 className="text-xl font-montserrat-bold text-[#121c67] mb-6">
           {t("quickActions")}
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
           {userRole && canAccess(userRole, "universities", "read") && (
             <Link
               href="/dashboard/universities"

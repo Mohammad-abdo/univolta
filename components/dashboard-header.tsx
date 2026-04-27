@@ -85,9 +85,9 @@ export function DashboardHeader({ onMenuToggle, isMobileMenuOpen }: DashboardHea
       className="dashboard-header-panel h-14 border-b border-gray-200 bg-white shadow-sm md:h-16"
       dir={currentLang === "ar" ? "rtl" : "ltr"}
     >
-      <div className="h-full px-2 md:px-6 flex items-center justify-between gap-1 md:gap-2">
-        {/* Left side - Mobile menu button and search */}
-        <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+      <div className="flex h-full min-w-0 max-w-full items-center justify-between gap-1 px-2 md:gap-2 md:px-6">
+        {/* Start: menu + search (min-w-0 so search shrinks inside header band) */}
+        <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-4">
           {/* Mobile menu button */}
           <button
             onClick={onMenuToggle}
@@ -102,7 +102,7 @@ export function DashboardHeader({ onMenuToggle, isMobileMenuOpen }: DashboardHea
           </button>
 
           {/* Search bar - Mobile */}
-          <div className="md:hidden flex items-center flex-1 min-w-0 max-w-[calc(100vw-120px)]">
+          <div className="flex min-w-0 flex-1 items-center md:hidden">
             <div className="relative w-full">
               <Search className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 ${currentLang === "ar" ? "right-2" : "left-2"}`} />
               <input
@@ -114,7 +114,7 @@ export function DashboardHeader({ onMenuToggle, isMobileMenuOpen }: DashboardHea
           </div>
 
           {/* Search bar - Desktop */}
-          <div className="hidden md:flex items-center flex-1 max-w-md">
+          <div className="hidden min-w-0 max-w-full flex-1 md:flex md:max-w-md">
             <div className="relative w-full">
               <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 ${currentLang === "ar" ? "right-3" : "left-3"}`} />
               <input
