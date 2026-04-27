@@ -16,8 +16,22 @@ function readLanguageCookie(): Language | null {
   return v === "ar" || v === "en" ? v : null;
 }
 
-export function getLanguage(): Language {
-  if (typeof window === "undefined") return "en";
+/**
+ * Active locale for `getLanguage()` / `t()` during this render.
+ * Set from the root `I18nProvider` (cookie on SSR + first client paint, then React state).
+ * Keeps server HTML and client hydration aligned.
+ */
+let renderLanguage: Language = "en";
+
+export function setI18nRenderLanguage(lang: Language): void {
+  renderLanguage = lang;
+}
+
+/**
+ * Client-only: localStorage wins, then cookie, else `fallback` (usually the server-read cookie).
+ */
+export function readClientLanguagePreference(fallback: Language): Language {
+  if (typeof window === "undefined") return fallback;
   try {
     const stored = localStorage.getItem("language") as Language | null;
     if (stored === "ar" || stored === "en") return stored;
@@ -29,7 +43,11 @@ export function getLanguage(): Language {
   } catch {
     /* storage unavailable */
   }
-  return "en";
+  return fallback;
+}
+
+export function getLanguage(): Language {
+  return renderLanguage;
 }
 
 export function setLanguage(lang: Language): void {
@@ -633,6 +651,8 @@ const translations: Record<Language, Record<string, string>> = {
     continue: "Continue",
     loadingRegistration: "Loading registration...",
     failedToCreateApplication: "Failed to create application",
+    applicationCredentialsEmailSent:
+      "We created your UniVolta student account. Check your inbox for an email with your sign-in address and temporary password. Use them to log in, then you can continue this application and view it under My Applications.",
     failedToUpdateServices: "Failed to update services. Please try again.",
     applicationIdMissing: "Application ID is missing. Please go back to step 1.",
     completeStepOneFirst: "Please complete step 1 first",
@@ -1303,6 +1323,8 @@ const translations: Record<Language, Record<string, string>> = {
     continue: "متابعة",
     loadingRegistration: "جاري تحميل نموذج التقديم...",
     failedToCreateApplication: "فشل إنشاء الطلب",
+    applicationCredentialsEmailSent:
+      "تم إنشاء حسابك الطلابي على يونيفولتا. تحقق من بريدك الإلكتروني لرسالة تحتوي على عنوان تسجيل الدخول وكلمة مرور مؤقتة. استخدمهما لتسجيل الدخول ومتابعة هذا الطلب وعرضه ضمن «طلباتي».",
     failedToUpdateServices: "فشل تحديث الخدمات. حاول مرة أخرى.",
     applicationIdMissing: "معرّف الطلب مفقود. الرجاء العودة إلى الخطوة الأولى.",
     completeStepOneFirst: "يرجى إكمال الخطوة الأولى أولاً",
@@ -1540,18 +1562,9 @@ export function tServer(key: string, lang: Language = "en"): string {
   return key;
 }
 
-// Client-side translation function (uses window/localStorage)
+// Translation helper — uses `renderLanguage` from I18nProvider (or explicit `lang`).
 export function t(key: string, lang?: Language): string {
-  if (typeof window === "undefined") {
-    const currentLang = lang || "en";
-    return tServer(key, currentLang);
-  }
-
-  const currentLang = lang || getLanguage();
-  const dict = getMergedDictionary(currentLang);
-  const val = dict[key];
-  if (val !== undefined && val !== "") return val;
-  return key;
+  return tServer(key, lang ?? getLanguage());
 }
 
 export function getDirection(): "ltr" | "rtl" {

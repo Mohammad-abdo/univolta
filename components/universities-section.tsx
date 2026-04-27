@@ -13,8 +13,6 @@ import { getImageUrl } from "@/lib/image-utils";
 import {
   MapPin,
   Globe,
-  ChevronDown,
-  Search,
   Trophy,
   Users,
   GraduationCap,
@@ -27,6 +25,7 @@ type University = {
   id: string;
   name: string;
   slug: string;
+  logo?: string | null;
   country: string;
   city: string;
   language: string;
@@ -76,6 +75,7 @@ function UniversityCard({
   index?: number;
   isRTL: boolean;
 }) {
+  const logoSrc = university.logoUrl || university.logo;
   const bannerSrc =
     getImageUrl(university.bannerUrl) ||
     getImageUrl(university.image1) ||
@@ -113,12 +113,12 @@ function UniversityCard({
           )}
 
           {/* University logo – bottom-left */}
-          {university.logoUrl && (
+          {logoSrc && (
             <div className="absolute bottom-3 left-4">
               <div className="w-14 h-14 rounded-xl bg-white shadow-lg p-1.5 overflow-hidden">
                 <div className="relative w-full h-full">
                   <Image
-                    src={getImageUrl(university.logoUrl) || university.logoUrl || ""}
+                    src={getImageUrl(logoSrc) || logoSrc || ""}
                     alt={`${university.name} logo`}
                     fill
                     className="object-contain p-0.5"
@@ -133,7 +133,7 @@ function UniversityCard({
           <div className="absolute bottom-0 left-0 right-0 p-4 pt-8">
             <h3
               className={`font-montserrat-bold text-lg text-white leading-tight line-clamp-2 ${
-                university.logoUrl ? "pl-16" : ""
+                logoSrc ? "pl-16" : ""
               }`}
             >
               {university.name}
@@ -276,64 +276,6 @@ function SectionBanner({ isRTL }: { isRTL: boolean }) {
   );
 }
 
-// ── Filter / search bar ──────────────────────────────────────────────────
-function FilterBar({ isRTL }: { isRTL: boolean }) {
-  return (
-    <div
-      className={`bg-white rounded-2xl shadow-[0px_4px_40px_0px_rgba(82,96,206,0.10)] border border-gray-100 p-4 md:p-5 mb-8 md:mb-10 flex flex-col md:flex-row gap-3 ${
-        isRTL ? "md:flex-row-reverse" : ""
-      }`}
-    >
-      {/* Country */}
-      <FilterSelect label={t("country")} isRTL={isRTL} />
-      {/* Language */}
-      <FilterSelect label={t("languageOfStudy")} isRTL={isRTL} />
-      {/* Specialisation */}
-      <FilterSelect label={t("fieldOfSpecialisation")} isRTL={isRTL} />
-
-      {/* Search input + button */}
-      <div
-        className={`flex gap-2 w-full md:w-auto ${isRTL ? "flex-row-reverse" : ""}`}
-      >
-        <div
-          className={`flex-1 md:w-[260px] bg-gray-50 border border-gray-200 rounded-xl h-[48px] px-3.5 flex items-center gap-2.5 ${
-            isRTL ? "flex-row-reverse" : ""
-          }`}
-        >
-          <Search className="w-4 h-4 text-[#8b8c9a] shrink-0" />
-          <span className="text-[#8b8c9a] text-sm font-montserrat-light truncate">
-            {t("searchUniversitiesPlaceholder")}
-          </span>
-        </div>
-        <Button
-          className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm h-[48px] px-5 rounded-xl shrink-0 hover:shadow-[0_8px_24px_rgba(82,96,206,0.35)] transition-all duration-300"
-          asChild
-        >
-          <Link href="/universities">{t("search")}</Link>
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function FilterSelect({ label, isRTL }: { label: string; isRTL: boolean }) {
-  return (
-    <div className="flex-1 min-w-0">
-      <div
-        className={`bg-gray-50 border border-gray-200 rounded-xl h-[48px] px-3.5 flex items-center justify-between gap-2 cursor-pointer hover:border-[#5260ce]/40 transition-colors ${
-          isRTL ? "flex-row-reverse" : ""
-        }`}
-      >
-        <span className="text-[#8b8c9a] text-sm font-montserrat-regular truncate">
-          {label}
-        </span>
-        <ChevronDown className="w-4 h-4 text-[#8b8c9a] shrink-0" />
-      </div>
-    </div>
-  );
-}
-
-
 // ── Main Section ──────────────────────────────────────────────────────────
 export function UniversitiesSection() {
   const [universities, setUniversities] = useState<University[]>([]);
@@ -386,11 +328,6 @@ export function UniversitiesSection() {
         {/* Hero banner */}
         <ScrollReveal direction="fade">
           <SectionBanner isRTL={isRTL} />
-        </ScrollReveal>
-
-        {/* Filters */}
-        <ScrollReveal direction="up" delay={100}>
-          <FilterBar isRTL={isRTL} />
         </ScrollReveal>
 
         {/* 3-card grid */}

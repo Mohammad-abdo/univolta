@@ -201,6 +201,60 @@ export async function apiRequest<T>(
 }
 
 /**
+ * Same as apiRequest but never sends Authorization and does not refresh tokens.
+ * Use for public flows (e.g. program registration) so a stale session token cannot
+ * send the request into authenticated-only middleware on the server.
+ */
+export async function apiRequestPublic<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const isForm = options.body instanceof FormData;
+  const headers: HeadersInit = isForm
+    ? (options.headers ?? {})
+    : {
+        "Content-Type": "application/json",
+        ...((options.headers || {}) as Record<string, string>),
+      };
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as ApiError & { message?: string };
+    const msg = body.message || body.error || `HTTP ${response.status}`;
+    const err = Object.assign(new Error(msg), {
+      error: body.error,
+      statusCode: response.status,
+    }) as Error & ApiError;
+    throw err;
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return response.json();
+}
+
+export async function apiPostPublic<T>(endpoint: string, data: unknown): Promise<T> {
+  return apiRequestPublic<T>(endpoint, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiPutPublic<T>(endpoint: string, data: unknown): Promise<T> {
+  return apiRequestPublic<T>(endpoint, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+/**
  * Make a POST request
  */
 export async function apiPost<T>(
@@ -301,6 +355,34 @@ export async function apiUploadDocument(
   }
 }
 
+export async function apiUploadDocumentPublic(
+  applicationId: string,
+  file: File,
+  documentType: string
+): Promise<{ id: string; fileUrl: string }> {
+  const formData = new FormData();
+  formData.append("document", file);
+  formData.append("documentType", documentType);
+
+  try {
+    return await apiRequestPublic<{ id: string; fileUrl: string }>(
+      `/applications/${applicationId}/documents`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+  } catch (error: any) {
+    if (error.statusCode === 400) {
+      throw new Error(error.error || "Invalid file type or missing document type");
+    }
+    if (error.statusCode === 404) {
+      throw new Error("Application not found. Please complete step 1 first.");
+    }
+    throw error;
+  }
+}
+
 /**
  * Process payment for application
  */
@@ -317,4 +399,19 @@ export async function apiProcessPayment(
   }
 ): Promise<any> {
   return apiPost(`/payments/${applicationId}/process`, paymentData);
+}
+
+export async function apiProcessPaymentPublic(
+  applicationId: string,
+  paymentData: {
+    paymentMethod: "credit_card" | "paypal";
+    amount: number;
+    cardNumber?: string;
+    cardholderName?: string;
+    expiryDate?: string;
+    cvv?: string;
+    paypalEmail?: string;
+  }
+): Promise<any> {
+  return apiPostPublic(`/payments/${applicationId}/process`, paymentData);
 }

@@ -117,6 +117,7 @@ export function Navbar() {
   const navItems = [
     { href: "/", label: tl("home", "Home"), active: pathname === "/" },
     { href: "/universities", label: tl("universities", "Universities"), active: pathname === "/universities" },
+  
     { href: "/about", label: tl("aboutNavLink", "About"), active: pathname === "/about" },
     { href: "/faq", label: tl("faq", "FAQ"), active: pathname === "/faq" },
     { href: "/contact", label: tl("contact", "Contact"), active: pathname === "/contact" },
@@ -137,13 +138,13 @@ export function Navbar() {
   return (
     <>
       {/* Mobile Header - Only visible on mobile/tablet */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 shadow-sm">
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 shadow-sm">
         <div className="h-14 px-4 flex items-center justify-between">
           {/* Left side - Notification icon and Menu button */}
           <div className="flex items-center gap-3 relative z-10">
             {isAuthenticated && (
               <div className="relative z-10">
-                <AlertNotification className="md:hidden" />
+                <AlertNotification className="lg:hidden" />
               </div>
             )}
             <button
@@ -151,7 +152,7 @@ export function Navbar() {
                 e.stopPropagation();
                 setIsOpen(!isOpen);
               }}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative z-10"
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative z-10 min-h-11 min-w-11"
               aria-label="Toggle menu"
               type="button"
             >
@@ -170,7 +171,7 @@ export function Navbar() {
               </div>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors min-h-11 min-w-11"
                 aria-label={tl("logout", "Logout")}
               >
                 <LogOut className="w-4 h-4 flex-shrink-0" />
@@ -182,7 +183,7 @@ export function Navbar() {
           ) : (
             <div className="flex items-center gap-2 sm:gap-3">
               <Button
-                className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-xs h-8 px-2 sm:px-3 rounded-lg shadow-[0_4px_14px_rgba(82,96,206,0.35)]"
+                className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-xs h-11 min-h-11 px-2 sm:px-3 rounded-lg shadow-[0_4px_14px_rgba(82,96,206,0.35)]"
                 asChild
               >
                 <Link href="/login">
@@ -195,12 +196,12 @@ export function Navbar() {
       </div>
 
       {/* Spacer for mobile content - pushes content below fixed header */}
-      <div className="md:hidden h-14" aria-hidden="true" />
+      <div className="lg:hidden h-14" aria-hidden="true" />
 
       {/* ── Rainbow accent bar fixed at the very top (desktop only) ── */}
-      <div className="hidden md:block fixed top-0 left-0 right-0 z-[60] nav-top-bar h-[3px]" />
+      <div className="hidden lg:block fixed top-0 left-0 right-0 z-[60] nav-top-bar h-[3px]" />
 
-      <nav className={`hidden md:block fixed left-1/2 -translate-x-1/2 z-50 w-full max-w-[1440px] px-5 transition-[top] duration-500 ${scrolled ? "top-[8px]" : "top-[28px]"}`}>
+      <nav className={`hidden lg:block fixed left-1/2 -translate-x-1/2 z-50 w-full max-w-[1440px] px-5 transition-[top] duration-500 ${scrolled ? "top-[8px]" : "top-[28px]"}`}>
       <div className={`animate-nav-enter rounded-[22px] h-[70px] flex items-center justify-between px-6 relative transition-[background-color,box-shadow,border-color] duration-500 ${
         scrolled
           ? "bg-white/92 backdrop-blur-2xl shadow-[0_8px_48px_rgba(82,96,206,0.22)] ring-1 ring-[#5260ce]/12"
@@ -215,7 +216,7 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Menu - Centered */}
-        <div className={`hidden md:flex items-center justify-center gap-1 flex-1 absolute ${isRTL ? "right-1/2 translate-x-1/2" : "left-1/2 -translate-x-1/2"}`}>
+        <div className={`hidden lg:flex items-center justify-center gap-1 flex-1 absolute ${isRTL ? "right-1/2 translate-x-1/2" : "left-1/2 -translate-x-1/2"}`}>
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -235,7 +236,7 @@ export function Navbar() {
         </div>
 
         {/* Right Side */}
-          <div className={`hidden md:flex items-center gap-4 shrink-0 ${isRTL ? "mr-auto" : "ml-auto"}`}>
+          <div className={`hidden lg:flex items-center gap-4 shrink-0 ${isRTL ? "mr-auto" : "ml-auto"}`}>
           {/* Language Selector */}
           <div className="relative">
             <button
@@ -338,18 +339,18 @@ export function Navbar() {
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/50 z-[60] md:hidden"
+            className="fixed inset-0 bg-black/50 z-[60] lg:hidden"
             onClick={() => setIsOpen(false)}
           />
           {/* Menu Panel */}
-          <div className={`fixed top-14 ${isRTL ? "right-0" : "left-0"} w-full max-w-sm h-[calc(100vh-56px)] bg-white shadow-2xl z-[70] md:hidden transform transition-transform duration-300 ease-in-out overflow-y-auto`}>
+          <div className={`fixed top-14 ${isRTL ? "right-0" : "left-0"} w-full max-w-sm h-[calc(100vh-56px)] bg-white shadow-2xl z-[70] lg:hidden transform transition-transform duration-300 ease-in-out overflow-y-auto`}>
             <div className="px-4 py-4 space-y-1">
               {/* Navigation Items */}
               {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 py-3.5 px-4 rounded-xl transition-all ${
+                  className={`flex items-center gap-3 py-3.5 px-4 rounded-xl transition-all min-h-11 ${
                     item.active
                       ? "text-[#5260ce] font-montserrat-bold bg-[rgba(82,96,206,0.1)]"
                       : "text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100"
@@ -376,7 +377,7 @@ export function Navbar() {
                         handleLanguageChange(lang.code);
                         setIsOpen(false);
                       }}
-                      className={`flex-1 px-3 py-2.5 rounded-xl border-2 text-sm font-montserrat-medium transition-all ${
+                      className={`flex-1 px-3 py-2.5 rounded-xl border-2 text-sm font-montserrat-medium transition-all min-h-11 ${
                         currentLang === lang.code
                           ? "bg-[#5260ce] text-white border-[#5260ce] shadow-md"
                           : "bg-white text-gray-700 border-gray-300 hover:border-[#5260ce] active:scale-95"
@@ -406,7 +407,7 @@ export function Navbar() {
                   </p>
                   <Link
                     href="/my-applications"
-                    className="flex items-center gap-3 py-3.5 px-4 rounded-xl text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100 transition-all"
+                    className="flex items-center gap-3 py-3.5 px-4 rounded-xl text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100 transition-all min-h-11"
                     onClick={() => setIsOpen(false)}
                   >
                     <User className="w-5 h-5 text-[#5260ce]" />
@@ -414,7 +415,7 @@ export function Navbar() {
                   </Link>
                   <Link
                     href="/profile"
-                    className="flex items-center gap-3 py-3.5 px-4 rounded-xl text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100 transition-all"
+                    className="flex items-center gap-3 py-3.5 px-4 rounded-xl text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100 transition-all min-h-11"
                     onClick={() => setIsOpen(false)}
                   >
                     <User className="w-5 h-5 text-[#5260ce]" />
@@ -425,7 +426,7 @@ export function Navbar() {
                       handleLogout();
                       setIsOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 py-3.5 px-4 rounded-xl text-red-600 font-montserrat-regular hover:bg-red-50 active:bg-red-100 transition-all"
+                    className="w-full flex items-center gap-3 py-3.5 px-4 rounded-xl text-red-600 font-montserrat-regular hover:bg-red-50 active:bg-red-100 transition-all min-h-11"
                   >
                     <LogOut className="w-5 h-5" />
                     <span className="text-base">{tl("logout", "Logout")}</span>
@@ -434,7 +435,7 @@ export function Navbar() {
               ) : (
                 <div className="px-4 py-2 space-y-3">
                   <Button
-                    className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white text-base h-12 font-montserrat-semibold shadow-md active:scale-95 transition-all"
+                    className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white text-base h-12 min-h-11 font-montserrat-semibold shadow-md active:scale-95 transition-all"
                     asChild
                   >
                     <Link href="/login" onClick={() => setIsOpen(false)}>

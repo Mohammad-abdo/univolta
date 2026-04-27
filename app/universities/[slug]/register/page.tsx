@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -22,11 +22,10 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
-  apiPost,
-  apiPut,
-  apiUploadImage,
-  apiUploadDocument,
-  apiProcessPayment,
+  apiPostPublic,
+  apiPutPublic,
+  apiUploadDocumentPublic,
+  apiProcessPaymentPublic,
 } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/constants";
 import { getDirection, getLanguage, t } from "@/lib/i18n";
@@ -69,6 +68,15 @@ const egyptianCities = [
   { en: "Kafr El Dawwar", ar: "كفر الدوار" },
 ];
 
+type PublicService = {
+  id: string;
+  title: string;
+  titleAr?: string | null;
+  description?: string;
+  descriptionAr?: string | null;
+  price: string;
+};
+
 // Steps will be defined inside component to use translations
 
 function UniversityRegisterContent() {
@@ -81,8 +89,11 @@ function UniversityRegisterContent() {
   const [uploading, setUploading] = useState<string | null>(null);
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  /** Shown after step 1 when backend created a new student account and emailed credentials */
+  const [accountEmailNotice, setAccountEmailNotice] = useState("");
+  const [availableServices, setAvailableServices] = useState<PublicService[]>(
+    []
+  );
 
   // Form data
   const [formData, setFormData] = useState({
@@ -96,11 +107,7 @@ function UniversityRegisterContent() {
     identityNumber: "",
     phone: "",
     // Step 2: Additional Services
-    requestType: "admission_only" as
-      | "admission_only"
-      | "admission_accommodation"
-      | "admission_transfer"
-      | "admission_accommodation_transfer",
+    selectedServiceIds: [] as string[],
     universityCity: "",
     expectedArrivalDate: "",
     additionalNotes: "",
@@ -121,44 +128,42 @@ function UniversityRegisterContent() {
   const lang = getLanguage();
   const isRTL = lang === "ar";
 
-  // Check authentication on mount (optional - students can register without login)
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const accessToken = localStorage.getItem("accessToken");
-        if (accessToken) {
-          const response = await fetch(`${API_BASE_URL}/auth/me`, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          });
+  const selectedServices = useMemo(
+    () =>
+      availableServices.filter((service) =>
+        formData.selectedServiceIds.includes(service.id)
+      ),
+    [availableServices, formData.selectedServiceIds]
+  );
 
-          if (response.ok) {
-            setIsAuthenticated(true);
-          } else {
-            // Token invalid, clear it but don't redirect
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
-            setIsAuthenticated(false);
-          }
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        // Error checking auth, but don't redirect - allow anonymous registration
-        setIsAuthenticated(false);
-      } finally {
-        setCheckingAuth(false);
-      }
-    };
+  const additionalFee = useMemo(
+    () =>
+      selectedServices.reduce((sum, service) => {
+        const numeric = Number.parseFloat(service.price || "0");
+        return sum + (Number.isNaN(numeric) ? 0 : numeric);
+      }, 0),
+    [selectedServices]
+  );
 
-    checkAuth();
-  }, [slug, router, searchParams]);
+  const totalAmount = useMemo(() => 100 + additionalFee, [additionalFee]);
+
+  const formatMoney = (value: number) => {
+    const rounded = Math.round(value * 100) / 100;
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+  };
 
   // Fetch university and program data
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const servicesRes = await fetch(`${API_BASE_URL}/public/services`);
+        if (servicesRes.ok) {
+          const servicesData = await servicesRes.json();
+          if (Array.isArray(servicesData)) {
+            setAvailableServices(servicesData as PublicService[]);
+          }
+        }
+
         const uniRes = await fetch(
           `${API_BASE_URL}/public/universities/${slug}`
         );
@@ -253,6 +258,18 @@ function UniversityRegisterContent() {
     return true;
   };
 
+  const toggleServiceSelection = (serviceId: string) => {
+    setFormData((prev) => {
+      const exists = prev.selectedServiceIds.includes(serviceId);
+      return {
+        ...prev,
+        selectedServiceIds: exists
+          ? prev.selectedServiceIds.filter((id) => id !== serviceId)
+          : [...prev.selectedServiceIds, serviceId],
+      };
+    });
+  };
+
   const handleNext = async () => {
     // Validate current step
     if (!validateCurrentStep()) {
@@ -263,7 +280,10 @@ function UniversityRegisterContent() {
       // Create application
       setLoading(true);
       try {
-        const response = (await apiPost<{ id: string }>("/applications", {
+        const response = (await apiPostPublic<{
+          id: string;
+          newStudentAccountCreated?: boolean;
+        }>("/applications", {
           fullName: formData.fullName,
           email: formData.email,
           phone: formData.phone,
@@ -275,9 +295,12 @@ function UniversityRegisterContent() {
           universityId: university?.id,
           programId: program?.id,
           applicationFee: 100, // Default application fee
-        })) as { id: string };
+        })) as { id: string; newStudentAccountCreated?: boolean };
 
         setApplicationId(response.id);
+        setAccountEmailNotice(
+          response.newStudentAccountCreated ? t("applicationCredentialsEmailSent") : ""
+        );
         setCurrentStep(2);
         setError("");
       } catch (error: any) {
@@ -291,27 +314,27 @@ function UniversityRegisterContent() {
         setLoading(true);
         setError("");
         try {
-          // Map request type to services array
-          const services: string[] = [];
-          if (
-            formData.requestType === "admission_accommodation" ||
-            formData.requestType === "admission_accommodation_transfer"
-          ) {
-            services.push("accommodation");
-          }
-          if (
-            formData.requestType === "admission_transfer" ||
-            formData.requestType === "admission_accommodation_transfer"
-          ) {
-            services.push("airport_transfer");
-          }
+          const selectedServiceNames = selectedServices.map((service) =>
+            isRTL ? service.titleAr || service.title : service.title
+          );
+          const composedAdditionalNotes = [
+            formData.additionalNotes?.trim() || "",
+            formData.universityCity
+              ? `Preferred city: ${formData.universityCity}`
+              : "",
+            formData.expectedArrivalDate
+              ? `Expected arrival date: ${formData.expectedArrivalDate}`
+              : "",
+          ]
+            .filter(Boolean)
+            .join("\n");
 
-          const additionalFee = services.length * 15; // $15 per service
-          await apiPut(`/applications/${applicationId}`, {
-            additionalServices: services.length > 0 ? services : undefined,
-            additionalNotes: formData.additionalNotes?.trim() || undefined,
+          await apiPutPublic(`/applications/${applicationId}`, {
+            additionalServices:
+              selectedServiceNames.length > 0 ? selectedServiceNames : undefined,
+            additionalNotes: composedAdditionalNotes || undefined,
             additionalFee,
-            totalFee: 100 + additionalFee,
+            totalFee: totalAmount,
           });
           setCurrentStep(3);
           setError("");
@@ -340,8 +363,12 @@ function UniversityRegisterContent() {
 
   const handlePrevious = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      const nextStep = currentStep - 1;
+      setCurrentStep(nextStep);
       setError("");
+      if (nextStep === 1) {
+        setAccountEmailNotice("");
+      }
     }
   };
 
@@ -368,7 +395,7 @@ function UniversityRegisterContent() {
     setUploading(type);
     setError("");
     try {
-      const result = await apiUploadDocument(applicationId, file, type);
+      const result = await apiUploadDocumentPublic(applicationId, file, type);
       if (result?.id) {
         setFormData({
           ...formData,
@@ -441,23 +468,7 @@ function UniversityRegisterContent() {
     setLoading(true);
     setError("");
     try {
-      // Calculate fees based on request type
-      const services: string[] = [];
-      if (
-        formData.requestType === "admission_accommodation" ||
-        formData.requestType === "admission_accommodation_transfer"
-      ) {
-        services.push("accommodation");
-      }
-      if (
-        formData.requestType === "admission_transfer" ||
-        formData.requestType === "admission_accommodation_transfer"
-      ) {
-        services.push("airport_transfer");
-      }
-      const totalAmount = 100 + services.length * 15;
-
-      await apiProcessPayment(applicationId, {
+      await apiProcessPaymentPublic(applicationId, {
         paymentMethod: formData.paymentMethod,
         amount: totalAmount,
         ...(formData.paymentMethod === "credit_card" && {
@@ -485,17 +496,6 @@ function UniversityRegisterContent() {
       setLoading(false);
     }
   };
-
-  if (checkingAuth) {
-    return (
-      <div className="min-h-screen bg-[#f9fafe] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5260ce] mx-auto mb-4" />
-          <p className="font-montserrat-regular text-sm text-[#8b8c9a]">Loading application form…</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#f9fafe] pb-16 md:pb-0" dir={getDirection()}>
@@ -707,6 +707,15 @@ function UniversityRegisterContent() {
                     </div>
                   )}
 
+                  {currentStep >= 2 && accountEmailNotice && (
+                    <div className="mb-4 p-3 md:p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-lg flex items-start gap-2 md:gap-3">
+                      <Check className="w-4 h-4 md:w-5 md:h-5 text-emerald-600 shrink-0 mt-0.5" />
+                      <p className="text-emerald-900 text-xs md:text-sm font-montserrat-regular leading-relaxed">
+                        {accountEmailNotice}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Step 1: Student Data */}
                   {currentStep === 1 && (
                     <div className="animate-card-enter">
@@ -764,24 +773,71 @@ function UniversityRegisterContent() {
                       <div className="space-y-5">
                         <div>
                           <label className="block font-montserrat-semibold text-sm mb-3">
-                            {t("typeOfRequest")}
+                            {t("additionalServices")}
                           </label>
-                          <div className="grid md:grid-cols-2 gap-3">
-                            {[
-                              { value: "admission_only",                      label: t("admissionOnly"),                                   desc: "$100" },
-                              { value: "admission_accommodation",             label: t("admissionAccommodation"),                          desc: "$115" },
-                              { value: "admission_transfer",                  label: t("admissionTransfer"),                               desc: "$115" },
-                              { value: "admission_accommodation_transfer",    label: t("admissionAccommodationTransfer"),                  desc: "$130" },
-                            ].map(({ value, label, desc }) => (
-                              <label key={value} className={`flex items-start gap-3 cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 ${formData.requestType === value ? "border-[#5260ce] bg-[rgba(82,96,206,0.05)]" : "border-gray-200 hover:border-[#5260ce]/40"}`}>
-                                <input type="radio" name="requestType" value={value} checked={formData.requestType === value} onChange={(e) => setFormData({ ...formData, requestType: e.target.value as any })} className="w-4 h-4 mt-0.5 text-[#5260ce] shrink-0" />
-                                <div>
-                                  <p className="font-montserrat-semibold text-sm text-[#121c67]">{label}</p>
-                                  <p className="text-xs text-[#5260ce] mt-0.5">{desc}</p>
-                                </div>
-                              </label>
-                            ))}
-                          </div>
+                          {availableServices.length === 0 ? (
+                            <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">
+                              {isRTL
+                                ? "لا توجد خدمات إضافية متاحة حالياً."
+                                : "No additional services are available right now."}
+                            </div>
+                          ) : (
+                            <>
+                              <div className="grid md:grid-cols-2 gap-3">
+                                {availableServices.map((service) => {
+                                  const selected = formData.selectedServiceIds.includes(
+                                    service.id
+                                  );
+                                  const title =
+                                    isRTL && service.titleAr
+                                      ? service.titleAr
+                                      : service.title;
+                                  const description =
+                                    isRTL && service.descriptionAr
+                                      ? service.descriptionAr
+                                      : service.description || "";
+
+                                  return (
+                                    <label
+                                      key={service.id}
+                                      className={`flex items-start gap-3 cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 ${
+                                        selected
+                                          ? "border-[#5260ce] bg-[rgba(82,96,206,0.05)]"
+                                          : "border-gray-200 hover:border-[#5260ce]/40"
+                                      }`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={selected}
+                                        onChange={() =>
+                                          toggleServiceSelection(service.id)
+                                        }
+                                        className="w-4 h-4 mt-0.5 text-[#5260ce] shrink-0"
+                                      />
+                                      <div className="min-w-0">
+                                        <p className="font-montserrat-semibold text-sm text-[#121c67] break-words">
+                                          {title}
+                                        </p>
+                                        <p className="text-xs text-[#5260ce] mt-0.5">
+                                          ${service.price}
+                                        </p>
+                                        {description && (
+                                          <p className="text-xs text-[#65666f] mt-1 line-clamp-2">
+                                            {description}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                              <p className="mt-2 text-xs text-[#5260ce] font-montserrat-medium">
+                                {isRTL
+                                  ? `تم اختيار ${formData.selectedServiceIds.length} خدمة - إجمالي إضافي: $${formatMoney(additionalFee)}`
+                                  : `${formData.selectedServiceIds.length} service(s) selected - Additional total: $${formatMoney(additionalFee)}`}
+                              </p>
+                            </>
+                          )}
                         </div>
                         <div>
                           <label className="block font-montserrat-semibold text-sm mb-2">
@@ -1002,27 +1058,7 @@ function UniversityRegisterContent() {
                           </div>
                           <div>
                             <span className="font-montserrat-semibold text-gray-900">
-                              $
-                              {(() => {
-                                const services: string[] = [];
-                                if (
-                                  formData.requestType ===
-                                    "admission_accommodation" ||
-                                  formData.requestType ===
-                                    "admission_accommodation_transfer"
-                                ) {
-                                  services.push("accommodation");
-                                }
-                                if (
-                                  formData.requestType ===
-                                    "admission_transfer" ||
-                                  formData.requestType ===
-                                    "admission_accommodation_transfer"
-                                ) {
-                                  services.push("airport_transfer");
-                                }
-                                return services.length * 15;
-                              })()}
+                              {"$" + formatMoney(additionalFee)}
                             </span>
                           </div>
                           <div className="col-span-2 border-t border-gray-300 pt-3 mt-2">
@@ -1031,27 +1067,7 @@ function UniversityRegisterContent() {
                                 {t("total")}:
                               </span>
                               <span className="font-montserrat-semibold text-[#5260ce]">
-                                $
-                                {(() => {
-                                  const services: string[] = [];
-                                  if (
-                                    formData.requestType ===
-                                      "admission_accommodation" ||
-                                    formData.requestType ===
-                                      "admission_accommodation_transfer"
-                                  ) {
-                                    services.push("accommodation");
-                                  }
-                                  if (
-                                    formData.requestType ===
-                                      "admission_transfer" ||
-                                    formData.requestType ===
-                                      "admission_accommodation_transfer"
-                                  ) {
-                                    services.push("airport_transfer");
-                                  }
-                                  return 100 + services.length * 15;
-                                })()}
+                                {"$" + formatMoney(totalAmount)}
                               </span>
                             </div>
                           </div>

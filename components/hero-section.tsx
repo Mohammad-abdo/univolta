@@ -96,13 +96,9 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
   const gradient = isRTL
     ? "linear-gradient(to left,  white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)"
     : "linear-gradient(to right, white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)";
-  const padSide = isRTL
-    ? { paddingLeft:  "clamp(0px, 45%, 660px)" }
-    : { paddingRight: "clamp(0px, 45%, 660px)" };
-
   return (
     <section
-      className="relative min-h-[600px] md:h-[793px] overflow-hidden pt-20 md:pt-0"
+      className="relative min-h-[560px] overflow-hidden pt-20 lg:h-[793px] lg:min-h-0 lg:pt-0"
       dir={isRTL ? "rtl" : "ltr"}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -279,8 +275,7 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
           isRTL controls text-alignment + inline flex ordering only.
         */}
         <div
-          className={`relative z-[5] pt-8 md:pt-[249px] pb-12 md:pb-0 ${isRTL ? "text-right" : "text-left"}`}
-          style={padSide}
+          className={`relative z-[5] pt-8 pb-12 lg:pt-[249px] lg:pb-0 ${isRTL ? "text-right lg:ml-auto" : "text-left"} lg:max-w-[56%]`}
         >
           {/* Discovery badge */}
           <div className={`inline-flex items-center gap-2 glass-badge rounded-full px-4 py-1.5 mb-5 ${isRTL ? "flex-row-reverse" : ""}`}>
@@ -292,12 +287,12 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
           </div>
 
           {/* Headline */}
-          <h1 className="font-montserrat-bold text-2xl md:text-[40px] leading-[1.25] text-[#121c67] mb-3 md:mb-4">
+          <h1 className="font-montserrat-bold text-2xl md:text-3xl lg:text-[40px] leading-[1.25] text-[#121c67] mb-3 md:mb-4">
             {slideTitle}
           </h1>
 
           {/* Description */}
-          <p className="font-montserrat-regular text-sm md:text-[17px] leading-[1.55] text-[#65666f] mb-5 md:mb-6">
+          <p className="font-montserrat-regular text-sm md:text-base lg:text-[17px] leading-[1.55] text-[#65666f] mb-5 md:mb-6">
             {slideSubtitle}
           </p>
 
@@ -370,20 +365,23 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
             </div>
 
             {/* Stats row */}
-            <div className={`flex items-center pt-3 border-t border-gray-100 ${isRTL ? "flex-row-reverse" : ""}`}>
-              {stats.map((stat, i) => (
-                <div key={stat.label} className="flex items-center flex-1">
-                  <div className="flex-1 text-center px-4">
+            <div className="pt-3 border-t border-gray-100">
+              <div
+                className={`grid grid-cols-3 items-stretch gap-0 sm:flex sm:items-center ${
+                  isRTL ? "sm:flex-row-reverse" : ""
+                }`}
+              >
+                {stats.map((stat) => (
+                  <div key={stat.label} className="text-center px-2 py-2 sm:flex-1 sm:px-4 sm:py-0">
                     <div className="font-montserrat-bold text-xl text-gradient-accent">
                       <AnimatedCounter target={stat.target} suffix={stat.suffix} />
                     </div>
-                    <div className="font-montserrat-regular text-xs text-[#65666f] mt-0.5 whitespace-nowrap">
+                    <div className="font-montserrat-regular text-xs text-[#65666f] mt-0.5">
                       {stat.label}
                     </div>
                   </div>
-                  {i < stats.length - 1 && <div className="w-px h-10 bg-gray-200 shrink-0" />}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
 
