@@ -5,8 +5,9 @@ import { apiGet } from "@/lib/api";
 import { canAccess, type UserRole } from "@/lib/permissions";
 import { API_BASE_URL } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, DollarSign, CheckCircle, XCircle, Clock, Eye } from "lucide-react";
+import { Search, Filter, DollarSign, CheckCircle, XCircle, Clock, Eye, Download, RotateCcw, X } from "lucide-react";
 import Link from "next/link";
+import { showToast } from "@/lib/toast";
 import { t } from "@/lib/i18n";
 
 interface Payment {
@@ -37,6 +38,10 @@ export default function PaymentsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [methodFilter, setMethodFilter] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [refundingId, setRefundingId] = useState<string | null>(null);
+  const [refundReason, setRefundReason] = useState("");
+  const [refundAmount, setRefundAmount] = useState("");
+  const [submittingRefund, setSubmittingRefund] = useState(false);
 
   useEffect(() => {
     fetchUserRole();
@@ -160,6 +165,47 @@ export default function PaymentsPage() {
     };
   };
 
+  const exportData = async (type: "applications" | "revenue", format: "xlsx" | "csv") => {
+    const token = localStorage.getItem("accessToken");
+    const res = await fetch(`${API_BASE_URL}/payments/export/${type}?format=${format}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) { showToast.error("Export failed"); return; }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${type}-${Date.now()}.${format}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const submitRefund = async () => {
+    if (!refundingId || !refundReason) return;
+    setSubmittingRefund(true);
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`${API_BASE_URL}/payments/${refundingId}/refund`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          reason: refundReason,
+          ...(refundAmount ? { refundAmount: Number(refundAmount) } : {}),
+        }),
+      });
+      if (!res.ok) throw new Error();
+      showToast.success("Payment refunded successfully");
+      setRefundingId(null);
+      setRefundReason("");
+      setRefundAmount("");
+      fetchPayments();
+    } catch {
+      showToast.error("Refund failed");
+    } finally {
+      setSubmittingRefund(false);
+    }
+  };
+
   const statusCounts = {
     all: payments.length,
     completed: payments.filter((p) => p.paymentStatus === "completed" || p.paymentStatus === "paid").length,
@@ -181,13 +227,74 @@ export default function PaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-3">
         <h1 className="text-3xl font-montserrat-bold text-[#121c67]">{t("payments")}</h1>
-        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
-          <Filter className="w-4 h-4 mr-2" />
-          Filters
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Export buttons */}
+          <div className="flex items-center gap-1 border border-gray-200 rounded-lg p-1 bg-white">
+            <span className="text-xs text-gray-500 px-2">Export:</span>
+            <button onClick={() => exportData("applications", "xlsx")} className="text-xs px-3 py-1.5 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium flex items-center gap-1">
+              <Download className="w-3 h-3" />Apps .xlsx
+            </button>
+            <button onClick={() => exportData("applications", "csv")} className="text-xs px-3 py-1.5 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium flex items-center gap-1">
+              <Download className="w-3 h-3" />Apps .csv
+            </button>
+            <button onClick={() => exportData("revenue", "xlsx")} className="text-xs px-3 py-1.5 rounded bg-sky-50 text-sky-700 hover:bg-sky-100 font-medium flex items-center gap-1">
+              <Download className="w-3 h-3" />Revenue .xlsx
+            </button>
+            <button onClick={() => exportData("revenue", "csv")} className="text-xs px-3 py-1.5 rounded bg-sky-50 text-sky-700 hover:bg-sky-100 font-medium flex items-center gap-1">
+              <Download className="w-3 h-3" />Revenue .csv
+            </button>
+          </div>
+          <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+            <Filter className="w-4 h-4 mr-2" />
+            Filters
+          </Button>
+        </div>
       </div>
+
+      {/* Refund dialog */}
+      {refundingId && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[#121c67] flex items-center gap-2">
+                <RotateCcw className="w-5 h-5 text-orange-500" /> Process Refund
+              </h3>
+              <button onClick={() => setRefundingId(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Refund Amount (leave blank for full amount)</label>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-gray-500">$</span>
+                  <input type="number" min="0" step="0.01" value={refundAmount}
+                    onChange={(e) => setRefundAmount(e.target.value)}
+                    placeholder="Full amount"
+                    className="flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Reason <span className="text-red-500">*</span></label>
+                <textarea value={refundReason} onChange={(e) => setRefundReason(e.target.value)}
+                  rows={3} placeholder="Enter refund reason…"
+                  className="w-full mt-1 p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button onClick={submitRefund} disabled={!refundReason || submittingRefund}
+                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white">
+                <RotateCcw className="w-4 h-4 mr-1" />{submittingRefund ? "Processing…" : "Confirm Refund"}
+              </Button>
+              <Button variant="outline" onClick={() => setRefundingId(null)} className="flex-1">Cancel</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -344,16 +451,26 @@ export default function PaymentsPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {payment.applicationId || payment.application?.id ? (
-                        <Link href={`/dashboard/applications/${payment.applicationId || payment.application?.id}`}>
-                          <Button variant="outline" size="sm">
-                            <Eye className="w-4 h-4 mr-1" />
-                            View App
+                      <div className="flex items-center gap-2">
+                        {payment.applicationId || payment.application?.id ? (
+                          <Link href={`/dashboard/applications/${payment.applicationId || payment.application?.id}`}>
+                            <Button variant="outline" size="sm">
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                          </Link>
+                        ) : (
+                          <span className="text-gray-400 text-xs">N/A</span>
+                        )}
+                        {payment.paymentStatus !== "refunded" && (payment.paymentStatus === "completed" || payment.paymentStatus === "paid") && (
+                          <Button variant="outline" size="sm"
+                            onClick={() => { setRefundingId(payment.applicationId); setRefundReason(""); setRefundAmount(""); }}
+                            className="text-orange-600 border-orange-300 hover:bg-orange-50">
+                            <RotateCcw className="w-3 h-3 mr-1" />
+                            Refund
                           </Button>
-                        </Link>
-                      ) : (
-                        <span className="text-gray-400 text-xs">N/A</span>
-                      )}
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

@@ -52,8 +52,12 @@ interface Application {
   applicationFee?: number;
   additionalFee?: number;
   totalFee?: number;
+  remainingBalance?: number;
   paymentStatus?: string;
   paymentMethod?: string;
+  arrivalDate?: string;
+  acceptanceLetterUrl?: string;
+  acceptanceLetterFileName?: string;
   documents?: Document[];
   payment?: Payment;
   statusHistory?: StatusHistory[];
@@ -68,6 +72,8 @@ interface Document {
   fileSize?: number;
   mimeType?: string;
   uploadedAt: string;
+  documentStatus?: string;   // pending | approved | rejected
+  rejectionReason?: string;
 }
 
 interface Payment {
@@ -80,6 +86,9 @@ interface Payment {
   paidAt?: string;
   invoiceUrl?: string;
   invoiceFileName?: string;
+  refundedAt?: string;
+  refundReason?: string;
+  refundAmount?: number;
   createdAt: string;
 }
 
@@ -106,6 +115,24 @@ export default function ApplicationDetailPage() {
   const [statusReason, setStatusReason] = useState("");
   const [rejectionPreset, setRejectionPreset] = useState("");
   const [customRejection, setCustomRejection] = useState("");
+
+  // Acceptance letter
+  const [uploadingLetter, setUploadingLetter] = useState(false);
+  const letterInputRef = useState<HTMLInputElement | null>(null);
+
+  // Remaining balance
+  const [editingBalance, setEditingBalance] = useState(false);
+  const [balanceInput, setBalanceInput] = useState("");
+  const [savingBalance, setSavingBalance] = useState(false);
+
+  // Arrival date
+  const [editingArrival, setEditingArrival] = useState(false);
+  const [arrivalInput, setArrivalInput] = useState("");
+  const [savingArrival, setSavingArrival] = useState(false);
+
+  // Document review (per-doc)
+  const [reviewingDocId, setReviewingDocId] = useState<string | null>(null);
+  const [docRejectReason, setDocRejectReason] = useState("");
 
   // Missing documents
   const DOCUMENT_OPTIONS = [
@@ -168,10 +195,95 @@ export default function ApplicationDetailPage() {
       const data = await apiGet<Application>(`/applications/${applicationId}`);
       setApplication(data);
       setNotes(data.notes || "");
+      setBalanceInput(String(data.remainingBalance ?? 0));
+      setArrivalInput(data.arrivalDate ? new Date(data.arrivalDate).toISOString().split("T")[0] : "");
     } catch (error: any) {
       showToast.error("Failed to load application details");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const reviewDocument = async (docId: string, status: "approved" | "rejected", reason?: string) => {
+    if (!application) return;
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`${API_BASE_URL}/applications/${application.id}/documents/${docId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status, reason }),
+      });
+      if (!res.ok) throw new Error();
+      showToast.success(`Document ${status}`);
+      setReviewingDocId(null);
+      setDocRejectReason("");
+      fetchApplication();
+    } catch {
+      showToast.error("Failed to update document status");
+    }
+  };
+
+  const uploadAcceptanceLetter = async (file: File) => {
+    if (!application) return;
+    setUploadingLetter(true);
+    try {
+      const token = localStorage.getItem("accessToken");
+      const formData = new FormData();
+      formData.append("acceptanceLetter", file);
+      const res = await fetch(`${API_BASE_URL}/applications/${application.id}/acceptance-letter`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!res.ok) throw new Error();
+      showToast.success("Acceptance letter uploaded");
+      fetchApplication();
+    } catch {
+      showToast.error("Failed to upload acceptance letter");
+    } finally {
+      setUploadingLetter(false);
+    }
+  };
+
+  const saveRemainingBalance = async () => {
+    if (!application) return;
+    setSavingBalance(true);
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`${API_BASE_URL}/applications/${application.id}/remaining-balance`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ remainingBalance: Number(balanceInput) }),
+      });
+      if (!res.ok) throw new Error();
+      showToast.success("Remaining balance updated");
+      setEditingBalance(false);
+      fetchApplication();
+    } catch {
+      showToast.error("Failed to update balance");
+    } finally {
+      setSavingBalance(false);
+    }
+  };
+
+  const saveArrivalDate = async () => {
+    if (!application) return;
+    setSavingArrival(true);
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`${API_BASE_URL}/applications/${application.id}/arrival-date`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ arrivalDate: arrivalInput || null }),
+      });
+      if (!res.ok) throw new Error();
+      showToast.success("Arrival date saved");
+      setEditingArrival(false);
+      fetchApplication();
+    } catch {
+      showToast.error("Failed to save arrival date");
+    } finally {
+      setSavingArrival(false);
     }
   };
 
@@ -448,32 +560,83 @@ export default function ApplicationDetailPage() {
               <p className="text-gray-500">{t("noDocumentsUploaded")}</p>
             ) : (
               <div className="space-y-3">
-                {application.documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-5 h-5 text-[#5260ce]" />
-                      <div>
-                        <p className="font-semibold text-gray-900">{doc.fileName}</p>
-                        <p className="text-sm text-gray-500">
-                          {doc.documentType ? doc.documentType.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()) : t("nA")}
-                          {doc.fileSize && ` • ${(doc.fileSize / 1024).toFixed(2)} KB`}
-                        </p>
-                      </div>
-                    </div>
-                    <a
-                      href={doc.fileUrl.startsWith("http") ? doc.fileUrl : `${API_BASE_URL.replace("/api/v1", "")}${doc.fileUrl}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#5260ce] hover:underline flex items-center gap-1"
+                {application.documents.map((doc) => {
+                  const docStatusColor =
+                    doc.documentStatus === "approved" ? "bg-green-100 text-green-800 border-green-200" :
+                    doc.documentStatus === "rejected"  ? "bg-red-100 text-red-800 border-red-200" :
+                    "bg-yellow-50 text-yellow-800 border-yellow-200";
+                  return (
+                    <div
+                      key={doc.id}
+                      className={`p-3 border rounded-lg ${doc.documentStatus === "rejected" ? "border-red-200 bg-red-50" : "border-gray-200 hover:bg-gray-50"}`}
                     >
-                      <Download className="w-4 h-4" />
-                      {t("download")}
-                    </a>
-                  </div>
-                ))}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <FileText className="w-5 h-5 text-[#5260ce] shrink-0" />
+                          <div>
+                            <p className="font-semibold text-gray-900">{doc.fileName}</p>
+                            <p className="text-sm text-gray-500">
+                              {doc.documentType ? doc.documentType.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()) : t("nA")}
+                              {doc.fileSize && ` • ${(doc.fileSize / 1024).toFixed(2)} KB`}
+                            </p>
+                            {doc.documentStatus && (
+                              <span className={`inline-block text-xs px-2 py-0.5 rounded-full border mt-1 ${docStatusColor}`}>
+                                {doc.documentStatus.charAt(0).toUpperCase() + doc.documentStatus.slice(1)}
+                              </span>
+                            )}
+                            {doc.documentStatus === "rejected" && doc.rejectionReason && (
+                              <p className="text-xs text-red-600 mt-1">Reason: {doc.rejectionReason}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <a
+                            href={doc.fileUrl.startsWith("http") ? doc.fileUrl : `${API_BASE_URL.replace("/api/v1", "")}${doc.fileUrl}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#5260ce] hover:underline flex items-center gap-1 text-sm"
+                          >
+                            <Download className="w-4 h-4" />
+                            {t("download")}
+                          </a>
+                          {canUpdate && (
+                            <>
+                              <button
+                                onClick={() => reviewDocument(doc.id, "approved")}
+                                className="text-xs px-2 py-1 rounded bg-green-100 text-green-700 hover:bg-green-200"
+                                title="Approve document"
+                              >✓ Approve</button>
+                              <button
+                                onClick={() => setReviewingDocId(reviewingDocId === doc.id ? null : doc.id)}
+                                className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200"
+                                title="Reject document"
+                              >✗ Reject</button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      {/* Reject reason input */}
+                      {canUpdate && reviewingDocId === doc.id && (
+                        <div className="mt-2 flex gap-2 items-center">
+                          <input
+                            type="text"
+                            value={docRejectReason}
+                            onChange={(e) => setDocRejectReason(e.target.value)}
+                            placeholder="Rejection reason (optional)…"
+                            className="flex-1 text-sm p-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-400"
+                          />
+                          <Button size="sm" onClick={() => reviewDocument(doc.id, "rejected", docRejectReason)}
+                            className="bg-red-600 hover:bg-red-700 text-white text-xs">
+                            Confirm Reject
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setReviewingDocId(null)} className="text-xs">
+                            Cancel
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -775,6 +938,129 @@ export default function ApplicationDetailPage() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Acceptance Letter (APPROVED only) */}
+          {application.status === "APPROVED" && (
+            <div className="bg-white rounded-lg shadow border border-emerald-200 p-6 space-y-3">
+              <h3 className="text-lg font-montserrat-bold text-[#121c67] flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-emerald-500" />
+                Acceptance Letter
+              </h3>
+              {application.acceptanceLetterUrl ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600">Letter uploaded — student can download it.</p>
+                  <a
+                    href={application.acceptanceLetterUrl.startsWith("http")
+                      ? application.acceptanceLetterUrl
+                      : `${API_BASE_URL.replace("/api/v1", "")}${application.acceptanceLetterUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-emerald-700 hover:underline font-medium"
+                  >
+                    <Download className="w-4 h-4" />
+                    {application.acceptanceLetterFileName || "Download Letter"}
+                  </a>
+                  {canUpdate && (
+                    <label className="block mt-2">
+                      <span className="text-xs text-gray-500">Replace letter:</span>
+                      <input type="file" accept=".pdf,.doc,.docx,.jpg,.png"
+                        className="block mt-1 text-xs text-gray-600 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAcceptanceLetter(f); }}
+                      />
+                    </label>
+                  )}
+                </div>
+              ) : canUpdate ? (
+                <div>
+                  <p className="text-sm text-gray-500 mb-2">Upload acceptance letter from university:</p>
+                  <label>
+                    <input type="file" accept=".pdf,.doc,.docx,.jpg,.png" disabled={uploadingLetter}
+                      className="block text-xs text-gray-600 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAcceptanceLetter(f); }}
+                    />
+                    {uploadingLetter && <p className="text-xs text-gray-400 mt-1 animate-pulse">Uploading…</p>}
+                  </label>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400">No acceptance letter uploaded yet.</p>
+              )}
+            </div>
+          )}
+
+          {/* Remaining Balance (admin editable) */}
+          {canUpdate && (
+            <div className="bg-white rounded-lg shadow border border-orange-200 p-6 space-y-3">
+              <h3 className="text-lg font-montserrat-bold text-[#121c67] flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-orange-500" />
+                Remaining Balance
+              </h3>
+              <p className="text-xs text-gray-500">University fee still owed by student after acceptance.</p>
+              {editingBalance ? (
+                <div className="flex gap-2 items-center">
+                  <span className="text-gray-500">$</span>
+                  <input
+                    type="number" min="0" step="0.01"
+                    value={balanceInput}
+                    onChange={(e) => setBalanceInput(e.target.value)}
+                    className="flex-1 p-2 border border-orange-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400"
+                  />
+                  <Button size="sm" onClick={saveRemainingBalance} disabled={savingBalance}
+                    className="bg-orange-500 hover:bg-orange-600 text-white text-xs">
+                    <Save className="w-3 h-3 mr-1" />{savingBalance ? "…" : "Save"}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setEditingBalance(false)} className="text-xs">
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <span className="text-2xl font-bold text-orange-700">
+                    ${Number(application.remainingBalance ?? 0).toFixed(2)}
+                  </span>
+                  <Button size="sm" variant="outline" onClick={() => setEditingBalance(true)} className="text-xs">
+                    <Edit className="w-3 h-3 mr-1" />Edit
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Arrival Date (admin editable, APPROVED only) */}
+          {application.status === "APPROVED" && canUpdate && (
+            <div className="bg-white rounded-lg shadow border border-sky-200 p-6 space-y-3">
+              <h3 className="text-lg font-montserrat-bold text-[#121c67] flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-sky-500" />
+                Arrival Date
+              </h3>
+              <p className="text-xs text-gray-500">Expected date of student arrival in Egypt.</p>
+              {editingArrival ? (
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="date"
+                    value={arrivalInput}
+                    onChange={(e) => setArrivalInput(e.target.value)}
+                    className="flex-1 p-2 border border-sky-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-400"
+                  />
+                  <Button size="sm" onClick={saveArrivalDate} disabled={savingArrival}
+                    className="bg-sky-500 hover:bg-sky-600 text-white text-xs">
+                    <Save className="w-3 h-3 mr-1" />{savingArrival ? "…" : "Save"}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setEditingArrival(false)} className="text-xs">
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <span className="text-base font-semibold text-sky-700">
+                    {application.arrivalDate ? new Date(application.arrivalDate).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }) : "Not set"}
+                  </span>
+                  <Button size="sm" variant="outline" onClick={() => setEditingArrival(true)} className="text-xs">
+                    <Edit className="w-3 h-3 mr-1" />Edit
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 

@@ -173,6 +173,12 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
       permission: { resource: "applications", action: "read" },
     },
     {
+      href: "/dashboard/arrivals",
+      label: "Student Arrivals",
+      icon: CalendarRange,
+      permission: { resource: "applications", action: "read" },
+    },
+    {
       href: "/dashboard/testimonials",
       label: t("testimonials"),
       icon: Star,

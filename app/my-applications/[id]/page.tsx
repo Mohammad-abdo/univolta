@@ -32,6 +32,10 @@ interface Application {
   applicationFee?: number;
   additionalFee?: number;
   totalFee?: number;
+  remainingBalance?: number;
+  arrivalDate?: string;
+  acceptanceLetterUrl?: string;
+  acceptanceLetterFileName?: string;
   payment?: {
     id: string; amount: number; currency: string;
     paymentMethod: string; paymentStatus: string;
@@ -44,6 +48,8 @@ interface Application {
 interface DocumentItem {
   id: string; documentType: string; fileName: string;
   fileUrl: string; fileSize?: number; uploadedAt: string;
+  documentStatus?: string;  // pending | approved | rejected
+  rejectionReason?: string;
 }
 
 interface StatusHistoryItem {
@@ -418,9 +424,39 @@ export default function ApplicationDetailPage() {
                   </div>
                   <div className="flex justify-between px-4 py-2.5 text-sm">
                     <span className="text-[#718096]">Remaining Balance:</span>
-                    <span className="font-semibold text-[#1B2559]">$0</span>
+                    <span className={`font-semibold ${Number(application.remainingBalance ?? 0) > 0 ? "text-orange-600" : "text-[#1B2559]"}`}>
+                      ${Number(application.remainingBalance ?? 0).toLocaleString()}
+                    </span>
                   </div>
+                  {application.arrivalDate && (
+                    <div className="flex justify-between px-4 py-2.5 text-sm border-t border-gray-100">
+                      <span className="text-[#718096]">Arrival Date:</span>
+                      <span className="font-semibold text-sky-700">
+                        {new Date(application.arrivalDate).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
+                      </span>
+                    </div>
+                  )}
                 </div>
+
+                {/* Acceptance Letter download (student) */}
+                {application.status === "APPROVED" && application.acceptanceLetterUrl && (
+                  <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3">
+                    <span className="text-emerald-600 text-xl">🎓</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-emerald-800">Acceptance Letter Available</p>
+                      <p className="text-xs text-emerald-600 truncate">{application.acceptanceLetterFileName || "acceptance-letter"}</p>
+                    </div>
+                    <a
+                      href={application.acceptanceLetterUrl.startsWith("http")
+                        ? application.acceptanceLetterUrl
+                        : `${API_BASE_URL.replace("/api/v1", "")}${application.acceptanceLetterUrl}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="shrink-0 flex items-center gap-1 text-xs font-semibold text-emerald-700 border border-emerald-400 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors"
+                    >
+                      <Download className="w-3.5 h-3.5" /> Download
+                    </a>
+                  </div>
+                )}
 
                 {/* Payment actions */}
                 {application.payment?.invoiceUrl ? (
@@ -476,30 +512,44 @@ export default function ApplicationDetailPage() {
                     {documents.map((doc) => {
                       const label   = DOC_LABEL[doc.documentType] || doc.documentType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
                       const url     = doc.fileUrl.startsWith("http") ? doc.fileUrl : `${API_BASE_URL.replace("/api/v1", "")}${doc.fileUrl}`;
-                      const docStat = application.status === "APPROVED" ? "Verified" : application.status === "REJECTED" ? "Rejected" : "Pending";
-                      const badge   = application.status === "APPROVED"
+                      // Use per-doc status if available, else fall back to app status
+                      const perDocStatus = doc.documentStatus;
+                      const docStat = perDocStatus === "approved" ? "Verified"
+                        : perDocStatus === "rejected" ? "Rejected"
+                        : perDocStatus === "pending" ? "Pending Review"
+                        : application.status === "APPROVED" ? "Verified"
+                        : application.status === "REJECTED" ? "Rejected"
+                        : "Pending";
+                      const badge = (perDocStatus === "approved" || (!perDocStatus && application.status === "APPROVED"))
                         ? "bg-green-50 text-green-600 border-green-100"
-                        : application.status === "REJECTED"
+                        : (perDocStatus === "rejected" || (!perDocStatus && application.status === "REJECTED"))
                         ? "bg-red-50 text-red-500 border-red-100"
                         : "bg-orange-50 text-orange-500 border-orange-100";
                       return (
-                        <li key={doc.id} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-[#EBF3FD] flex items-center justify-center shrink-0">
-                              <FileText className="w-4 h-4 text-[#5B9BD5]" />
+                        <li key={doc.id} className="py-3 border-b border-gray-50 last:border-0">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-8 h-8 rounded-lg bg-[#EBF3FD] flex items-center justify-center shrink-0">
+                                <FileText className="w-4 h-4 text-[#5B9BD5]" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-sm text-[#1B2559] truncate">{label}</p>
+                                <p className="text-xs text-[#A0AEC0]">Uploaded: {fmtDate(doc.uploadedAt)}</p>
+                              </div>
                             </div>
-                            <div className="min-w-0">
-                              <p className="font-semibold text-sm text-[#1B2559] truncate">{label}</p>
-                              <p className="text-xs text-[#A0AEC0]">Uploaded: {fmtDate(doc.uploadedAt)}</p>
+                            <div className="flex items-center gap-2 shrink-0 ml-2">
+                              <span className={`text-xs px-2.5 py-0.5 rounded-full border font-semibold ${badge}`}>{docStat}</span>
+                              <a href={url} target="_blank" rel="noopener noreferrer"
+                                className="text-[#A0AEC0] hover:text-[#5260ce] transition-colors">
+                                <Download className="w-4 h-4" />
+                              </a>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 shrink-0 ml-2">
-                            <span className={`text-xs px-2.5 py-0.5 rounded-full border font-semibold ${badge}`}>{docStat}</span>
-                            <a href={url} target="_blank" rel="noopener noreferrer"
-                              className="text-[#A0AEC0] hover:text-[#5260ce] transition-colors">
-                              <Download className="w-4 h-4" />
-                            </a>
-                          </div>
+                          {doc.documentStatus === "rejected" && doc.rejectionReason && (
+                            <p className="mt-1.5 ml-10 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-1.5">
+                              ⚠ Rejected: {doc.rejectionReason}
+                            </p>
+                          )}
                         </li>
                       );
                     })}
