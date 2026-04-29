@@ -354,8 +354,8 @@ function UniversitiesContent() {
                   {availableSpecializations.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
 
-                <div className="flex gap-2 md:gap-3 flex-1 md:flex-none">
-                  <div className="flex-1 md:w-72 bg-[#f9fafe] border border-[#e0e6f1] rounded-xl px-3 flex gap-2 items-center focus-within:ring-2 focus-within:ring-[#5260ce]/30 focus-within:border-[#5260ce] transition-all">
+                <div className="flex flex-col sm:flex-row gap-2 md:gap-3 flex-1 md:flex-none">
+                  <div className="flex-1 sm:min-w-0 md:w-72 bg-[#f9fafe] border border-[#e0e6f1] rounded-xl px-3 flex gap-2 items-center focus-within:ring-2 focus-within:ring-[#5260ce]/30 focus-within:border-[#5260ce] transition-all">
                     <Search className="w-4 h-4 text-[#8b8c9a] shrink-0" />
                     <input
                       type="text"
@@ -368,7 +368,7 @@ function UniversitiesContent() {
                   </div>
                   <Button
                     onClick={handleSearch}
-                    className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm h-11 md:h-12 px-5 rounded-xl shrink-0"
+                    className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm h-11 md:h-12 px-5 rounded-xl shrink-0 w-full sm:w-auto"
                   >
                     {t("search")}
                   </Button>

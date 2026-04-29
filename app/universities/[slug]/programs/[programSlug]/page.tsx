@@ -499,7 +499,7 @@ export default async function ProgramDetailPage({
 
             {/* ══ RIGHT SIDEBAR ══ */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 shadow-sm sticky top-[130px]">
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 shadow-sm lg:sticky lg:top-[130px]">
 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">

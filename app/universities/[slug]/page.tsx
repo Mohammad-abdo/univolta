@@ -235,12 +235,12 @@ export default async function UniversityDetailPage({
 
             {/* Bottom content row (separated blocks) */}
             <div
-              className={`absolute left-5 right-5 bottom-5 md:left-10 md:right-10 md:bottom-8 flex items-end justify-between gap-4 ${
-                lang === "ar" ? "flex-row-reverse" : "flex-row"
+              className={`absolute left-5 right-5 bottom-5 md:left-10 md:right-10 md:bottom-8 flex flex-col items-start md:items-end justify-between gap-4 ${
+                lang === "ar" ? "md:flex-row-reverse" : "md:flex-row"
               }`}
             >
               <div
-                className={`flex items-end gap-3 md:gap-4 min-w-0 max-w-[65%] ${
+                className={`flex items-end gap-3 md:gap-4 min-w-0 w-full md:max-w-[65%] ${
                   lang === "ar" ? "flex-row-reverse text-right" : "text-left"
                 }`}
               >
@@ -263,9 +263,9 @@ export default async function UniversityDetailPage({
                 </div>
               </div>
 
-              <div className={`shrink-0 ${lang === "ar" ? "text-left" : "text-right"}`}>
+              <div className={`shrink-0 w-full md:w-auto ${lang === "ar" ? "text-left md:text-left" : "text-right md:text-right"}`}>
                 <Button
-                  className="bg-white hover:bg-gray-50 text-[#5260ce] font-montserrat-semibold text-sm md:text-base h-10 md:h-12 px-4 md:px-7 rounded-xl shadow-lg transition-all hover:shadow-xl"
+                  className="w-full md:w-auto bg-white hover:bg-gray-50 text-[#5260ce] font-montserrat-semibold text-sm md:text-base h-10 md:h-12 px-4 md:px-7 rounded-xl shadow-lg transition-all hover:shadow-xl"
                   asChild
                 >
                   <Link href={`/universities/${slug}/programs`} className="flex items-center gap-2">

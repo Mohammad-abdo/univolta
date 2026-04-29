@@ -36,6 +36,7 @@ import {
   Award,
   SlidersHorizontal,
   ScrollText,
+  Mail,
 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { t, getLanguage } from "@/lib/i18n";
@@ -96,6 +97,11 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
         href: "/dashboard/partner/reports",
         label: t("reports"),
         icon: BarChart3,
+      },
+      {
+        href: "/dashboard/partner/email-center",
+        label: "Email Center",
+        icon: Mail,
       },
       {
         href: "/dashboard/partner/profile",

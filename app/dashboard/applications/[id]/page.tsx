@@ -102,6 +102,17 @@ interface StatusHistory {
   createdAt: string;
 }
 
+interface EmailLog {
+  id: string;
+  recipient: string;
+  subject: string;
+  template: string;
+  status: string;
+  errorMessage?: string | null;
+  createdAt: string;
+  sentAt?: string | null;
+}
+
 export default function ApplicationDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -146,6 +157,8 @@ export default function ApplicationDetailPage() {
   ];
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
   const [sendingDocs, setSendingDocs] = useState(false);
+  const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
+  const [loadingEmailLogs, setLoadingEmailLogs] = useState(false);
 
   // Rejection preset reasons
   const REJECTION_REASONS = [
@@ -197,10 +210,23 @@ export default function ApplicationDetailPage() {
       setNotes(data.notes || "");
       setBalanceInput(String(data.remainingBalance ?? 0));
       setArrivalInput(data.arrivalDate ? new Date(data.arrivalDate).toISOString().split("T")[0] : "");
+      void fetchEmailLogs(applicationId);
     } catch (error: any) {
       showToast.error("Failed to load application details");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEmailLogs = async (applicationId: string) => {
+    try {
+      setLoadingEmailLogs(true);
+      const logs = await apiGet<EmailLog[]>(`/applications/${applicationId}/email-logs`);
+      setEmailLogs(Array.isArray(logs) ? logs : []);
+    } catch {
+      setEmailLogs([]);
+    } finally {
+      setLoadingEmailLogs(false);
     }
   };
 
@@ -690,6 +716,48 @@ export default function ApplicationDetailPage() {
               </div>
             </div>
           )}
+
+          <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <h2 className="text-xl font-montserrat-bold text-[#121c67] mb-4 flex items-center gap-2">
+              <Mail className="w-5 h-5" />
+              Email History
+            </h2>
+            {loadingEmailLogs ? (
+              <p className="text-sm text-gray-500">Loading email logs...</p>
+            ) : emailLogs.length === 0 ? (
+              <p className="text-sm text-gray-500">No emails were sent for this application yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {emailLogs.map((log) => (
+                  <div key={log.id} className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-gray-900">{log.subject}</p>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full ${
+                          log.status === "sent"
+                            ? "bg-green-100 text-green-700"
+                            : log.status === "failed"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-blue-100 text-blue-700"
+                        }`}
+                      >
+                        {log.status}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">To: {log.recipient}</p>
+                    <p className="text-xs text-gray-500">Template: {log.template}</p>
+                    <p className="text-xs text-gray-500">
+                      Created: {new Date(log.createdAt).toLocaleString()}
+                      {log.sentAt ? ` | Sent: ${new Date(log.sentAt).toLocaleString()}` : ""}
+                    </p>
+                    {log.errorMessage ? (
+                      <p className="text-xs text-red-600 mt-1">Error: {log.errorMessage}</p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Admin Notes */}
           {canUpdate && (

@@ -101,6 +101,9 @@ export default function StudentDetailPage() {
   const [blockReason, setBlockReason] = useState("");
   const [updatingPayment, setUpdatingPayment] = useState(false);
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<string | null>(null);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     if (params.id) {
@@ -212,6 +215,31 @@ export default function StudentDetailPage() {
       router.push("/dashboard/partner/students");
     } catch (error: any) {
       showToast.error(error.message || "Failed to delete student");
+    }
+  };
+
+  const sendStudentEmail = async () => {
+    if (!application) return;
+    if (!emailSubject.trim() || !emailMessage.trim()) {
+      showToast.error("Subject and message are required");
+      return;
+    }
+    setSendingEmail(true);
+    try {
+      await apiRequest(`/partner/applications/${application.id}/send-message`, {
+        method: "POST",
+        body: JSON.stringify({
+          subject: emailSubject.trim(),
+          message: emailMessage.trim(),
+        }),
+      });
+      showToast.success("Email sent successfully");
+      setEmailSubject("");
+      setEmailMessage("");
+    } catch (error: any) {
+      showToast.error(error.message || "Failed to send email");
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -767,6 +795,35 @@ export default function StudentDetailPage() {
                   {new Date(application.updatedAt).toLocaleString()}
                 </p>
               </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow border border-indigo-200 p-6">
+            <h2 className="text-xl font-montserrat-bold text-[#121c67] mb-4 flex items-center gap-2">
+              <Mail className="w-5 h-5 text-indigo-600" />
+              Send Email to Student
+            </h2>
+            <div className="space-y-3">
+              <input
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                placeholder="Email subject"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              />
+              <textarea
+                value={emailMessage}
+                onChange={(e) => setEmailMessage(e.target.value)}
+                rows={4}
+                placeholder="Write your message..."
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              />
+              <Button
+                onClick={sendStudentEmail}
+                disabled={sendingEmail}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                {sendingEmail ? "Sending..." : "Send Email"}
+              </Button>
             </div>
           </div>
         </div>

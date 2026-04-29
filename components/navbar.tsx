@@ -321,180 +321,181 @@ export function Navbar() {
 
       </div>
 
-      {/* Mobile Menu Drawer */}
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/50 z-[60] lg:hidden"
-            onClick={() => setIsOpen(false)}
-          />
+    </nav>
 
-          {/* Drawer panel */}
-          <div
-            className={`fixed top-0 ${isRTL ? "right-0" : "left-0"} w-[82vw] max-w-[320px] h-full bg-white shadow-2xl z-[70] lg:hidden flex flex-col overflow-hidden`}
-            style={{ animation: "slideInDrawer 0.25s cubic-bezier(0.4,0,0.2,1)" }}
-          >
+    {/* Mobile Menu Drawer */}
+    {isOpen && (
+      <>
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 bg-black/50 z-[60] lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
 
-            {/* ── Drawer header: logo + close ── */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-[#f6f8ff] to-white shrink-0">
-              <Link href="/" onClick={() => setIsOpen(false)} className="flex items-center">
-                <div className="relative h-8 w-28">
-                  <Image src={siteLogoUrl} alt="UniVolta" fill className="object-contain object-left" unoptimized priority />
-                </div>
-              </Link>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-2 rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-colors"
-                aria-label="Close menu"
-              >
-                <X size={20} className="text-[#121c67]" />
-              </button>
-            </div>
+        {/* Drawer panel */}
+        <div
+          className={`fixed top-0 ${isRTL ? "right-0" : "left-0"} w-[82vw] max-w-[320px] h-full bg-white shadow-2xl z-[70] lg:hidden flex flex-col overflow-hidden`}
+          style={{ animation: "slideInDrawer 0.25s cubic-bezier(0.4,0,0.2,1)" }}
+        >
 
-            {/* ── Scrollable body ── */}
-            <div className="flex-1 overflow-y-auto px-4 py-5 space-y-1">
-
-              {/* Nav items with icons */}
-              {[
-                { href: "/",             label: tl("home", "Home"),                  Icon: Home },
-                { href: "/universities", label: tl("universities", "Universities"),   Icon: GraduationCap },
-                { href: "/about",        label: tl("aboutNavLink", "About"),          Icon: Info },
-                { href: "/faq",          label: tl("faq", "FAQ"),                    Icon: HelpCircle },
-                { href: "/contact",      label: tl("contact", "Contact"),             Icon: Mail },
-                { href: "/terms",        label: tl("termsPolicy", "Terms & Policy"),  Icon: FileText },
-              ].map(({ href, label, Icon }) => {
-                const active = pathname === href;
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    onClick={() => setIsOpen(false)}
-                    className={`flex items-center gap-3 py-3 px-4 rounded-2xl transition-all ${
-                      active
-                        ? "bg-[rgba(82,96,206,0.1)] text-[#5260ce] font-montserrat-bold"
-                        : "text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100"
-                    }`}
-                  >
-                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${active ? "bg-[rgba(82,96,206,0.15)]" : "bg-gray-100"}`}>
-                      <Icon className={`w-[18px] h-[18px] ${active ? "text-[#5260ce]" : "text-[#65666f]"}`} />
-                    </span>
-                    <span className="text-[15px] leading-tight">{label}</span>
-                    {active && <span className="ms-auto w-1.5 h-1.5 rounded-full bg-[#5260ce]" />}
-                  </Link>
-                );
-              })}
-
-              {/* Divider */}
-              <div className="pt-4 pb-2">
-                <div className="border-t border-gray-100" />
+          {/* ── Drawer header: logo + close ── */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-[#f6f8ff] to-white shrink-0">
+            <Link href="/" onClick={() => setIsOpen(false)} className="flex items-center">
+              <div className="relative h-8 w-28">
+                <Image src={siteLogoUrl} alt="UniVolta" fill className="object-contain object-left" unoptimized priority />
               </div>
-
-              {/* Language toggle */}
-              <div className="px-1">
-                <p className="text-[11px] font-montserrat-semibold text-gray-400 mb-3 uppercase tracking-wider px-3">
-                  {tl("language", "Language")}
-                </p>
-                <div className="flex gap-2">
-                  {languages.map((lang) => (
-                    <button
-                      key={lang.code}
-                      onClick={() => { handleLanguageChange(lang.code); setIsOpen(false); }}
-                      className={`flex flex-1 items-center justify-center gap-2 py-2.5 rounded-2xl border-2 text-sm font-montserrat-semibold transition-all ${
-                        currentLang === lang.code
-                          ? "bg-[#5260ce] text-white border-[#5260ce] shadow-md"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-[#5260ce]"
-                      }`}
-                    >
-                      <img
-                        src={getFlagIconUrl(lang.code)}
-                        alt={lang.name}
-                        className="w-5 h-3.5 rounded-sm object-cover shrink-0"
-                        loading="lazy"
-                        referrerPolicy="no-referrer"
-                      />
-                      {lang.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div className="pt-4 pb-2">
-                <div className="border-t border-gray-100" />
-              </div>
-
-              {/* Account section */}
-              {isAuthenticated ? (
-                <div className="space-y-1 px-1">
-                  <p className="text-[11px] font-montserrat-semibold text-gray-400 mb-3 uppercase tracking-wider px-3">
-                    {tl("account", "Account")}
-                  </p>
-                  {/* User badge */}
-                  <div className="flex items-center gap-3 px-4 py-3 bg-[#f6f8ff] rounded-2xl mb-2">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#5260ce] to-[#75d3f7] flex items-center justify-center text-white text-sm font-montserrat-bold shrink-0">
-                      {userName?.charAt(0).toUpperCase() || "U"}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-montserrat-semibold text-[#121c67] truncate">{userName}</p>
-                      <p className="text-xs text-gray-400">Signed in</p>
-                    </div>
-                  </div>
-                  <Link
-                    href="/my-applications"
-                    className="flex items-center gap-3 py-3 px-4 rounded-2xl text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100 transition-all"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100">
-                      <FileText className="w-[18px] h-[18px] text-[#5260ce]" />
-                    </span>
-                    <span className="text-[15px]">{tl("myApplications", "My Applications")}</span>
-                  </Link>
-                  <Link
-                    href="/profile"
-                    className="flex items-center gap-3 py-3 px-4 rounded-2xl text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100 transition-all"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100">
-                      <User className="w-[18px] h-[18px] text-[#5260ce]" />
-                    </span>
-                    <span className="text-[15px]">{tl("profile", "Profile")}</span>
-                  </Link>
-                  <button
-                    onClick={() => { handleLogout(); setIsOpen(false); }}
-                    className="w-full flex items-center gap-3 py-3 px-4 rounded-2xl text-red-600 font-montserrat-regular hover:bg-red-50 active:bg-red-100 transition-all"
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50">
-                      <LogOut className="w-[18px] h-[18px] text-red-500" />
-                    </span>
-                    <span className="text-[15px]">{tl("logout", "Logout")}</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="px-1 pt-1">
-                  <Button
-                    className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white text-base h-12 font-montserrat-semibold rounded-2xl shadow-[0_4px_16px_rgba(82,96,206,0.3)] active:scale-[0.98] transition-all"
-                    asChild
-                  >
-                    <Link href="/login" onClick={() => setIsOpen(false)}>
-                      <User className="w-4 h-4 mr-2" />
-                      {mounted ? t("login") : "Login"}
-                    </Link>
-                  </Button>
-                </div>
-              )}
-            </div>
+            </Link>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="p-2 rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-colors"
+              aria-label="Close menu"
+            >
+              <X size={20} className="text-[#121c67]" />
+            </button>
           </div>
 
-          <style>{`
-            @keyframes slideInDrawer {
-              from { transform: translateX(${isRTL ? "100%" : "-100%"}); }
-              to   { transform: translateX(0); }
-            }
-          `}</style>
-        </>
-      )}
-    </nav>
+          {/* ── Scrollable body ── */}
+          <div className="flex-1 overflow-y-auto px-4 py-5 space-y-1">
+
+            {/* Nav items with icons */}
+            {[
+              { href: "/",             label: tl("home", "Home"),                  Icon: Home },
+              { href: "/universities", label: tl("universities", "Universities"),   Icon: GraduationCap },
+              { href: "/about",        label: tl("aboutNavLink", "About"),          Icon: Info },
+              { href: "/faq",          label: tl("faq", "FAQ"),                    Icon: HelpCircle },
+              { href: "/contact",      label: tl("contact", "Contact"),             Icon: Mail },
+              { href: "/terms",        label: tl("termsPolicy", "Terms & Policy"),  Icon: FileText },
+            ].map(({ href, label, Icon }) => {
+              const active = pathname === href;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center gap-3 py-3 px-4 rounded-2xl transition-all ${
+                    active
+                      ? "bg-[rgba(82,96,206,0.1)] text-[#5260ce] font-montserrat-bold"
+                      : "text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100"
+                  }`}
+                >
+                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${active ? "bg-[rgba(82,96,206,0.15)]" : "bg-gray-100"}`}>
+                    <Icon className={`w-[18px] h-[18px] ${active ? "text-[#5260ce]" : "text-[#65666f]"}`} />
+                  </span>
+                  <span className="text-[15px] leading-tight">{label}</span>
+                  {active && <span className="ms-auto w-1.5 h-1.5 rounded-full bg-[#5260ce]" />}
+                </Link>
+              );
+            })}
+
+            {/* Divider */}
+            <div className="pt-4 pb-2">
+              <div className="border-t border-gray-100" />
+            </div>
+
+            {/* Language toggle */}
+            <div className="px-1">
+              <p className="text-[11px] font-montserrat-semibold text-gray-400 mb-3 uppercase tracking-wider px-3">
+                {tl("language", "Language")}
+              </p>
+              <div className="flex gap-2">
+                {languages.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => { handleLanguageChange(lang.code); setIsOpen(false); }}
+                    className={`flex flex-1 items-center justify-center gap-2 py-2.5 rounded-2xl border-2 text-sm font-montserrat-semibold transition-all ${
+                      currentLang === lang.code
+                        ? "bg-[#5260ce] text-white border-[#5260ce] shadow-md"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-[#5260ce]"
+                    }`}
+                  >
+                    <img
+                      src={getFlagIconUrl(lang.code)}
+                      alt={lang.name}
+                      className="w-5 h-3.5 rounded-sm object-cover shrink-0"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                    />
+                    {lang.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="pt-4 pb-2">
+              <div className="border-t border-gray-100" />
+            </div>
+
+            {/* Account section */}
+            {isAuthenticated ? (
+              <div className="space-y-1 px-1">
+                <p className="text-[11px] font-montserrat-semibold text-gray-400 mb-3 uppercase tracking-wider px-3">
+                  {tl("account", "Account")}
+                </p>
+                {/* User badge */}
+                <div className="flex items-center gap-3 px-4 py-3 bg-[#f6f8ff] rounded-2xl mb-2">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#5260ce] to-[#75d3f7] flex items-center justify-center text-white text-sm font-montserrat-bold shrink-0">
+                    {userName?.charAt(0).toUpperCase() || "U"}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-montserrat-semibold text-[#121c67] truncate">{userName}</p>
+                    <p className="text-xs text-gray-400">Signed in</p>
+                  </div>
+                </div>
+                <Link
+                  href="/my-applications"
+                  className="flex items-center gap-3 py-3 px-4 rounded-2xl text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100 transition-all"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100">
+                    <FileText className="w-[18px] h-[18px] text-[#5260ce]" />
+                  </span>
+                  <span className="text-[15px]">{tl("myApplications", "My Applications")}</span>
+                </Link>
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-3 py-3 px-4 rounded-2xl text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100 transition-all"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100">
+                    <User className="w-[18px] h-[18px] text-[#5260ce]" />
+                  </span>
+                  <span className="text-[15px]">{tl("profile", "Profile")}</span>
+                </Link>
+                <button
+                  onClick={() => { handleLogout(); setIsOpen(false); }}
+                  className="w-full flex items-center gap-3 py-3 px-4 rounded-2xl text-red-600 font-montserrat-regular hover:bg-red-50 active:bg-red-100 transition-all"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50">
+                    <LogOut className="w-[18px] h-[18px] text-red-500" />
+                  </span>
+                  <span className="text-[15px]">{tl("logout", "Logout")}</span>
+                </button>
+              </div>
+            ) : (
+              <div className="px-1 pt-1">
+                <Button
+                  className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white text-base h-12 font-montserrat-semibold rounded-2xl shadow-[0_4px_16px_rgba(82,96,206,0.3)] active:scale-[0.98] transition-all"
+                  asChild
+                >
+                  <Link href="/login" onClick={() => setIsOpen(false)}>
+                    <User className="w-4 h-4 mr-2" />
+                    {mounted ? t("login") : "Login"}
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes slideInDrawer {
+            from { transform: translateX(${isRTL ? "100%" : "-100%"}); }
+            to   { transform: translateX(0); }
+          }
+        `}</style>
+      </>
+    )}
     </>
   );
 }
