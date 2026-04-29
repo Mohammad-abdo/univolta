@@ -35,6 +35,7 @@ import {
   CalendarRange,
   Award,
   SlidersHorizontal,
+  ScrollText,
 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { t, getLanguage } from "@/lib/i18n";
@@ -141,6 +142,11 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
       href: "/dashboard/cms/messages",
       label: t("sidebarCmsMessages"),
       icon: Inbox,
+    },
+    {
+      href: "/dashboard/cms/terms",
+      label: "Terms & Conditions",
+      icon: ScrollText,
     },
     {
       href: "/dashboard/universities",
