@@ -15,7 +15,7 @@ export function Footer() {
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
-  const [footerLogoUrl, setFooterLogoUrl] = useState(figmaAssets.footerLogo);
+  const [footerLogoUrl, setFooterLogoUrl] = useState<string>(figmaAssets.footerLogo);
   const [footerContent, setFooterContent] = useState<FooterContentSetting | null>(null);
 
   useEffect(() => {

@@ -339,21 +339,20 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
             {/* Quick filters */}
             <div className={`flex gap-1.5 items-center flex-wrap ${isRTL ? "flex-row-reverse" : ""}`}>
               {[
-                { key: "filterUSA",         value: "USA",         type: "country"        },
-                { key: "filterCanada",       value: "Canada",      type: "country"        },
-                { key: "filterMexico",       value: "Mexico",      type: "country"        },
-                { key: "filterMedicine",     value: "Medicine",    type: "specialization" },
-                { key: "filterEngineering",  value: "Engineering", type: "specialization" },
-                { key: "filterEnglish",      value: "English",     type: "language"       },
+                { key: "filterMedicine",       value: "Medicine",              type: "specialization" as const },
+                { key: "filterEngineering",    value: "Engineering",           type: "specialization" as const },
+                { key: "filterComputerScience",  value: "Computer Science",      type: "specialization" as const },
+                { key: "filterUniCairo",         value: "Cairo University",    type: "search" as const },
+                { key: "filterUniAUC",           value: "American University in Cairo", type: "search" as const },
+                { key: "filterUniAinShams",      value: "Ain Shams",           type: "search" as const },
               ].map((tag) => (
                 <button
                   key={tag.key}
                   suppressHydrationWarning
                   onClick={() => {
-                    const param = tag.type === "country"
-                      ? `country=${encodeURIComponent(tag.value)}`
-                      : tag.type === "language"
-                        ? `language=${encodeURIComponent(tag.value)}`
+                    const param =
+                      tag.type === "search"
+                        ? `search=${encodeURIComponent(tag.value)}`
                         : `specialization=${encodeURIComponent(tag.value)}`;
                     router.push(`/universities?${param}`);
                   }}

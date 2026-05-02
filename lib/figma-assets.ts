@@ -15,7 +15,8 @@ export const figmaAssets = {
   buttonEllipse: "/Rectangle 12.png",
   
   // Hero Section Images
-  heroGraduationCap: "/Asset 8@4x 1.png",
+  // NOTE: `@` must be URL-encoded for Next to serve this file on Windows dev server
+  heroGraduationCap: "/Asset%208%404x%201.png",
   heroMainImage: "/80871096_078_230602_3d_studies_14_poster 1.png",
   heroMainImageMask: "/Rectangle 12.png",
   heroVector: "/Vector.png",
@@ -44,9 +45,9 @@ export const figmaAssets = {
   vector66: "/Vector 66.png",
   
   // Feature Icons (Why Us Section)
-  universityIcon: "/Asset 8@4x 1.png",
-  audioBookIcon: "/Asset 8@4x 1.png",
-  houseIcon: "/Asset 8@4x 1.png",
+  universityIcon: "/Asset%208%404x%201.png",
+  audioBookIcon: "/Asset%208%404x%201.png",
+  houseIcon: "/Asset%208%404x%201.png",
   studentServicesIcon: {
     vector: "/Vector.png",
     xmlid5205: "/Vector (3).png",
@@ -96,7 +97,7 @@ export const figmaAssets = {
   
   // How It Works Icons
   exploreIcon: "/explore 1.png",
-  applicationIcon: "/Asset 8@4x 1.png",
+  applicationIcon: "/Asset%208%404x%201.png",
   customerServiceIcon: "/customer-service 1.png",
   
   // CTA Banner

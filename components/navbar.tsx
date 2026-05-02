@@ -121,7 +121,6 @@ export function Navbar() {
     { href: "/about", label: tl("aboutNavLink", "About"), active: pathname === "/about" },
     { href: "/faq", label: tl("faq", "FAQ"), active: pathname === "/faq" },
     { href: "/contact", label: tl("contact", "Contact"), active: pathname === "/contact" },
-    { href: "/terms", label: tl("termsPolicy", "Terms & Policy"), active: pathname === "/terms" },
   ];
 
 
@@ -364,7 +363,6 @@ export function Navbar() {
               { href: "/about",        label: tl("aboutNavLink", "About"),          Icon: Info },
               { href: "/faq",          label: tl("faq", "FAQ"),                    Icon: HelpCircle },
               { href: "/contact",      label: tl("contact", "Contact"),             Icon: Mail },
-              { href: "/terms",        label: tl("termsPolicy", "Terms & Policy"),  Icon: FileText },
             ].map(({ href, label, Icon }) => {
               const active = pathname === href;
               return (

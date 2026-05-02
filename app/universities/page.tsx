@@ -190,11 +190,9 @@ function UniversitiesContent() {
   const [universities, setUniversities] = useState<University[]>([]);
   const [meta, setMeta] = useState<Meta>({ total: 0, page: 1, limit: 12, pages: 1 });
   const [loading, setLoading] = useState(true);
-  const [availableCountries, setAvailableCountries] = useState<string[]>([]);
   const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
   const [availableSpecializations, setAvailableSpecializations] = useState<string[]>([]);
   const [filters, setFilters] = useState({
-    country: searchParams.get("country") || "",
     language: searchParams.get("language") || "",
     specialization: searchParams.get("specialization") || "",
     search: searchParams.get("search") || "",
@@ -218,7 +216,6 @@ function UniversitiesContent() {
       if (uniRes.ok) {
         const data = await uniRes.json();
         const items: University[] = data.data || [];
-        setAvailableCountries([...new Set(items.map((u) => u.country).filter(Boolean))].sort() as string[]);
         setAvailableLanguages([...new Set(items.map((u) => u.language).filter(Boolean))].sort() as string[]);
       }
       if (specRes.ok) {
@@ -236,7 +233,6 @@ function UniversitiesContent() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (filters.country) params.append("country", filters.country);
       if (filters.language) params.append("language", filters.language);
       if (filters.specialization) params.append("specialization", filters.specialization);
       if (filters.search) params.append("search", filters.search);
@@ -276,7 +272,6 @@ function UniversitiesContent() {
 
   const updateURL = (f: typeof filters) => {
     const params = new URLSearchParams();
-    if (f.country) params.append("country", f.country);
     if (f.language) params.append("language", f.language);
     if (f.specialization) params.append("specialization", f.specialization);
     if (f.search) params.append("search", f.search);
@@ -327,15 +322,6 @@ function UniversitiesContent() {
                 <span className="font-montserrat-semibold text-sm text-[#121c67]">Filter Universities</span>
               </div>
               <div className="flex flex-col md:flex-row gap-3 md:gap-4">
-                <select
-                  value={filters.country}
-                  onChange={(e) => handleFilterChange("country", e.target.value)}
-                  className="flex-1 bg-[#f9fafe] border border-[#e0e6f1] rounded-xl h-11 md:h-12 px-3 font-montserrat-regular text-sm text-[#2e2e2e] focus:outline-none focus:ring-2 focus:ring-[#5260ce]/30 focus:border-[#5260ce] transition-all"
-                >
-                  <option value="">{t("country")}</option>
-                  {availableCountries.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-
                 <select
                   value={filters.language}
                   onChange={(e) => handleFilterChange("language", e.target.value)}
@@ -403,7 +389,7 @@ function UniversitiesContent() {
                   <p className="font-montserrat-regular text-[#65666f] text-sm mb-6">Try adjusting your filters or search term</p>
                   <Button
                     onClick={() => {
-                      const reset = { country: "", language: "", specialization: "", search: "", page: 1 };
+                      const reset = { language: "", specialization: "", search: "", page: 1 };
                       setFilters(reset);
                       updateURL(reset);
                     }}

@@ -467,13 +467,13 @@ const translations: Record<Language, Record<string, string>> = {
     languageOfStudy: "Language of study",
     fieldOfSpecialisation: "Field of specialisation",
     searchUniversitiesPlaceholder: "Search universities...",
-    // Filter Tags
-    filterUSA: "USA",
-    filterCanada: "Canada",
-    filterMexico: "Mexico",
+    // Filter Tags (hero quick chips)
     filterMedicine: "Medicine",
     filterEngineering: "Engineering",
-    filterEnglish: "English",
+    filterComputerScience: "Computer Science",
+    filterUniCairo: "Cairo University",
+    filterUniAUC: "AUC",
+    filterUniAinShams: "Ain Shams",
     // How It Works Section
     howItWorks: "How It Works",
     howToApply: "How to Apply - A Step-by-Step Guide 🔍",
@@ -1223,13 +1223,13 @@ const translations: Record<Language, Record<string, string>> = {
     testimonial3Author: "أحمد الفارسي",
     // Universities Page
     noUniversitiesFound: "لم يتم العثور على جامعات. حاول تعديل المرشحات الخاصة بك.",
-    // Filter Tags
-    filterUSA: "الولايات المتحدة",
-    filterCanada: "كندا",
-    filterMexico: "المكسيك",
+    // Filter Tags (hero quick chips)
     filterMedicine: "الطب",
     filterEngineering: "الهندسة",
-    filterEnglish: "الإنجليزية",
+    filterComputerScience: "علوم الحاسب",
+    filterUniCairo: "جامعة القاهرة",
+    filterUniAUC: "الجامعة الأمريكية بالقاهرة",
+    filterUniAinShams: "عين شمس",
     // Error Messages
     unauthorized: "غير مصرح",
     errorOccurred: "حدث خطأ",
