@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { API_BASE_URL } from "@/lib/constants";
+import { getLocaleHeaders } from "@/lib/api";
 import { Plus, Minus, MessageCircle, ChevronDown } from "lucide-react";
 import { t, getLanguage, type Language } from "@/lib/i18n";
 
@@ -127,7 +128,9 @@ export function FAQSection() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/public/faqs`);
+        const res = await fetch(`${API_BASE_URL}/public/faqs`, {
+          headers: { ...getLocaleHeaders() },
+        });
         if (res.ok) {
           const data = await res.json();
           const list: FAQ[] = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
@@ -148,7 +151,7 @@ export function FAQSection() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [lang]);
 
   const isRTL = lang === "ar";
 

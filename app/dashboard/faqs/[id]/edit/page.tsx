@@ -1,16 +1,38 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { apiPost } from "@/lib/api";
+import { apiGet, apiPut } from "@/lib/api";
 import { showToast } from "@/lib/toast";
-import Link from "next/link";
 
-export default function AddFAQPage() {
+interface FaqRow {
+  id: string;
+  question: unknown;
+  answer: unknown;
+  category?: string | null;
+  isPublished: boolean;
+  sortOrder: number;
+}
+
+function localizedFields(raw: unknown): { en: string; ar: string } {
+  if (typeof raw === "string") return { en: raw, ar: "" };
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    const o = raw as { en?: string; ar?: string };
+    return { en: o.en ?? "", ar: o.ar ?? "" };
+  }
+  return { en: "", ar: "" };
+}
+
+export default function EditFAQPage() {
+  const params = useParams();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const id = typeof params.id === "string" ? params.id : "";
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     questionEn: "",
@@ -22,13 +44,52 @@ export default function AddFAQPage() {
     sortOrder: 0,
   });
 
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const faq = await apiGet<FaqRow>(`/faqs/${id}`);
+        if (cancelled) return;
+        const q = localizedFields(faq.question);
+        const a = localizedFields(faq.answer);
+        setFormData({
+          questionEn: q.en,
+          questionAr: q.ar,
+          answerEn: a.en,
+          answerAr: a.ar,
+          category: faq.category ?? "",
+          isPublished: faq.isPublished,
+          sortOrder: faq.sortOrder,
+        });
+      } catch {
+        if (!cancelled) {
+          showToast.error("Failed to load FAQ");
+          router.push("/dashboard/faqs");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!id) return;
     setError("");
-    setLoading(true);
+    setSaving(true);
 
     try {
-      await apiPost("/faqs", {
+      await apiPut(`/faqs/${id}`, {
         question: {
           en: formData.questionEn.trim(),
           ar: formData.questionAr.trim() || "",
@@ -42,16 +103,26 @@ export default function AddFAQPage() {
         sortOrder: formData.sortOrder,
       });
 
-      showToast.success("FAQ created successfully!");
+      showToast.success("FAQ updated successfully!");
       router.push("/dashboard/faqs");
-    } catch (error: any) {
-      const errorMsg = error.message || "Failed to create FAQ";
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to update FAQ";
       showToast.error(errorMsg);
       setError(errorMsg);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+
+  if (!id) {
+    return (
+      <div className="text-center py-12 text-gray-500">Invalid FAQ</div>
+    );
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64">Loading...</div>;
+  }
 
   return (
     <div>
@@ -61,9 +132,7 @@ export default function AddFAQPage() {
             <ArrowLeft className="w-4 h-4" />
           </Button>
         </Link>
-        <h1 className="text-3xl font-montserrat-bold text-[#121c67]">
-          Add New FAQ
-        </h1>
+        <h1 className="text-3xl font-montserrat-bold text-[#121c67]">Edit FAQ</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
@@ -144,7 +213,7 @@ export default function AddFAQPage() {
             <input
               type="number"
               value={formData.sortOrder}
-              onChange={(e) => setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })}
+              onChange={(e) => setFormData({ ...formData, sortOrder: parseInt(e.target.value, 10) || 0 })}
               min={0}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
             />
@@ -167,10 +236,10 @@ export default function AddFAQPage() {
         <div className="flex gap-4 mt-6">
           <Button
             type="submit"
-            disabled={loading}
+            disabled={saving}
             className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold"
           >
-            {loading ? "Creating..." : "Create FAQ"}
+            {saving ? "Saving..." : "Save changes"}
           </Button>
           <Link href="/dashboard/faqs">
             <Button type="button" variant="outline">
@@ -182,8 +251,3 @@ export default function AddFAQPage() {
     </div>
   );
 }
-
-
-
-
-

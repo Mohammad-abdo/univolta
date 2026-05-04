@@ -8,11 +8,12 @@ import { canAccess, type UserRole } from "@/lib/permissions";
 import { API_BASE_URL } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2 } from "lucide-react";
+import { previewLocalized } from "@/lib/localized";
 
 interface FAQ {
   id: string;
-  question: string;
-  answer: string;
+  question: unknown;
+  answer: unknown;
   category?: string;
   isPublished: boolean;
   sortOrder: number;
@@ -94,14 +95,14 @@ export default function FAQsPage() {
         {faqs.map((faq) => (
           <div key={faq.id} className="bg-white rounded-lg shadow p-6">
             <div className="flex justify-between items-start mb-2">
-              <h3 className="font-montserrat-semibold text-lg">{faq.question}</h3>
+              <h3 className="font-montserrat-semibold text-lg">{previewLocalized(faq.question)}</h3>
               {faq.category && (
                 <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
                   {faq.category}
                 </span>
               )}
             </div>
-            <p className="text-gray-700 mb-2">{faq.answer}</p>
+            <p className="text-gray-700 mb-2 line-clamp-3">{previewLocalized(faq.answer)}</p>
             <div className="flex items-center justify-between mt-4">
               <span className={`inline-block px-2 py-1 rounded text-xs ${
                 faq.isPublished ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
@@ -111,9 +112,13 @@ export default function FAQsPage() {
               {(userRole && (canAccess(userRole, "faqs", "update") || canAccess(userRole, "faqs", "delete"))) && (
                 <div className="flex items-center gap-2">
                   {userRole && canAccess(userRole, "faqs", "update") && (
-                    <button className="text-blue-600 hover:text-blue-900">
+                    <Link
+                      href={`/dashboard/faqs/${faq.id}/edit`}
+                      className="text-blue-600 hover:text-blue-900 inline-flex"
+                      aria-label="Edit FAQ"
+                    >
                       <Edit className="w-4 h-4" />
-                    </button>
+                    </Link>
                   )}
                   {userRole && canAccess(userRole, "faqs", "delete") && (
                     <button

@@ -3,12 +3,104 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
-import { Phone, Mail, MapPin, Facebook, Youtube, Twitter, Instagram, MessageCircle, Send, GraduationCap, Globe } from "lucide-react";
+import { Phone, Mail, MapPin, Send, GraduationCap, Globe, MessageCircle } from "lucide-react";
 import { figmaAssets } from "@/lib/figma-assets";
 import { t, getLanguage, type Language } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { fetchPublicSiteSettings, type FooterContentSetting } from "@/lib/site-settings";
 import { getImageUrl } from "@/lib/image-utils";
+import { CreditBar } from "@/components/credit-bar";
+import { buildSocialLinkRows, footerSocialHoverClass } from "@/lib/social-links";
+
+/** Normalize href for matching (pathname only, no trailing slash except root). */
+function normalizeFooterHref(href: string): string {
+  const raw = href.trim();
+  if (!raw) return "/";
+  try {
+    if (raw.startsWith("http://") || raw.startsWith("https://")) {
+      const p = new URL(raw).pathname.replace(/\/$/, "") || "/";
+      return p;
+    }
+  } catch {
+    /* ignore */
+  }
+  const noHash = raw.split("#")[0] ?? raw;
+  const noQuery = noHash.split("?")[0] ?? noHash;
+  let path = noQuery.replace(/\/$/, "") || "/";
+  if (!path.startsWith("/")) path = `/${path}`;
+  return path;
+}
+
+/**
+ * Footer quick links: CMS often stores English labels only — map known paths and
+ * common English labels to i18n so AR/EN both work.
+ */
+function translateFooterQuickLinkLabel(href: string, cmsLabel: string, tl: (key: string) => string): string {
+  const path = normalizeFooterHref(href);
+  const label = cmsLabel.trim();
+  const lower = label.toLowerCase();
+
+  if (path === "/universities") {
+    if (/\bprogram(s)?\b/i.test(label)) return tl("programs");
+    if (/\bapply\b/i.test(label)) return tl("applyNow");
+    return tl("universities");
+  }
+
+  const pathToKey: Record<string, string> = {
+    "/": "home",
+    "/about": "footerQuickAbout",
+    "/contact": "contact",
+    "/faq": "faq",
+    "/terms": "termsAndConditions",
+  };
+  const byPath = pathToKey[path];
+  if (byPath) return tl(byPath);
+
+  const englishToKey: Record<string, string> = {
+    home: "home",
+    universities: "universities",
+    university: "universities",
+    programs: "programs",
+    programme: "programs",
+    "about us": "footerQuickAbout",
+    about: "footerQuickAbout",
+    "contact us": "contact",
+    contact: "contact",
+    faq: "faq",
+    "terms & conditions": "termsAndConditions",
+    "terms and conditions": "termsAndConditions",
+    "terms & policy": "termsPolicy",
+    terms: "termsAndConditions",
+    "apply now": "applyNow",
+  };
+  if (englishToKey[lower]) return tl(englishToKey[lower]);
+
+  return cmsLabel;
+}
+
+/** Default quick links when CMS does not override — all labels go through i18n. */
+const DEFAULT_FOOTER_QUICK_LINKS: { href: string; labelKey: string }[] = [
+  { href: "/", labelKey: "home" },
+  { href: "/universities", labelKey: "universities" },
+  { href: "/universities", labelKey: "programs" },
+  { href: "/about", labelKey: "footerQuickAbout" },
+  { href: "/contact", labelKey: "contact" },
+  { href: "/faq", labelKey: "faq" },
+  { href: "/terms", labelKey: "termsAndConditions" },
+  { href: "/universities", labelKey: "applyNow" },
+];
+
+/**
+ * Footer specialization shortcuts — `queryValue` is passed to `?specialization=` (matches program names, same as hero chips).
+ */
+const FOOTER_SPECIALIZATION_ITEMS: { labelKey: string; queryValue: string }[] = [
+  { labelKey: "filterEngineering", queryValue: "Engineering" },
+  { labelKey: "filterBusiness", queryValue: "Business" },
+  { labelKey: "filterMedicine", queryValue: "Medicine" },
+  { labelKey: "filterLaw", queryValue: "Law" },
+  { labelKey: "filterComputerScience", queryValue: "Computer Science" },
+  { labelKey: "filterArchitecture", queryValue: "Architecture" },
+];
 
 export function Footer() {
   const [currentLang, setCurrentLang] = useState<Language>("en");
@@ -43,51 +135,56 @@ export function Footer() {
     }
   };
 
-  const defaultQuickLinks = useMemo(
-    () => [
-      { label: tl("home"), href: "/" },
-      { label: tl("universities"), href: "/universities" },
-      { label: tl("faq"), href: "/faq" },
-      { label: tl("contact"), href: "/contact" },
-      { label: tl("termsPolicy"), href: "/terms" },
-    ],
+  const translatedDefaults = useMemo(
+    () =>
+      DEFAULT_FOOTER_QUICK_LINKS.map((d) => ({
+        href: d.href,
+        label: tl(d.labelKey),
+      })),
     [currentLang]
   );
 
-  /** CMS `quickLinks` replaces defaults entirely when set — merge so `/terms` (and other defaults) are never dropped. */
+  /**
+   * CMS quick links: translate labels by path / known English text.
+   * Merge: show CMS order first, then append default entries whose path is missing.
+   */
   const quickLinks = useMemo(() => {
     const fromCms = footerContent?.quickLinks;
-    if (!fromCms?.length) return defaultQuickLinks;
-    const seen = new Set(fromCms.map((l) => (l.href || "").trim()).filter(Boolean));
-    const merged = [...fromCms];
-    for (const link of defaultQuickLinks) {
-      if (link.href && !seen.has(link.href)) {
-        merged.push(link);
-        seen.add(link.href);
+    if (!fromCms?.length) return translatedDefaults;
+
+    const merged = fromCms.map((l) => ({
+      href: l.href,
+      label: translateFooterQuickLinkLabel(l.href, l.label, tl),
+    }));
+
+    const seenPaths = new Set(fromCms.map((l) => normalizeFooterHref(l.href || "")));
+    for (const d of translatedDefaults) {
+      const p = normalizeFooterHref(d.href);
+      if (p && !seenPaths.has(p)) {
+        merged.push(d);
+        seenPaths.add(p);
       }
     }
     return merged;
-  }, [footerContent?.quickLinks, defaultQuickLinks]);
+  }, [footerContent?.quickLinks, translatedDefaults, currentLang]);
 
-  const programs = ["Engineering", "Business", "Medicine", "Law", "Computer Science", "Architecture"];
+  const footerSpecializations = useMemo(
+    () =>
+      FOOTER_SPECIALIZATION_ITEMS.map((item) => ({
+        label: tl(item.labelKey),
+        href: `/universities?specialization=${encodeURIComponent(item.queryValue)}`,
+      })),
+    [currentLang]
+  );
 
-  const socials = (footerContent?.socialLinks ?? [
-    { platform: "Instagram", href: "#" },
-    { platform: "Facebook", href: "#" },
-    { platform: "YouTube", href: "#" },
-    { platform: "Twitter", href: "#" },
-  ]).map(({ platform, href }) => {
-    const map = {
-      Instagram: { Icon: Instagram, color: "hover:bg-gradient-to-br hover:from-[#833ab4] hover:via-[#fd1d1d] hover:to-[#fcb045]" },
-      Facebook: { Icon: Facebook, color: "hover:bg-[#1877F2]" },
-      YouTube: { Icon: Youtube, color: "hover:bg-[#FF0000]" },
-      Twitter: { Icon: Twitter, color: "hover:bg-[#1DA1F2]" },
-      WhatsApp: { Icon: MessageCircle, color: "hover:bg-[#25D366]" },
-    } as const;
-    const fallback = { Icon: Globe, color: "hover:bg-[#5260ce]" };
-    const entry = map[platform as keyof typeof map] ?? fallback;
-    return { ...entry, href, label: platform };
-  });
+  const socials = useMemo(
+    () =>
+      buildSocialLinkRows(footerContent?.socialLinks).map((row) => ({
+        ...row,
+        color: footerSocialHoverClass(row.label),
+      })),
+    [footerContent?.socialLinks]
+  );
 
   return (
     <footer className="relative bg-[#0d1550] text-white overflow-hidden" dir={isRTL ? "rtl" : "ltr"}>
@@ -177,8 +274,8 @@ export function Footer() {
               {tl("quickLinks")}
             </h4>
             <ul className="space-y-3">
-              {quickLinks.map((link) => (
-                <li key={link.label}>
+              {quickLinks.map((link, index) => (
+                <li key={`${normalizeFooterHref(link.href)}-${index}`}>
                   <Link href={link.href} className="footer-link">
                     {link.label}
                   </Link>
@@ -187,16 +284,16 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Column 3: Programs */}
+          {/* Column 3: Specializations (filtered universities list) */}
           <div className={isRTL ? "text-right" : ""}>
             <h4 className="font-montserrat-bold text-white mb-5 text-sm uppercase tracking-wider opacity-80">
-              {tl("programs")}
+              {tl("footerSpecializations")}
             </h4>
             <ul className="space-y-3">
-              {programs.map((p) => (
-                <li key={p}>
-                  <Link href="/universities" className="footer-link">
-                    {p}
+              {footerSpecializations.map((row) => (
+                <li key={row.href}>
+                  <Link href={row.href} className="footer-link">
+                    {row.label}
                   </Link>
                 </li>
               ))}
@@ -219,7 +316,7 @@ export function Footer() {
                   <div className="w-8 h-8 rounded-lg bg-[#5260ce]/40 flex items-center justify-center shrink-0">
                     <Icon className="w-4 h-4 text-[#75d3f7]" />
                   </div>
-                  <p className="text-white/55 text-sm leading-relaxed">{text}</p>
+                  <p className={`text-white/55 text-sm leading-relaxed `} dir={ isRTL ? "ltr" : "ltr" }>{text}</p>
                 </div>
               ))}
             </div>
@@ -235,7 +332,9 @@ export function Footer() {
           </p>
           <p className="text-white/40 text-xs font-montserrat-regular">
             {tl("poweredBy")}{" "}
-            <span className="text-[#75d3f7] font-montserrat-bold">Qeematech</span>
+            <span className="text-[#75d3f7] font-montserrat-bold">
+              <Link href="https://www.qeematech.net/" target="_blank" rel="noopener noreferrer">Qeematech</Link>
+            </span>
           </p>
         </div>
       </div>

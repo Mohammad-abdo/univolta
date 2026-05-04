@@ -27,6 +27,7 @@ import {
   X,
   Send,
   AlertTriangle,
+  MessageCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { t } from "@/lib/i18n";
@@ -62,6 +63,14 @@ interface Application {
   payment?: Payment;
   statusHistory?: StatusHistory[];
   user?: { id: string; name: string; email: string };
+  advisor?: {
+    id: string;
+    name: string;
+    title: string;
+    institution: string | null;
+    availability: string | null;
+    whatsappE164: string;
+  };
 }
 
 interface Document {
@@ -100,6 +109,15 @@ interface StatusHistory {
   reason?: string;
   notes?: string;
   createdAt: string;
+}
+
+function advisorInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
 }
 
 interface EmailLog {
@@ -819,6 +837,57 @@ export default function ApplicationDetailPage() {
 
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-6">
+          {/* Application Advisor */}
+          {application.advisor ? (
+            <div className="bg-white rounded-lg shadow border border-[#CBD5F5] p-5 space-y-4">
+              <h3 className="text-base font-montserrat-bold text-[#121c67] flex items-center gap-2">
+                <User className="w-5 h-5 text-[#5260ce]" />
+                {t("appDetailApplicationAdvisor")}
+              </h3>
+              <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                <div
+                  className="w-14 h-14 rounded-full shrink-0 flex items-center justify-center text-white font-bold text-sm bg-gradient-to-br from-[#5260ce] to-[#7c3aed]"
+                  aria-hidden
+                >
+                  {advisorInitials(application.advisor.name)}
+                </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="font-bold text-[#121c67] leading-tight">{application.advisor.name}</p>
+                  <p className="text-sm text-gray-600">{application.advisor.title}</p>
+                  {application.advisor.institution ? (
+                    <p className="text-sm text-gray-500">{application.advisor.institution}</p>
+                  ) : null}
+                  {application.advisor.availability ? (
+                    <p className="text-xs text-gray-400 mt-2 flex items-start gap-1.5">
+                      <Clock className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden />
+                      <span>{application.advisor.availability}</span>
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full border-[#CBD5F5] text-[#121c67] hover:bg-[#EEF2FF] rounded-xl"
+                onClick={() => {
+                  const digits = application.advisor!.whatsappE164.replace(/\D/g, "");
+                  if (digits) window.open(`https://wa.me/${digits}`, "_blank", "noopener,noreferrer");
+                }}
+              >
+                <MessageCircle className="w-4 h-4 mr-2 rtl:mr-0 rtl:ml-2" />
+                {t("appDetailSendMessage")}
+              </Button>
+            </div>
+          ) : (
+            <div className="bg-gray-50 rounded-lg border border-dashed border-gray-200 p-5">
+              <h3 className="text-sm font-montserrat-bold text-gray-600 flex items-center gap-2 mb-1">
+                <User className="w-4 h-4" />
+                {t("appDetailApplicationAdvisor")}
+              </h3>
+              <p className="text-xs text-gray-500">{t("dashboardApplicationNoAdvisor")}</p>
+            </div>
+          )}
+
           {/* Status Update */}
           {canUpdate && (
             <div className="bg-white rounded-lg shadow border border-gray-200 p-6 space-y-4">

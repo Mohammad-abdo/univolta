@@ -11,6 +11,7 @@ import { API_BASE_URL } from "@/lib/constants";
 import { getImageUrl } from "@/lib/image-utils";
 import { apiGet } from "@/lib/api";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { t } from "@/lib/i18n";
 
 /* ─── Types ─────────────────────────────────────────────────────── */
 interface Application {
@@ -22,18 +23,33 @@ interface Application {
 }
 interface UserData { id: string; name: string; email: string }
 
-const STATUS: Record<string, { label: string; cls: string }> = {
-  PENDING:  { label: "Pending",      cls: "bg-orange-50  text-orange-500  border-orange-100" },
-  REVIEW:   { label: "Under Review", cls: "bg-blue-50    text-blue-500    border-blue-100"   },
-  APPROVED: { label: "Accepted",     cls: "bg-green-50   text-green-600   border-green-100"  },
-  REJECTED: { label: "Rejected",     cls: "bg-red-50     text-red-500     border-red-100"    },
+const STATUS: Record<string, { cls: string }> = {
+  PENDING:  { cls: "bg-orange-50  text-orange-500  border-orange-100" },
+  REVIEW:   { cls: "bg-blue-50    text-blue-500    border-blue-100"   },
+  APPROVED: { cls: "bg-green-50   text-green-600   border-green-100"  },
+  REJECTED: { cls: "bg-red-50     text-red-500     border-red-100"    },
 };
+
+function statusLabelFor(code: string): string {
+  switch (code) {
+    case "PENDING":
+      return t("partnerStatusPending");
+    case "REVIEW":
+      return t("partnerStatusInReview");
+    case "APPROVED":
+      return t("partnerStatusApproved");
+    case "REJECTED":
+      return t("partnerStatusRejected");
+    default:
+      return t("partnerStatusPending");
+  }
+}
 
 /* ─── Stat card config ───────────────────────────────────────────── */
 const STAT_CONFIG = [
   {
     key: "total",
-    label: "Total Applications",
+    labelKey: "profileStatTotalApplications" as const,
     accent: "#5260CE",
     iconBg: "#EEF2FF",
     icon: (
@@ -48,7 +64,7 @@ const STAT_CONFIG = [
   },
   {
     key: "pending",
-    label: "Pending Applications",
+    labelKey: "profileStatPendingApplications" as const,
     accent: "#F59E0B",
     iconBg: "#FFFBEB",
     icon: (
@@ -62,7 +78,7 @@ const STAT_CONFIG = [
   },
   {
     key: "accepted",
-    label: "Accepted Applications",
+    labelKey: "profileStatAcceptedApplications" as const,
     accent: "#10B981",
     iconBg: "#ECFDF5",
     icon: (
@@ -75,7 +91,7 @@ const STAT_CONFIG = [
   },
   {
     key: "rejected",
-    label: "Rejected Applications",
+    labelKey: "profileStatRejectedApplications" as const,
     accent: "#EF4444",
     iconBg: "#FEF2F2",
     icon: (
@@ -177,7 +193,7 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-[#5260ce] border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-[#A0AEC0]">Loading your dashboard…</p>
+          <p className="text-sm text-[#A0AEC0]">{t("profileLoadingDashboard")}</p>
         </div>
       </div>
     );
@@ -200,10 +216,13 @@ export default function ProfilePage() {
           <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-[26px] md:text-[30px] font-bold text-[#1B2559] leading-tight">
-                Welcome back, {user?.name?.split(" ")[0] || "Student"}! 👋
+                {t("profileWelcomeBack").replace(
+                  "{name}",
+                  user?.name?.split(" ")[0] || t("profileStudentFallback")
+                )}
               </h1>
               <p className="text-sm text-[#A0AEC0] mt-1.5">
-                Track your applications and manage your documents
+                {t("profileTrackApplicationsSubtitle")}
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -211,13 +230,13 @@ export default function ProfilePage() {
                 className="border-gray-200 text-[#4A5568] hover:bg-[#F0F4FF] hover:text-[#5260ce] hover:border-[#5260ce]/30 rounded-xl h-10 px-4 text-sm font-semibold flex items-center gap-2"
                 asChild
               >
-                <Link href="/profile/settings"><Settings className="w-4 h-4" /> Settings</Link>
+                <Link href="/profile/settings"><Settings className="w-4 h-4" /> {t("settings")}</Link>
               </Button>
               <Button
                 className="bg-[#5260ce] hover:bg-[#4350b0] text-white rounded-xl h-10 px-5 text-sm font-semibold"
                 asChild
               >
-                <Link href="/universities">Browse Universities</Link>
+                <Link href="/universities">{t("browseUniversities")}</Link>
               </Button>
             </div>
           </div>
@@ -227,7 +246,7 @@ export default function ProfilePage() {
             {STAT_CONFIG.map((cfg) => (
               <StatCard
                 key={cfg.key}
-                label={cfg.label}
+                label={t(cfg.labelKey)}
                 value={statValues[cfg.key as keyof typeof statValues]}
                 icon={cfg.icon}
                 accent={cfg.accent}
@@ -239,9 +258,11 @@ export default function ProfilePage() {
           {/* ── Recent Applications ──────────────────────────────────── */}
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-[16px] font-bold text-[#1B2559]">Recent Applications</h2>
+              <h2 className="text-[16px] font-bold text-[#1B2559]">{t("recentApplications")}</h2>
               {applications.length > 0 && (
-                <span className="text-xs text-[#A0AEC0]">{applications.length} total</span>
+                <span className="text-xs text-[#A0AEC0]">
+                  {t("profileApplicationsTotal").replace("{count}", String(applications.length))}
+                </span>
               )}
             </div>
 
@@ -257,10 +278,10 @@ export default function ProfilePage() {
                     <polyline points="14 2 14 8 20 8"/>
                   </svg>
                 </div>
-                <p className="text-[#1B2559] font-semibold mb-1">No applications yet</p>
-                <p className="text-[#A0AEC0] text-sm mb-5">Start your journey by browsing universities</p>
+                <p className="text-[#1B2559] font-semibold mb-1">{t("profileNoApplicationsTitle")}</p>
+                <p className="text-[#A0AEC0] text-sm mb-5">{t("profileNoApplicationsSubtitle")}</p>
                 <Button className="bg-[#5260ce] hover:bg-[#4350b0] text-white rounded-xl" asChild>
-                  <Link href="/universities">Browse Universities</Link>
+                  <Link href="/universities">{t("browseUniversities")}</Link>
                 </Button>
               </div>
             ) : (
@@ -268,17 +289,18 @@ export default function ProfilePage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-[#FAFBFF]">
-                      <th className="text-left px-6 py-3 text-xs text-[#A0AEC0] font-medium">University</th>
-                      <th className="text-left px-4 py-3 text-xs text-[#A0AEC0] font-medium">Program</th>
-                      <th className="text-left px-4 py-3 text-xs text-[#A0AEC0] font-medium">Degree</th>
-                      <th className="text-left px-4 py-3 text-xs text-[#A0AEC0] font-medium">Status</th>
-                      <th className="text-left px-4 py-3 text-xs text-[#A0AEC0] font-medium">Submission date</th>
-                      <th className="text-left px-4 py-3 text-xs text-[#A0AEC0] font-medium">Action</th>
+                      <th className="text-left px-6 py-3 text-xs text-[#A0AEC0] font-medium">{t("profileTableUniversity")}</th>
+                      <th className="text-left px-4 py-3 text-xs text-[#A0AEC0] font-medium">{t("profileTableProgram")}</th>
+                      <th className="text-left px-4 py-3 text-xs text-[#A0AEC0] font-medium">{t("profileTableDegree")}</th>
+                      <th className="text-left px-4 py-3 text-xs text-[#A0AEC0] font-medium">{t("profileTableStatus")}</th>
+                      <th className="text-left px-4 py-3 text-xs text-[#A0AEC0] font-medium">{t("profileTableSubmissionDate")}</th>
+                      <th className="text-left px-4 py-3 text-xs text-[#A0AEC0] font-medium">{t("profileTableAction")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {applications.map((app) => {
                       const s    = STATUS[app.status] ?? STATUS.PENDING;
+                      const sLab = statusLabelFor(app.status);
                       const logo = getImageUrl(app.university?.logoUrl || "");
                       return (
                         <tr key={app.id} className="border-b border-gray-50 last:border-0 hover:bg-[#FAFBFF] transition-colors group">
@@ -315,7 +337,7 @@ export default function ProfilePage() {
                           {/* Status */}
                           <td className="px-4 py-4">
                             <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${s.cls}`}>
-                              {s.label}
+                              {sLab}
                             </span>
                           </td>
 
@@ -334,7 +356,7 @@ export default function ProfilePage() {
                             >
                               <Link href={`/my-applications/${app.id}`} className="flex items-center gap-1.5">
                                 <EyeIcon />
-                                View Details
+                                {t("viewDetails")}
                               </Link>
                             </Button>
                           </td>

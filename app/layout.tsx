@@ -24,11 +24,29 @@ const alexandria = Alexandria({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "UniVolta - Study Abroad Made Easy",
-  description:
-    "Connect with top international universities and get personalized support throughout your application journey.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const lang = cookieStore.get("language")?.value === "ar" ? "ar" : "en";
+  const icons = {
+    icon: [{ url: "/logo-1.png", type: "image/png" as const }],
+    apple: "/logo-1.png",
+  };
+
+  if (lang === "ar") {
+    return {
+      title: "يونيفولتا — بوابتك للجامعات المصرية",
+      description:
+        "قدّم على جامعات مصرية معتمدة، واستكشف البرامج والرسوم مع دعم بالعربية والإنجليزية.",
+      icons,
+    };
+  }
+  return {
+    title: "UniVolta — Your gateway to Egyptian universities",
+    description:
+      "Apply to accredited Egyptian universities, explore programmes and fees, with support in English and Arabic.",
+    icons,
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",

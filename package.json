@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "check-i18n": "node scripts/check-i18n-keys.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",

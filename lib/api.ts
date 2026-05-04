@@ -1,8 +1,28 @@
 import { API_BASE_URL } from "./constants";
+import { getLanguage } from "./i18n";
 
 export interface ApiError {
   error: string;
   statusCode?: number;
+}
+
+/**
+ * Start backend OAuth (full-page redirect). {@link API_BASE_URL} must include `/api/v1`.
+ */
+export function getOAuthLoginUrl(
+  provider: "google" | "facebook",
+  redirectPath?: string | null
+): string {
+  const base = API_BASE_URL.replace(/\/$/, "");
+  const start = `${base}/auth/${provider}`;
+  if (
+    typeof redirectPath === "string" &&
+    redirectPath.startsWith("/") &&
+    !redirectPath.startsWith("//")
+  ) {
+    return `${start}?redirect=${encodeURIComponent(redirectPath)}`;
+  }
+  return start;
 }
 
 let isRefreshing = false;
@@ -56,6 +76,13 @@ async function refreshAccessToken(): Promise<string | null> {
   return refreshPromise;
 }
 
+/** Locale headers for API responses (matches Express `localeMiddleware`). */
+export function getLocaleHeaders(): HeadersInit {
+  if (typeof window === "undefined") return {};
+  const code = getLanguage() === "ar" ? "ar" : "en";
+  return { "X-Locale": code, "Accept-Language": code };
+}
+
 /**
  * Get authentication headers with access token
  */
@@ -65,8 +92,9 @@ export function getAuthHeaders(): HeadersInit {
   }
 
   const accessToken = localStorage.getItem("accessToken");
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    ...(getLocaleHeaders() as Record<string, string>),
   };
 
   if (accessToken) {
@@ -202,8 +230,9 @@ export async function apiRequest<T>(
 
 /**
  * Same as apiRequest but never sends Authorization and does not refresh tokens.
- * Use for public flows (e.g. program registration) so a stale session token cannot
- * send the request into authenticated-only middleware on the server.
+ * Use for **anonymous** program registration so the API creates/links a student account.
+ * When the user is logged in, use `apiPost` / `apiPut` / etc. instead so `optionalAuth`
+ * can attach the application to the current user.
  */
 export async function apiRequestPublic<T>(
   endpoint: string,

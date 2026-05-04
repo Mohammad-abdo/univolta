@@ -37,6 +37,7 @@ import {
   SlidersHorizontal,
   ScrollText,
   Mail,
+  UserCircle,
 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { t, getLanguage } from "@/lib/i18n";
@@ -44,6 +45,7 @@ import { Toaster } from "react-hot-toast";
 import { figmaAssets } from "@/lib/figma-assets";
 import { fetchPublicSiteSettings } from "@/lib/site-settings";
 import { getImageUrl } from "@/lib/image-utils";
+import { CreditBar } from "@/components/credit-bar";
 
 interface MenuItem {
   href: string;
@@ -177,6 +179,12 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
       label: t("applications"),
       icon: ClipboardList,
       permission: { resource: "applications", action: "read" },
+    },
+    {
+      href: "/dashboard/advisors",
+      label: t("sidebarAdvisors"),
+      icon: UserCircle,
+      permission: { resource: "advisors", action: "read" },
     },
     {
       href: "/dashboard/payments",
@@ -610,6 +618,8 @@ export default function DashboardLayout({
       <main className="dashboard-main-panel mt-14 min-h-[calc(100vh-3.5rem)] px-2 py-3 md:mt-16 md:min-h-[calc(100vh-4rem)] md:px-6 md:py-6">
         <div className="dashboard-main-inner">{children}</div>
       </main>
+
+      <CreditBar className="dashboard-main-panel border-gray-200" />
 
       {/* Toast Notifications */}
       <Toaster

@@ -7,7 +7,9 @@ import Image from "next/image";
 import { Eye, EyeOff, Mail, User, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/constants";
+import { getLocaleHeaders, getOAuthLoginUrl } from "@/lib/api";
 import { figmaAssets } from "@/lib/figma-assets";
+import { t } from "@/lib/i18n";
 
 export default function SignUpPage() {
   const [fullName, setFullName] = useState("");
@@ -25,12 +27,12 @@ export default function SignUpPage() {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/signup`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getLocaleHeaders() },
         body: JSON.stringify({ name: fullName, email, password }),
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        setError(data.error || "Failed to create account");
+        setError(data.error || t("authFailedCreateAccount"));
         setLoading(false);
         return;
       }
@@ -46,7 +48,7 @@ export default function SignUpPage() {
       }
       router.refresh();
     } catch {
-      setError("An error occurred. Please try again.");
+      setError(t("authGenericTryAgain"));
     } finally {
       setLoading(false);
     }
@@ -81,22 +83,22 @@ export default function SignUpPage() {
           </div>
 
           <h2 className="text-2xl md:text-3xl font-montserrat-bold text-[#121c67] mb-1.5 text-center">
-            Create Account
+            {t("authCreateAccountTitle")}
           </h2>
           <p className="text-sm font-montserrat-regular text-[#65666f] mb-6 text-center">
-            Join thousands of students finding their dream university
+            {t("authCreateAccountSubtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Full Name */}
             <div>
-              <label className="block font-montserrat-semibold text-sm text-[#2e2e2e] mb-1.5">Full Name</label>
+              <label className="block font-montserrat-semibold text-sm text-[#2e2e2e] mb-1.5">{t("fullName")}</label>
               <div className="relative">
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Your full name"
+                  placeholder={t("authYourNamePlaceholder")}
                   required
                   className="input-enhanced pr-12"
                 />
@@ -106,13 +108,13 @@ export default function SignUpPage() {
 
             {/* Email */}
             <div>
-              <label className="block font-montserrat-semibold text-sm text-[#2e2e2e] mb-1.5">Email</label>
+              <label className="block font-montserrat-semibold text-sm text-[#2e2e2e] mb-1.5">{t("email")}</label>
               <div className="relative">
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t("authEmailPlaceholderExample")}
                   required
                   className="input-enhanced pr-12"
                 />
@@ -122,7 +124,7 @@ export default function SignUpPage() {
 
             {/* Password */}
             <div>
-              <label className="block font-montserrat-semibold text-sm text-[#2e2e2e] mb-1.5">Password</label>
+              <label className="block font-montserrat-semibold text-sm text-[#2e2e2e] mb-1.5">{t("password")}</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -136,7 +138,7 @@ export default function SignUpPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8B8C9A] hover:text-[#65666f] focus:outline-none"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? t("authAriaHidePassword") : t("authAriaShowPassword")}
                 >
                   {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
                 </button>
@@ -145,7 +147,7 @@ export default function SignUpPage() {
               <div className="mt-2 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
                 <div className={`h-full rounded-full transition-all duration-300 ${strengthColor} ${strengthWidth}`} />
               </div>
-              <p className="text-xs text-gray-400 mt-1">Minimum 6 characters</p>
+              <p className="text-xs text-gray-400 mt-1">{t("authPasswordMinCharsHint")}</p>
             </div>
 
             {/* Error */}
@@ -165,40 +167,51 @@ export default function SignUpPage() {
               {loading ? (
                 <span className="flex items-center gap-2">
                   <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                  Creating account...
+                  {t("authCreatingAccount")}
                 </span>
-              ) : "Create Account"}
+              ) : t("authCreateAccountButton")}
             </Button>
           </form>
 
           {/* Divider */}
           <div className="my-5 flex items-center gap-3">
             <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400 font-montserrat-regular">OR</span>
+            <span className="text-xs text-gray-400 font-montserrat-regular">{t("authOr")}</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
 
           {/* Social Login */}
           <div className="flex gap-3">
-            <Button type="button"
-              className="flex-1 h-11 rounded-xl bg-[#1877F2] hover:bg-[#166FE5] text-white font-montserrat-regular flex items-center justify-center gap-2 text-sm">
+            <Button
+              type="button"
+              className="flex-1 h-11 rounded-xl bg-[#1877F2] hover:bg-[#166FE5] text-white font-montserrat-regular flex items-center justify-center gap-2 text-sm"
+              onClick={() => {
+                window.location.href = getOAuthLoginUrl("facebook", "/");
+              }}
+            >
               <div className="w-5 h-5 bg-white rounded flex items-center justify-center shrink-0">
                 <span className="text-[#1877F2] font-bold text-sm">f</span>
               </div>
-              <span>Facebook</span>
+              <span>{t("authFacebook")}</span>
             </Button>
-            <Button type="button" variant="outline"
-              className="flex-1 h-11 rounded-xl border border-[#E0E6F1] hover:bg-[#F9FAFB] hover:border-[#5260ce]/30 font-montserrat-regular text-[#2e2e2e] flex items-center justify-center gap-2 bg-white text-sm">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 h-11 rounded-xl border border-[#E0E6F1] hover:bg-[#F9FAFB] hover:border-[#5260ce]/30 font-montserrat-regular text-[#2e2e2e] flex items-center justify-center gap-2 bg-white text-sm"
+              onClick={() => {
+                window.location.href = getOAuthLoginUrl("google", "/");
+              }}
+            >
               <div className="w-5 h-5 bg-gradient-to-br from-[#4285F4] to-[#34A853] rounded flex items-center justify-center text-white font-bold text-xs shrink-0">G</div>
-              <span>Google</span>
+              <span>{t("authGoogle")}</span>
             </Button>
           </div>
 
           {/* Login link */}
           <p className="mt-6 text-center text-sm font-montserrat-regular text-[#65666f]">
-            Already have an account?{" "}
+            {t("authHaveAccount")}{" "}
             <Link href="/login" className="text-[#5260ce] hover:text-[#4350b0] font-montserrat-semibold transition-colors">
-              Log in
+              {t("authLogInLink")}
             </Link>
           </p>
         </div>

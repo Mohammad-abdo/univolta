@@ -1,4 +1,7 @@
 // Local assets from public folder
+/** Replaces missing Figma export `Asset 8@4x 1.png` — use `public/logo-1.png`. */
+const ASSET_PLACEHOLDER = "/logo-1.png";
+
 export const figmaAssets = {
   // Logo and Branding
   logo: "/logo.png",
@@ -15,8 +18,7 @@ export const figmaAssets = {
   buttonEllipse: "/Rectangle 12.png",
   
   // Hero Section Images
-  // NOTE: `@` must be URL-encoded for Next to serve this file on Windows dev server
-  heroGraduationCap: "/Asset%208%404x%201.png",
+  heroGraduationCap: "/Asset-cab.png",
   heroMainImage: "/80871096_078_230602_3d_studies_14_poster 1.png",
   heroMainImageMask: "/Rectangle 12.png",
   heroVector: "/Vector.png",
@@ -45,9 +47,9 @@ export const figmaAssets = {
   vector66: "/Vector 66.png",
   
   // Feature Icons (Why Us Section)
-  universityIcon: "/Asset%208%404x%201.png",
-  audioBookIcon: "/Asset%208%404x%201.png",
-  houseIcon: "/Asset%208%404x%201.png",
+  universityIcon: ASSET_PLACEHOLDER,
+  audioBookIcon: ASSET_PLACEHOLDER,
+  houseIcon: ASSET_PLACEHOLDER,
   studentServicesIcon: {
     vector: "/Vector.png",
     xmlid5205: "/Vector (3).png",
@@ -97,7 +99,7 @@ export const figmaAssets = {
   
   // How It Works Icons
   exploreIcon: "/explore 1.png",
-  applicationIcon: "/Asset%208%404x%201.png",
+  applicationIcon: ASSET_PLACEHOLDER,
   customerServiceIcon: "/customer-service 1.png",
   
   // CTA Banner

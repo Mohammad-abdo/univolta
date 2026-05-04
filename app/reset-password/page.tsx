@@ -7,7 +7,9 @@ import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/constants";
+import { getLocaleHeaders } from "@/lib/api";
 import { figmaAssets } from "@/lib/figma-assets";
+import { t } from "@/lib/i18n";
 
 function ResetPasswordForm() {
   const [password, setPassword] = useState("");
@@ -23,7 +25,7 @@ function ResetPasswordForm() {
 
   useEffect(() => {
     if (!token) {
-      setError("Invalid or missing reset token");
+      setError(t("authInvalidResetToken"));
     }
   }, [token]);
 
@@ -32,17 +34,17 @@ function ResetPasswordForm() {
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("authPasswordsNoMatch"));
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(t("authPasswordMinLength"));
       return;
     }
 
     if (!token) {
-      setError("Invalid reset token");
+      setError(t("authResetTokenInvalid"));
       return;
     }
 
@@ -51,13 +53,13 @@ function ResetPasswordForm() {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getLocaleHeaders() },
         body: JSON.stringify({ token, password }),
       });
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        setError(data.error || "Failed to reset password");
+        setError(data.error || t("authResetPasswordFailed"));
         setLoading(false);
         return;
       }
@@ -68,7 +70,7 @@ function ResetPasswordForm() {
       }, 2000);
     } catch (error) {
       console.error("Reset password error:", error);
-      setError("An error occurred. Please try again.");
+      setError(t("authGenericTryAgain"));
     } finally {
       setLoading(false);
     }
@@ -91,17 +93,17 @@ function ResetPasswordForm() {
                 </svg>
               </div>
               <h2 className="text-xl md:text-2xl font-montserrat-bold text-[#040404] mb-2">
-                Password Reset Successful
+                {t("authPasswordResetSuccessTitle")}
               </h2>
               <p className="text-sm md:text-base font-montserrat-regular text-[#65666f]">
-                Your password has been reset successfully. Redirecting to login...
+                {t("authPasswordResetSuccessBody")}
               </p>
             </div>
             <Link
               href="/login"
               className="text-sm font-montserrat-regular text-[#5260ce] hover:text-[#4350b0] transition-colors"
             >
-              Go to login
+              {t("authGoToLogin")}
             </Link>
           </div>
         </div>
@@ -132,23 +134,23 @@ function ResetPasswordForm() {
             </div>
             <h1 className="text-xl md:text-2xl font-montserrat-bold text-[#5260ce] mb-2">UNIVOLTA</h1>
             <p className="text-xs md:text-sm font-montserrat-regular text-[#65666f] text-center">
-              شركة يونيفولتا للخدمات الاستشارية
+              {t("companyName")}
             </p>
           </div>
 
           {/* Title */}
           <h2 className="text-xl md:text-2xl font-montserrat-bold text-[#040404] mb-3 md:mb-4 text-center">
-            Reset your password
+            {t("authResetPasswordTitle")}
           </h2>
           <p className="text-sm md:text-base font-montserrat-regular text-[#65666f] mb-6 md:mb-8 text-center">
-            Please enter your new password below.
+            {t("authResetPasswordSubtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
             {/* New Password Field */}
             <div>
               <label className="block font-montserrat-semibold text-sm text-[#040404] mb-2">
-                New Password
+                {t("authNewPassword")}
               </label>
               <div className="relative">
                 <input
@@ -163,7 +165,7 @@ function ResetPasswordForm() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8B8C9A] hover:text-[#65666f] focus:outline-none"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? t("authAriaHidePassword") : t("authAriaShowPassword")}
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -177,7 +179,7 @@ function ResetPasswordForm() {
             {/* Confirm Password Field */}
             <div>
               <label className="block font-montserrat-semibold text-sm text-[#040404] mb-2">
-                Confirm Password
+                {t("authConfirmPassword")}
               </label>
               <div className="relative">
                 <input
@@ -192,7 +194,7 @@ function ResetPasswordForm() {
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8B8C9A] hover:text-[#65666f] focus:outline-none"
-                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  aria-label={showConfirmPassword ? t("authAriaHidePassword") : t("authAriaShowPassword")}
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -216,7 +218,7 @@ function ResetPasswordForm() {
               disabled={loading || !token}
               className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm md:text-base h-12 md:h-14 rounded-xl"
             >
-              {loading ? "Resetting..." : "Reset Password"}
+              {loading ? t("authResetting") : t("authResetPasswordButton")}
             </Button>
           </form>
 
@@ -226,7 +228,7 @@ function ResetPasswordForm() {
               href="/login"
               className="text-sm font-montserrat-regular text-[#5260ce] hover:text-[#4350b0] transition-colors"
             >
-              Return to login
+              {t("authReturnToLogin")}
             </Link>
           </div>
         </div>
@@ -239,7 +241,7 @@ export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg font-montserrat-regular">Loading...</div>
+        <div className="text-lg font-montserrat-regular">{t("authPageLoading")}</div>
       </div>
     }>
       <ResetPasswordForm />

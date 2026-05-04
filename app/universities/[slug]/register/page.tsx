@@ -22,13 +22,18 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
+  apiPost,
   apiPostPublic,
+  apiPut,
   apiPutPublic,
+  apiUploadDocument,
   apiUploadDocumentPublic,
+  apiProcessPayment,
   apiProcessPaymentPublic,
 } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/constants";
 import { getDirection, getLanguage, t } from "@/lib/i18n";
+import { readAdvisorRefFromCookie, clearAdvisorRefCookie } from "@/lib/advisor-ref-cookie";
 
 const egyptianCities = [
   { en: "Cairo", ar: "القاهرة" },
@@ -67,6 +72,12 @@ const egyptianCities = [
   { en: "El Mahalla El Kubra", ar: "المحلة الكبرى" },
   { en: "Kafr El Dawwar", ar: "كفر الدوار" },
 ];
+
+/** When true, `POST /applications` sends Bearer token so the app is linked to the current user (no auto signup). */
+function hasAccessToken(): boolean {
+  if (typeof window === "undefined") return false;
+  return !!localStorage.getItem("accessToken");
+}
 
 type PublicService = {
   id: string;
@@ -277,13 +288,11 @@ function UniversityRegisterContent() {
     }
 
     if (currentStep === 1) {
-      // Create application
+      // Create application (authenticated → linked to current user; anonymous → may create/link account on server)
       setLoading(true);
       try {
-        const response = (await apiPostPublic<{
-          id: string;
-          newStudentAccountCreated?: boolean;
-        }>("/applications", {
+        const advisorRef = readAdvisorRefFromCookie();
+        const payload: Record<string, unknown> = {
           fullName: formData.fullName,
           email: formData.email,
           phone: formData.phone,
@@ -295,11 +304,23 @@ function UniversityRegisterContent() {
           universityId: university?.id,
           programId: program?.id,
           applicationFee: 100, // Default application fee
-        })) as { id: string; newStudentAccountCreated?: boolean };
+        };
+        if (advisorRef) {
+          payload.advisorRef = advisorRef;
+        }
+
+        const authed = hasAccessToken();
+        const response = (authed
+          ? await apiPost<{ id: string; newStudentAccountCreated?: boolean }>("/applications", payload)
+          : await apiPostPublic<{ id: string; newStudentAccountCreated?: boolean }>(
+              "/applications",
+              payload
+            )) as { id: string; newStudentAccountCreated?: boolean };
 
         setApplicationId(response.id);
+        clearAdvisorRefCookie();
         setAccountEmailNotice(
-          response.newStudentAccountCreated ? t("applicationCredentialsEmailSent") : ""
+          !authed && response.newStudentAccountCreated ? t("applicationCredentialsEmailSent") : ""
         );
         setCurrentStep(2);
         setError("");
@@ -329,13 +350,18 @@ function UniversityRegisterContent() {
             .filter(Boolean)
             .join("\n");
 
-          await apiPutPublic(`/applications/${applicationId}`, {
+          const updatePayload = {
             additionalServices:
               selectedServiceNames.length > 0 ? selectedServiceNames : undefined,
             additionalNotes: composedAdditionalNotes || undefined,
             additionalFee,
             totalFee: totalAmount,
-          });
+          };
+          if (hasAccessToken()) {
+            await apiPut(`/applications/${applicationId}`, updatePayload);
+          } else {
+            await apiPutPublic(`/applications/${applicationId}`, updatePayload);
+          }
           setCurrentStep(3);
           setError("");
         } catch (error: any) {
@@ -395,7 +421,9 @@ function UniversityRegisterContent() {
     setUploading(type);
     setError("");
     try {
-      const result = await apiUploadDocumentPublic(applicationId, file, type);
+      const result = hasAccessToken()
+        ? await apiUploadDocument(applicationId, file, type)
+        : await apiUploadDocumentPublic(applicationId, file, type);
       if (result?.id) {
         setFormData({
           ...formData,
@@ -468,7 +496,7 @@ function UniversityRegisterContent() {
     setLoading(true);
     setError("");
     try {
-      await apiProcessPaymentPublic(applicationId, {
+      const paymentPayload = {
         paymentMethod: formData.paymentMethod,
         amount: totalAmount,
         ...(formData.paymentMethod === "credit_card" && {
@@ -480,7 +508,12 @@ function UniversityRegisterContent() {
         ...(formData.paymentMethod === "paypal" && {
           paypalEmail: formData.paypalEmail.trim(),
         }),
-      });
+      };
+      if (hasAccessToken()) {
+        await apiProcessPayment(applicationId, paymentPayload);
+      } else {
+        await apiProcessPaymentPublic(applicationId, paymentPayload);
+      }
 
       router.push(`/applications/success?id=${applicationId}`);
     } catch (error: any) {

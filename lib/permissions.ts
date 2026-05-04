@@ -8,7 +8,8 @@ export type Resource =
   | "testimonials"
   | "faqs"
   | "users"
-  | "settings";
+  | "settings"
+  | "advisors";
 
 export type Action = "create" | "read" | "update" | "delete";
 
@@ -51,6 +52,10 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     "settings:read",
     "settings:update",
     "settings:delete",
+    "advisors:create",
+    "advisors:read",
+    "advisors:update",
+    "advisors:delete",
   ],
   editor: [
     "universities:create",
@@ -73,6 +78,8 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     "faqs:read",
     "faqs:update",
     "faqs:delete",
+    "advisors:read",
+    "advisors:update",
   ],
   user: [
     "universities:read",

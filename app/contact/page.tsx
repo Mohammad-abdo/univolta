@@ -9,24 +9,20 @@ import { Footer } from "@/components/footer";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import {
-  Phone,
-  Mail,
-  MapPin,
-  Facebook,
-  Youtube,
-  Twitter,
-  Send,
-  CheckCircle,
-} from "lucide-react";
+import { Phone, Mail, MapPin, Send, CheckCircle } from "lucide-react";
 import { figmaAssets } from "@/lib/figma-assets";
 import { showToast } from "@/lib/toast";
 import { t } from "@/lib/i18n";
 import { contactApi } from "@/lib/admin-api";
+import { fetchPublicSiteSettings } from "@/lib/site-settings";
+import { buildSocialLinkRows, type SocialLinkRow } from "@/lib/social-links";
 
 export default function ContactPage() {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const [socialLinks, setSocialLinks] = useState<SocialLinkRow[]>(() =>
+    buildSocialLinkRows(undefined)
+  );
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -38,6 +34,17 @@ export default function ContactPage() {
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    fetchPublicSiteSettings()
+      .then((settings) => {
+        const fromCms = settings["footer.content"]?.socialLinks;
+        setSocialLinks(buildSocialLinkRows(fromCms));
+      })
+      .catch(() => {
+        setSocialLinks(buildSocialLinkRows(undefined));
+      });
   }, []);
 
   useEffect(() => {
@@ -138,29 +145,23 @@ export default function ContactPage() {
           <div className="absolute left-0 top-[140px] hidden xl:flex -translate-y-1/2 z-10">
             <div className="flex flex-col items-center gap-3 rounded-r-[12px] bg-white p-3 shadow-[0px_4px_20px_rgba(82,96,206,0.12)]">
               <div className="rotate-90 bg-[#75d3f7] px-2 py-0.5 rounded text-sm font-montserrat-regular text-[#5260ce] whitespace-nowrap">
-                        {tt("followUs", "Follow Us")}
+                {tt("followUs", "Follow Us")}
               </div>
-              <a
-                href="#"
-                className="w-10 h-10 flex items-center justify-center rounded-[12px] bg-[#5260ce]/10 transition-transform hover:scale-105"
-                aria-label="Facebook"
-              >
-                <Facebook className="w-5 h-5 text-[#5260ce]" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 flex items-center justify-center rounded-[12px] bg-[#5260ce]/10 transition-transform hover:scale-105"
-                aria-label="YouTube"
-              >
-                <Youtube className="w-5 h-5 text-[#5260ce]" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 flex items-center justify-center rounded-[12px] bg-[#5260ce]/10 transition-transform hover:scale-105"
-                aria-label="Twitter"
-              >
-                <Twitter className="w-5 h-5 text-[#5260ce]" />
-              </a>
+              {socialLinks.map((row, idx) => {
+                const Icon = row.Icon;
+                const external = /^https?:\/\//i.test(row.href);
+                return (
+                  <a
+                    key={`${row.label}-${idx}`}
+                    href={row.href}
+                    {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                    className="w-10 h-10 flex items-center justify-center rounded-[12px] bg-[#5260ce]/10 transition-transform hover:scale-105"
+                    aria-label={row.label}
+                  >
+                    <Icon className="w-5 h-5 text-[#5260ce]" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 

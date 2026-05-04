@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/constants";
+import { getLocaleHeaders } from "@/lib/api";
 import { figmaAssets } from "@/lib/figma-assets";
 import { t } from "@/lib/i18n";
 
@@ -23,13 +24,13 @@ export default function ForgotPasswordPage() {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getLocaleHeaders() },
         body: JSON.stringify({ email }),
       });
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        setError(data.error || "Failed to send reset link");
+        setError(data.error || t("authSendResetFailed"));
         setLoading(false);
         return;
       }
@@ -37,7 +38,7 @@ export default function ForgotPasswordPage() {
       setSuccess(true);
     } catch (error) {
       console.error("Forgot password error:", error);
-      setError("An error occurred. Please try again.");
+      setError(t("authGenericTryAgain"));
     } finally {
       setLoading(false);
     }
@@ -51,13 +52,13 @@ export default function ForgotPasswordPage() {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getLocaleHeaders() },
         body: JSON.stringify({ email }),
       });
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        setError(data.error || "Failed to send reset link");
+        setError(data.error || t("authSendResetFailed"));
         setLoading(false);
         return;
       }
@@ -66,7 +67,7 @@ export default function ForgotPasswordPage() {
       setLoading(false);
     } catch (error) {
       console.error("Resend error:", error);
-      setError("An error occurred. Please try again.");
+      setError(t("authGenericTryAgain"));
       setLoading(false);
     }
   };
@@ -110,16 +111,16 @@ export default function ForgotPasswordPage() {
 
             {/* Success Message */}
             <h2 className="text-xl md:text-2xl font-montserrat-bold text-[#040404] mb-3 md:mb-4 text-center">
-              The link has been sent.
+              {t("authResetLinkSentTitle")}
             </h2>
             <p className="text-xs md:text-base font-montserrat-regular text-[#65666f] mb-6 md:mb-8 text-center">
-              A password reset link has been sent to your email. Please check your inbox (including the spam folder) and follow the instructions to set a new password.
+              {t("authResetLinkSentBody")}
             </p>
 
             {/* Email Display */}
             <div className="mb-6">
               <label className="block font-montserrat-semibold text-sm text-[#040404] mb-2">
-                Email
+                {t("email")}
               </label>
               <div className="relative">
                 <input
@@ -138,7 +139,7 @@ export default function ForgotPasswordPage() {
               disabled={loading}
               className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm md:text-base h-12 md:h-14 rounded-xl mb-4 shadow-lg"
             >
-              {loading ? "Sending..." : "Resend"}
+              {loading ? t("authSending") : t("authResend")}
             </Button>
 
             {/* Return to Login */}
@@ -147,7 +148,7 @@ export default function ForgotPasswordPage() {
                 href="/login"
                 className="text-sm font-montserrat-regular text-[#5260ce] hover:text-[#4350b0] transition-colors"
               >
-                Return to login
+                {t("authReturnToLogin")}
               </Link>
             </div>
           </div>
@@ -188,23 +189,23 @@ export default function ForgotPasswordPage() {
             </div>
             <h1 className="text-lg md:text-xl font-montserrat-bold text-[#5260ce] mb-1">UNIVOLTA</h1>
             <p className="text-xs font-montserrat-regular text-[#65666f] text-center">
-              شركة يونيفولتا للخدمات الاستشارية
+              {t("companyName")}
             </p>
           </div>
 
           {/* Title */}
           <h2 className="text-xl md:text-2xl font-montserrat-bold text-[#040404] mb-3 md:mb-4 text-center">
-            Forgot your password?
+            {t("authForgotPasswordTitle")}
           </h2>
           <p className="text-xs md:text-base font-montserrat-regular text-[#65666f] mb-6 md:mb-8 text-center">
-            Please enter your email address and we will send you a link to reset your password.
+            {t("authForgotPasswordSubtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
             {/* Email Field */}
             <div>
               <label className="block font-montserrat-semibold text-sm text-[#040404] mb-2">
-                Email
+                {t("email")}
               </label>
               <div className="relative">
                 <input
@@ -232,7 +233,7 @@ export default function ForgotPasswordPage() {
               disabled={loading}
               className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm md:text-base h-12 md:h-14 rounded-xl shadow-lg"
             >
-              {loading ? "Sending..." : "Continue"}
+              {loading ? t("authSending") : t("authContinue")}
             </Button>
           </form>
 
@@ -242,7 +243,7 @@ export default function ForgotPasswordPage() {
               href="/login"
               className="text-sm font-montserrat-regular text-[#5260ce] hover:text-[#4350b0] transition-colors"
             >
-              Return to login
+              {t("authReturnToLogin")}
             </Link>
           </div>
         </div>

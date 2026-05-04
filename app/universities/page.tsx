@@ -389,7 +389,7 @@ function UniversitiesContent() {
                   <p className="font-montserrat-regular text-[#65666f] text-sm mb-6">Try adjusting your filters or search term</p>
                   <Button
                     onClick={() => {
-                      const reset = { language: "", specialization: "", search: "", page: 1 };
+                      const reset = { country: "", language: "", specialization: "", search: "", page: 1 };
                       setFilters(reset);
                       updateURL(reset);
                     }}

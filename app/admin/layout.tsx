@@ -15,6 +15,7 @@ import {
   Bell,
   Globe,
 } from "lucide-react";
+import { CreditBar } from "@/components/credit-bar";
 
 interface NavItem {
   href:  string;
@@ -196,6 +197,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Page content */}
         <main className="flex-1 p-4 md:p-6 overflow-auto">{children}</main>
+        <CreditBar />
       </div>
     </div>
   );

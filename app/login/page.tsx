@@ -1,13 +1,28 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, EyeOff, Mail, AlertCircle, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/constants";
+import { getLocaleHeaders, getOAuthLoginUrl } from "@/lib/api";
 import { figmaAssets } from "@/lib/figma-assets";
+import { t } from "@/lib/i18n";
+
+function oauthLoginErrorMessage(code: string): string {
+  switch (code) {
+    case "facebook_email_required":
+      return t("authOAuthFacebookEmail");
+    case "oauth_missing_tokens":
+      return t("authOAuthMissingTokens");
+    case "account_inactive":
+      return t("authInvalidCredentials");
+    default:
+      return t("authOAuthSignInFailed");
+  }
+}
 
 function LoginContent() {
   const [email, setEmail] = useState("");
@@ -19,6 +34,24 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  useEffect(() => {
+    const oauthErr = searchParams?.get("error");
+    if (oauthErr) {
+      setError(oauthLoginErrorMessage(oauthErr));
+      const url = new URL(window.location.href);
+      url.searchParams.delete("error");
+      window.history.replaceState({}, "", url.pathname + url.search);
+    }
+  }, [searchParams]);
+
+  const postLoginRedirect = searchParams?.get("redirect");
+  const oauthRedirectPath =
+    postLoginRedirect &&
+    postLoginRedirect.startsWith("/") &&
+    !postLoginRedirect.startsWith("//")
+      ? postLoginRedirect
+      : undefined;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -26,12 +59,12 @@ function LoginContent() {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getLocaleHeaders() },
         body: JSON.stringify({ email, password }),
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        setError(data.error || "Invalid credentials");
+        setError(data.error || t("authInvalidCredentials"));
         setLoading(false);
         return;
       }
@@ -53,7 +86,7 @@ function LoginContent() {
       }
       router.refresh();
     } catch {
-      setError("An error occurred. Please try again.");
+      setError(t("authGenericTryAgain"));
     } finally {
       setLoading(false);
     }
@@ -87,22 +120,22 @@ function LoginContent() {
           </div>
 
           <h2 className="text-2xl md:text-3xl font-montserrat-bold text-[#121c67] mb-1.5 text-center">
-            Welcome Back
+            {t("authWelcomeBackTitle")}
           </h2>
           <p className="text-sm font-montserrat-regular text-[#65666f] mb-7 text-center">
-            Sign in to continue your academic journey
+            {t("authSignInSubtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div>
-              <label className="block font-montserrat-semibold text-sm text-[#2e2e2e] mb-1.5">Email</label>
+              <label className="block font-montserrat-semibold text-sm text-[#2e2e2e] mb-1.5">{t("email")}</label>
               <div className="relative">
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t("authEmailPlaceholderExample")}
                   required
                   className="input-enhanced pr-12"
                 />
@@ -113,9 +146,9 @@ function LoginContent() {
             {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block font-montserrat-semibold text-sm text-[#2e2e2e]">Password</label>
+                <label className="block font-montserrat-semibold text-sm text-[#2e2e2e]">{t("password")}</label>
                 <Link href="/forgot-password" className="text-xs font-montserrat-regular text-[#5260ce] hover:text-[#4350b0] transition-colors">
-                  Forgot password?
+                  {t("authForgotPasswordLink")}
                 </Link>
               </div>
               <div className="relative">
@@ -130,7 +163,7 @@ function LoginContent() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8B8C9A] hover:text-[#65666f] focus:outline-none"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? t("authAriaHidePassword") : t("authAriaShowPassword")}
                 >
                   {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
                 </button>
@@ -147,7 +180,7 @@ function LoginContent() {
                 className="w-4 h-4 text-[#5260ce] border-2 border-[#E0E6F1] rounded focus:ring-2 focus:ring-[#5260ce] cursor-pointer"
               />
               <label htmlFor="rememberMe" className="text-sm font-montserrat-regular text-[#2e2e2e] cursor-pointer select-none">
-                Remember me
+                {t("authRememberMe")}
               </label>
             </div>
 
@@ -172,40 +205,52 @@ function LoginContent() {
               {loading ? (
                 <span className="flex items-center gap-2">
                   <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                  Signing in...
+                  {t("authSigningIn")}
                 </span>
-              ) : "Log In"}
+              ) : t("authLogInButton")}
             </Button>
           </form>
 
           {/* Divider */}
-          <div className="my-5 flex items-center gap-3">
+          {/* <div className="my-5 flex items-center gap-3">
             <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400 font-montserrat-regular">OR</span>
+            <span className="text-xs text-gray-400 font-montserrat-regular">{t("authOr")}</span>
             <div className="flex-1 h-px bg-gray-200" />
-          </div>
+          </div> */}
 
           {/* Social Login */}
-          <div className="flex gap-3">
-            <Button type="button" variant="outline"
-              className="flex-1 h-11 rounded-xl border border-[#E0E6F1] hover:bg-[#F9FAFB] hover:border-[#5260ce]/30 font-montserrat-regular text-[#2e2e2e] flex items-center justify-center gap-2 bg-white text-xs transition-all">
+          {/* <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 h-11 rounded-xl border border-[#E0E6F1] hover:bg-[#F9FAFB] hover:border-[#5260ce]/30 font-montserrat-regular text-[#2e2e2e] flex items-center justify-center gap-2 bg-white text-xs transition-all"
+              onClick={() => {
+                window.location.href = getOAuthLoginUrl("facebook", oauthRedirectPath);
+              }}
+            >
               <div className="w-5 h-5 bg-[#1877F2] rounded flex items-center justify-center text-white font-bold text-xs shrink-0">f</div>
-              <span className="truncate">Facebook</span>
+              <span className="truncate">{t("authFacebook")}</span>
             </Button>
-            <Button type="button" variant="outline"
-              className="flex-1 h-11 rounded-xl border border-[#E0E6F1] hover:bg-[#F9FAFB] hover:border-[#5260ce]/30 font-montserrat-regular text-[#2e2e2e] flex items-center justify-center gap-2 bg-white text-xs transition-all">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 h-11 rounded-xl border border-[#E0E6F1] hover:bg-[#F9FAFB] hover:border-[#5260ce]/30 font-montserrat-regular text-[#2e2e2e] flex items-center justify-center gap-2 bg-white text-xs transition-all"
+              onClick={() => {
+                window.location.href = getOAuthLoginUrl("google", oauthRedirectPath);
+              }}
+            >
               <div className="w-5 h-5 bg-gradient-to-br from-[#4285F4] to-[#34A853] rounded flex items-center justify-center text-white font-bold text-xs shrink-0">G</div>
-              <span className="truncate">Google</span>
+              <span className="truncate">{t("authGoogle")}</span>
             </Button>
-          </div>
+          </div> */}
 
           {/* Sign up link */}
-          <p className="mt-6 text-center text-sm font-montserrat-regular text-[#65666f]">
-            Don&apos;t have an account?{" "}
+          {/* <p className="mt-6 text-center text-sm font-montserrat-regular text-[#65666f]">
+            {t("authDontHaveAccount")}{" "}
             <Link href="/signup" className="text-[#5260ce] hover:text-[#4350b0] font-montserrat-semibold transition-colors">
-              Sign up free
+              {t("authSignUpFree")}
             </Link>
-          </p>
+          </p> */}
         </div>
       </div>
     </div>
@@ -218,7 +263,7 @@ export default function LoginPage() {
       <div className="min-h-screen aurora-hero flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5260ce] mx-auto" />
-          <p className="mt-4 text-[#65666f] font-montserrat-regular">Loading...</p>
+          <p className="mt-4 text-[#65666f] font-montserrat-regular">{t("authPageLoading")}</p>
         </div>
       </div>
     }>

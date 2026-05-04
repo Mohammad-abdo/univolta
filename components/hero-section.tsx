@@ -206,7 +206,7 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
           </div>
 
           {/* Country flag bubbles — positioned around the circular banner */}
-          {[
+          {/* {[
             { src: figmaAssets.flagFrance,  id: "f1", leftPct: "81.4%", top: 205, delay: "0s"   },
             { src: figmaAssets.flagUSA,     id: "f2", leftPct: "60.7%", top: 335, delay: "0.8s" },
             { src: figmaAssets.flagCanada,  id: "f3", leftPct: "88.0%", top: 300, delay: "1.5s" },
@@ -222,7 +222,7 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
                 <Image src={src} alt="" fill className="object-contain" unoptimized />
               </div>
             </div>
-          ))}
+          ))} */}
 
           {/* Sparkle vector */}
           <div
@@ -237,17 +237,17 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
           </div>
 
           {/* Sparkle star icon */}
-          <div
+          {/* <div
             className="absolute w-[95px] h-[95px] overflow-hidden z-[4]"
             style={{ left: "64.0%", top: 199 }}
           >
             <div className="absolute left-[15px] top-[5px] w-[66px] h-[66px]">
               <Image src={figmaAssets.heroSparkle} alt="" fill className="object-contain" unoptimized />
             </div>
-          </div>
+          </div> */}
 
           {/* Star decoration */}
-          <div
+          {/* <div
             className="absolute w-[111px] h-[102px] overflow-hidden z-[4]"
             style={{ left: "65.7%", top: 631 }}
           >
@@ -256,7 +256,7 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
                 <Image src={figmaAssets.heroStar} alt="" fill className="object-contain" unoptimized />
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Slide indicator badge — sits on upper rim of circular banner */}
           <div className="absolute z-[6]" style={{ left: "61.5%", top: 172 }}>
