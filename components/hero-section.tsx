@@ -161,25 +161,25 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
         <div className="hidden lg:block" style={{ transform: isRTL ? "scaleX(-1)" : "none" }}>
 
           {/* Graduation cap — shifted +4% right for breathing room */}
-          <div
+          {/* <div
             className="absolute w-[100px] h-[79px] flex items-center justify-center animate-float z-[4]"
             style={{ left: "50.6%", top: 202 }}
           >
             <div className="relative w-full h-full rotate-180 scale-y-[-1]">
               <Image src={figmaAssets.heroGraduationCap} alt="" fill className="object-contain" unoptimized />
             </div>
-          </div>
+          </div> */}
 
           {/* Vector underline — inside text column */}
-          <div className="absolute top-[312px] w-[141px] h-[10px] z-[4]" style={{ left: "5.56%" }}>
+          {/* <div className="absolute top-[312px] w-[141px] h-[10px] z-[4]" style={{ left: "5.56%" }}>
             <div className="absolute inset-[-30%_-2.13%_-30.01%_-2.13%]">
               <Image src={figmaAssets.heroVector} alt="" fill className="object-contain" unoptimized />
             </div>
-          </div>
+          </div> */}
 
           {/* Hero banner — perfect 360° circle (square clip + rounded-full) */}
-          <div
-            className="absolute z-[5] rounded-full overflow-hidden bg-[#e8ecf7] shadow-[0_16px_48px_rgba(18,28,103,0.22)] ring-[5px] ring-white"
+          {/* <div
+            className="absolute z-[5] rounded-full overflow-hidden bg-[#e8ecf7] shadow-[0_16px_48px_rgba(18,28,103,0.22)] "
             style={{
               left:   "61.2%",
               top:    200,
@@ -203,7 +203,7 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
                 <div className="absolute inset-0 rounded-full bg-gradient-to-b from-transparent via-transparent to-[#121c67]/15 pointer-events-none" />
               </div>
             ))}
-          </div>
+          </div> */}
 
           {/* Country flag bubbles — positioned around the circular banner */}
           {/* {[
