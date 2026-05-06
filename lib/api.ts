@@ -156,16 +156,16 @@ export async function apiRequest<T>(
           statusCode: retryResponse.status,
         }));
 
-        // Only redirect on authentication endpoints after refresh fails (not on 404 or other errors)
-        if ((retryResponse.status === 401 || retryResponse.status === 403) && typeof window !== "undefined") {
-          // Only logout on auth-related endpoints, not on data endpoints (404, 500, etc.)
-          const isAuthEndpoint = endpoint.includes("/auth/me") || 
-                                 endpoint.includes("/auth/refresh");
-          if (isAuthEndpoint && window.location.pathname.startsWith("/dashboard")) {
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
-            window.location.href = "/dashboard/login";
-          }
+        // If we are still unauthorized after a successful refresh, force logout
+        // (this can happen if the user was disabled, role revoked, or refresh token rotation desynced).
+        if (
+          (retryResponse.status === 401 || retryResponse.status === 403) &&
+          typeof window !== "undefined" &&
+          window.location.pathname.startsWith("/dashboard")
+        ) {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          window.location.href = "/dashboard/login?reason=session_expired";
         }
 
         throw error;
@@ -184,15 +184,10 @@ export async function apiRequest<T>(
         statusCode: response.status,
       }));
 
-      if (typeof window !== "undefined") {
-        // Only logout on auth-related endpoints when refresh fails, not on data endpoints
-        const isAuthEndpoint = endpoint.includes("/auth/me") || 
-                               endpoint.includes("/auth/refresh");
-        if (isAuthEndpoint && window.location.pathname.startsWith("/dashboard")) {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          window.location.href = "/dashboard/login";
-        }
+      if (typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/dashboard/login?reason=session_expired";
       }
 
       throw error;
@@ -205,16 +200,16 @@ export async function apiRequest<T>(
       statusCode: response.status,
     }));
 
-    // Only redirect on authentication endpoints (not on 404, 500, etc.)
-    if ((response.status === 401 || response.status === 403) && typeof window !== "undefined") {
-      // Only logout on auth-related endpoints, not on data endpoints
-      const isAuthEndpoint = endpoint.includes("/auth/me") || 
-                             endpoint.includes("/auth/refresh");
-      if (isAuthEndpoint && window.location.pathname.startsWith("/dashboard")) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        window.location.href = "/dashboard/login";
-      }
+    // If any dashboard request returns 401/403 (and refresh didn't apply), force re-login.
+    // This avoids the "it stops saving until I logout/login" experience.
+    if (
+      (response.status === 401 || response.status === 403) &&
+      typeof window !== "undefined" &&
+      window.location.pathname.startsWith("/dashboard")
+    ) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      window.location.href = "/dashboard/login?reason=session_expired";
     }
 
     throw error;

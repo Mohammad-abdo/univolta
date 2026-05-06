@@ -1,28 +1,15 @@
 import { API_BASE_URL } from "./constants";
-
-function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("accessToken");
-}
+import { apiRequest } from "./api";
 
 async function adminFetch<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getToken();
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers ?? {}),
-    },
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error ?? "Request failed");
-  }
-  return res.json() as Promise<T>;
+  // Use the shared API client:
+  // - attaches access token
+  // - auto refreshes token on 401
+  // - retries request once after refresh
+  return apiRequest<T>(path, options);
 }
 
 /* ── Contact Messages ──────────────────────────────────────────────────── */
@@ -110,8 +97,12 @@ export interface HomeSectionConfig {
 }
 
 export interface FooterContent {
+  titleEn?:   string;
+  titleAr?:   string;
   phone?:     string;
   email?:     string;
+  addressEn?: string;
+  addressAr?: string;
   address?:   string;
   copyright?: string;
   quickLinks?: Array<{ label: string; href: string }>;

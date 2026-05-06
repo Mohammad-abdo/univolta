@@ -125,6 +125,11 @@ export function Footer() {
 
   const isRTL = mounted && currentLang === "ar";
   const tl = (key: string) => t(key, currentLang);
+  const footerTitle =
+    isRTL ? footerContent?.titleAr?.trim() : footerContent?.titleEn?.trim();
+  const footerAddress =
+    (isRTL ? footerContent?.addressAr?.trim() : footerContent?.addressEn?.trim()) ||
+    footerContent?.address?.trim();
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,6 +254,11 @@ export function Footer() {
                 unoptimized
               />
             </div>
+            {footerTitle ? (
+              <h3 className="font-montserrat-bold text-base text-white">
+                {footerTitle}
+              </h3>
+            ) : null}
             <p className="font-montserrat-regular text-white/55 text-sm leading-relaxed">
               {tl("footerDescription")}
             </p>
@@ -310,7 +320,7 @@ export function Footer() {
                 { Icon: Phone,  text: footerContent?.phone || "+00 000 000 00 67" },
                 { Icon: Mail,   text: footerContent?.email || "info@univolta.com" },
                 { Icon: Globe,  text: "www.univolta.com" },
-                { Icon: MapPin, text: footerContent?.address || "Brooklyn, New York, USA" },
+                { Icon: MapPin, text: footerAddress || "Brooklyn, New York, USA" },
               ].map(({ Icon, text }) => (
                 <div key={text} className={`flex items-start gap-3 ${isRTL ? "flex-row-reverse" : ""}`}>
                   <div className="w-8 h-8 rounded-lg bg-[#5260ce]/40 flex items-center justify-center shrink-0">

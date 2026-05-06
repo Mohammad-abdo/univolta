@@ -11,9 +11,12 @@ import {
 type Tab = "contact" | "links" | "social";
 
 const DEFAULT: FooterContent = {
+  titleEn:    "UniVolta",
+  titleAr:    "يوني فولتا",
   phone:      "+20 100 000 0000",
   email:      "info@univolta.com",
-  address:    "Cairo, Egypt",
+  addressEn:  "Cairo, Egypt",
+  addressAr:  "القاهرة، مصر",
   copyright:  "© 2024 UniVolta. All rights reserved.",
   quickLinks: [
     { label: "Home",         href: "/" },
@@ -184,6 +187,20 @@ export default function FooterManager() {
           <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
+                <div className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Globe size={10} /></div>
+                Footer Title (English)
+              </label>
+              <input className={inp} value={data.titleEn ?? ""} onChange={(e) => setField("titleEn", e.target.value)} placeholder="UniVolta" />
+            </div>
+            <div>
+              <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
+                <div className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Globe size={10} /></div>
+                Footer Title (Arabic)
+              </label>
+              <input className={inp} value={data.titleAr ?? ""} onChange={(e) => setField("titleAr", e.target.value)} placeholder="يوني فولتا" />
+            </div>
+            <div>
+              <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
                 <div className="w-5 h-5 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><Phone size={10} /></div>
                 Phone Number
               </label>
@@ -199,9 +216,18 @@ export default function FooterManager() {
             <div className="sm:col-span-2">
               <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
                 <div className="w-5 h-5 rounded-lg bg-red-100 text-red-500 flex items-center justify-center"><MapPin size={10} /></div>
-                Address
+                Address (English)
               </label>
-              <input className={inp} value={data.address ?? ""} onChange={(e) => setField("address", e.target.value)} placeholder="Cairo, Egypt" />
+              <input className={inp} value={data.addressEn ?? data.address ?? ""} onChange={(e) => setField("addressEn", e.target.value)} placeholder="Cairo, Egypt" />
+              <p className="mt-1 text-[11px] text-gray-400">Shown when the site language is English.</p>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
+                <div className="w-5 h-5 rounded-lg bg-red-100 text-red-500 flex items-center justify-center"><MapPin size={10} /></div>
+                Address (Arabic)
+              </label>
+              <input className={inp} value={data.addressAr ?? ""} onChange={(e) => setField("addressAr", e.target.value)} placeholder="القاهرة، مصر" />
+              <p className="mt-1 text-[11px] text-gray-400">Shown when the site language is Arabic.</p>
             </div>
             <div className="sm:col-span-2">
               <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">

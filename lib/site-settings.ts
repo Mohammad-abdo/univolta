@@ -18,8 +18,12 @@ export interface HomeSectionSetting {
 }
 
 export interface FooterContentSetting {
+  titleEn?: string;
+  titleAr?: string;
   phone?: string;
   email?: string;
+  addressEn?: string;
+  addressAr?: string;
   address?: string;
   copyright?: string;
   quickLinks?: Array<{ label: string; href: string }>;

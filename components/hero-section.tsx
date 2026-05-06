@@ -225,16 +225,10 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
           ))} */}
 
           {/* Sparkle vector */}
-          <div
-            className="absolute w-[214px] h-[95px] overflow-hidden z-[4]"
-            style={{ left: "82.1%", top: 597 }}
-          >
-            <div className="absolute inset-0 rotate-[193.445deg]">
-              <div className="relative w-full h-full">
-                <Image src={figmaAssets.heroVector3} alt="" fill className="object-contain" unoptimized />
-              </div>
-            </div>
-          </div>
+          {/*
+            Removed per request:
+            Decorative sparkle vector that was rendering `/Vector (3).png` on the homepage hero.
+          */}
 
           {/* Sparkle star icon */}
           {/* <div
