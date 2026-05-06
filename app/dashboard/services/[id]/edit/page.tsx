@@ -34,12 +34,16 @@ export default function EditServicePage() {
     const load = async () => {
       try {
         const data = await apiGet<ServiceApi>(`/services/${params.id}`);
+        const totalSubServicesPrice =
+          data.subServices?.reduce((acc, item) => acc + Number(item.price || 0), 0) ?? 0;
+        // Backend stores `services.price` as (base + subServices). For editing we must derive base.
+        const derivedBasePrice = Math.max(0, Number(data.price || 0) - totalSubServicesPrice);
         setInitial({
           title: data.title,
           titleAr: data.titleAr || "",
           description: data.description,
           descriptionAr: data.descriptionAr || "",
-          price: String(data.price || "0"),
+          price: String(derivedBasePrice),
           discount: String(data.discount || "0"),
           mainImage: data.mainImage || "",
           images: data.images || [],

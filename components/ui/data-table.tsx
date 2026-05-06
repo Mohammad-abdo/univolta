@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, ReactNode } from "react";
+import { useEffect, useMemo, useState, ReactNode } from "react";
 import { Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { t, getLanguage } from "@/lib/i18n";
@@ -36,14 +36,17 @@ interface DataTableProps<T> {
   className?: string;
 }
 
+const DEFAULT_SEARCH_KEYS: any[] = [];
+const DEFAULT_FILTERS: any[] = [];
+
 export function DataTable<T extends { id: string }>({
   data,
   columns,
   loading = false,
   searchable = true,
   searchPlaceholder = "Search...",
-  searchKeys = [],
-  filters = [],
+  searchKeys = DEFAULT_SEARCH_KEYS,
+  filters = DEFAULT_FILTERS,
   pagination,
   emptyMessage = "No data found",
   className = "",
@@ -51,27 +54,52 @@ export function DataTable<T extends { id: string }>({
   const [searchTerm, setSearchTerm] = useState("");
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
   const [showFilters, setShowFilters] = useState(false);
-  const [filteredData, setFilteredData] = useState<T[]>(data);
   const [currentPage, setCurrentPage] = useState(pagination?.page || 1);
+
+  // Create stable signatures for array props to avoid reference-change triggers
+  const searchKeysSignature = useMemo(() => {
+    return JSON.stringify(searchKeys || []);
+  }, [searchKeys]);
+
+  const filterSignature = useMemo(() => {
+    return JSON.stringify(
+      (filters || []).map((f) => ({
+        key: f.key,
+        options: (f.options || []).map((o) => o.value),
+      }))
+    );
+  }, [filters]);
 
   // Initialize filter values
   useEffect(() => {
-    const initialFilters: Record<string, string> = {};
-    filters.forEach((filter) => {
-      initialFilters[filter.key] = "all";
+    const keys = (filters || []).map((f) => f.key);
+    setFilterValues((prev) => {
+      // Keep existing selections when possible; only add/remove keys as needed.
+      const next: Record<string, string> = {};
+      keys.forEach((k) => {
+        next[k] = prev[k] ?? "all";
+      });
+      return next;
     });
-    setFilterValues(initialFilters);
-  }, [filters]);
+  }, [filterSignature]);
 
-  // Apply filters and search
+  // Sync currentPage with pagination.page prop when it changes
   useEffect(() => {
+    if (pagination?.page !== undefined) {
+      setCurrentPage(pagination.page);
+    }
+  }, [pagination?.page]);
+
+  // Apply filters and search dynamically using useMemo (derived state)
+  const filteredData = useMemo(() => {
     let filtered = [...data];
 
     // Apply search
-    if (searchTerm && searchKeys.length > 0) {
+    const actualSearchKeys = searchKeys || [];
+    if (searchTerm && actualSearchKeys.length > 0) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter((item) =>
-        searchKeys.some((key) => {
+        actualSearchKeys.some((key) => {
           const value = item[key];
           return value && String(value).toLowerCase().includes(term);
         })
@@ -79,7 +107,8 @@ export function DataTable<T extends { id: string }>({
     }
 
     // Apply filters
-    filters.forEach((filter) => {
+    const actualFilters = filters || [];
+    actualFilters.forEach((filter) => {
       const filterValue = filterValues[filter.key];
       if (filterValue && filterValue !== "all") {
         filtered = filtered.filter((item) => {
@@ -93,14 +122,8 @@ export function DataTable<T extends { id: string }>({
       }
     });
 
-    setFilteredData(filtered);
-
-    // Reset to first page when filters change
-    if (pagination && (searchTerm || Object.values(filterValues).some(v => v !== "all"))) {
-      setCurrentPage(1);
-      pagination.onPageChange(1);
-    }
-  }, [data, searchTerm, filterValues, searchKeys, filters]);
+    return filtered;
+  }, [data, searchTerm, filterValues, searchKeysSignature, filterSignature]);
 
   // Calculate pagination
   const pageSize = pagination?.pageSize || 10;
@@ -159,7 +182,10 @@ export function DataTable<T extends { id: string }>({
                   <select
                     value={filterValues[filter.key] || "all"}
                     onChange={(e) =>
-                      setFilterValues({ ...filterValues, [filter.key]: e.target.value })
+                      setFilterValues((prev) => ({
+                        ...prev,
+                        [filter.key]: e.target.value,
+                      }))
                     }
                     className="w-full px-3 md:px-4 py-1.5 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5260ce] text-sm md:text-base"
                   >

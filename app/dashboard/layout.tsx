@@ -6,7 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/constants";
-import { canAccess, type UserRole } from "@/lib/permissions";
+import { type UserRole } from "@/lib/permissions";
+import { buildCan, fetchMeAuthz } from "@/lib/authz";
 import {
   LayoutDashboard,
   LayoutGrid,
@@ -190,7 +191,7 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
       href: "/dashboard/payments",
       label: t("payments"),
       icon: DollarSign,
-      permission: { resource: "applications", action: "read" },
+      permission: { resource: "payments", action: "read" },
     },
     {
       href: "/dashboard/arrivals",
@@ -217,15 +218,9 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
       permission: { resource: "users", action: "read" },
     },
     {
-      href: "/dashboard/permissions",
-      label: t("permissions"),
+      href: "/dashboard/access-control",
+      label: `${t("roles")} & ${t("permissions")}`,
       icon: KeyRound,
-      permission: { resource: "users", action: "read" },
-    },
-    {
-      href: "/dashboard/roles",
-      label: t("roles"),
-      icon: UsersRound,
       permission: { resource: "users", action: "read" },
     },
   ];
@@ -241,6 +236,7 @@ export default function DashboardLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isPartner, setIsPartner] = useState(false);
+  const [can, setCan] = useState<((resource: string, action: string) => boolean) | null>(null);
   const [currentLang, setCurrentLang] = useState<string>(() =>
     typeof window !== "undefined" && getLanguage() === "ar" ? "ar" : "en"
   );
@@ -352,24 +348,11 @@ export default function DashboardLayout({
       const refreshToken = localStorage.getItem("refreshToken");
 
       if (accessToken && refreshToken) {
-        const response = await fetch(`${API_BASE_URL}/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        if (!response.ok) {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          router.push("/dashboard/login");
-          return;
-        }
-
-        const userData = await response.json();
-        const role = userData.role?.toLowerCase() as UserRole;
+        const me = await fetchMeAuthz();
+        const role = me.role?.toLowerCase() as UserRole;
 
         // Allow admin, editor, university role, or partners (users with universityId) to access dashboard
-        const isPartnerUser = !!userData.universityId;
+        const isPartnerUser = !!me.universityId;
         const isUniversityRole = role === "university";
         if (role !== "admin" && role !== "editor" && role !== "university" && !isPartnerUser) {
           localStorage.removeItem("accessToken");
@@ -380,6 +363,7 @@ export default function DashboardLayout({
 
         setUserRole(role);
         setIsPartner(isPartnerUser || isUniversityRole);
+        setCan(() => buildCan(me.permissions || []));
         setIsAuthenticated(true);
         return;
       }
@@ -432,12 +416,8 @@ export default function DashboardLayout({
   // Filter menu items based on user permissions
   const menuItems = getMenuItems(isPartner, userRole || undefined).filter((item) => {
     if (!item.permission) return true; // Dashboard is always accessible
-    if (!userRole) return false; // No access if no user role
-    return canAccess(
-      userRole,
-      item.permission.resource as any,
-      item.permission.action as any
-    );
+    if (!can) return false;
+    return can(item.permission.resource as any, item.permission.action as any);
   });
 
   const layoutDir = currentLang === "ar" ? "rtl" : "ltr";

@@ -73,6 +73,7 @@ export interface SiteSettings {
   "site.logoUrl"?:      string;
   "site.footerLogoUrl"?: string;
   "site.tagline"?:      string;
+  "site.applicationFee"?: number | string;
   "hero.slides"?:       HeroSlide[];
   "home.sections"?:     HomeSectionConfig[];
   "footer.content"?:    FooterContent;

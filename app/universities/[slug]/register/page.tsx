@@ -100,6 +100,7 @@ function UniversityRegisterContent() {
   const [uploading, setUploading] = useState<string | null>(null);
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [appFee, setAppFee] = useState(100);
   /** Shown after step 1 when backend created a new student account and emailed credentials */
   const [accountEmailNotice, setAccountEmailNotice] = useState("");
   const [availableServices, setAvailableServices] = useState<PublicService[]>(
@@ -156,7 +157,7 @@ function UniversityRegisterContent() {
     [selectedServices]
   );
 
-  const totalAmount = useMemo(() => 100 + additionalFee, [additionalFee]);
+  const totalAmount = useMemo(() => appFee + additionalFee, [appFee, additionalFee]);
 
   const formatMoney = (value: number) => {
     const rounded = Math.round(value * 100) / 100;
@@ -173,6 +174,18 @@ function UniversityRegisterContent() {
           if (Array.isArray(servicesData)) {
             setAvailableServices(servicesData as PublicService[]);
           }
+        }
+
+        try {
+          const settingsRes = await fetch(`${API_BASE_URL}/settings`);
+          if (settingsRes.ok) {
+            const settingsData = await settingsRes.json();
+            if (settingsData && settingsData["site.applicationFee"] !== undefined) {
+              setAppFee(Number(settingsData["site.applicationFee"]) || 100);
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching site settings:", err);
         }
 
         const uniRes = await fetch(
@@ -303,7 +316,7 @@ function UniversityRegisterContent() {
           country: formData.country,
           universityId: university?.id,
           programId: program?.id,
-          applicationFee: 100, // Default application fee
+          applicationFee: appFee, // Default application fee
         };
         if (advisorRef) {
           payload.advisorRef = advisorRef;
@@ -1081,7 +1094,7 @@ function UniversityRegisterContent() {
                           </div>
                           <div>
                             <span className="font-montserrat-semibold text-gray-900">
-                              $100
+                              {"$" + appFee}
                             </span>
                           </div>
                           <div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { apiGet, apiPut } from "@/lib/api";
+import { apiGet, apiPatch, apiPut } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import { canAccess, type UserRole } from "@/lib/permissions";
 import { API_BASE_URL } from "@/lib/constants";
@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { t } from "@/lib/i18n";
+import { formatApplicationCode } from "@/lib/application-code";
 
 interface Application {
   id: string;
@@ -342,7 +343,7 @@ export default function ApplicationDetailPage() {
 
     setUpdatingStatus(true);
     try {
-      await apiPut(`/applications/${application.id}/status`, {
+      await apiPatch(`/applications/${application.id}/status`, {
         status: newStatus,
         reason: finalReason,
       });
@@ -461,7 +462,7 @@ export default function ApplicationDetailPage() {
               {t("studentApplicationDetails")}
             </h1>
             <p className="text-sm text-gray-500 mt-1">
-              ID: {application.id.slice(0, 8)}...
+              {t("applicationId")}: {formatApplicationCode(application.id)}
             </p>
           </div>
         </div>
@@ -1209,7 +1210,8 @@ export default function ApplicationDetailPage() {
             <div className="space-y-2 text-sm text-gray-700">
               <div>
                 <span className="font-semibold">{t("applicationId")}:</span>
-                <p className="font-mono text-xs mt-1">{application.id}</p>
+                <p className="font-mono text-base mt-1">{formatApplicationCode(application.id)}</p>
+                <p className="font-mono text-[11px] mt-1 text-gray-500 break-all">{application.id}</p>
               </div>
               <div>
                 <span className="font-semibold">{t("submitted")}:</span>

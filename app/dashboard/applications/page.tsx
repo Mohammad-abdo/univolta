@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { apiGet, apiPut } from "@/lib/api";
+import { apiGet, apiPatch } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import { canAccess, type UserRole } from "@/lib/permissions";
 import { API_BASE_URL } from "@/lib/constants";
@@ -84,7 +84,7 @@ export default function ApplicationsPage() {
 
   const updateStatus = async (id: string, status: Application["status"]) => {
     try {
-      await apiPut(`/applications/${id}/status`, { status });
+      await apiPatch(`/applications/${id}/status`, { status });
       showToast.success("Status updated");
       fetchApplications();
     } catch (e: any) { showToast.error(e.message || "Failed to update status"); }

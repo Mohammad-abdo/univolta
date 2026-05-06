@@ -5,6 +5,7 @@ export type Resource =
   | "services"
   | "programs"
   | "applications"
+  | "payments"
   | "testimonials"
   | "faqs"
   | "users"

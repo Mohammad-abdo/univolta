@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiGet, apiPut, apiDelete } from "@/lib/api";
 import { showToast } from "@/lib/toast";
-import { canAccess, type UserRole } from "@/lib/permissions";
-import { API_BASE_URL } from "@/lib/constants";
+import { type UserRole } from "@/lib/permissions";
+import { buildCan, fetchMeAuthz } from "@/lib/authz";
+import { t } from "@/lib/i18n";
 import {
   Plus, Trash2, Save, X, Search, RefreshCw,
   Users, Shield, UserCheck, UserX, Edit2, ChevronLeft, ChevronRight,
@@ -36,6 +37,7 @@ export default function UsersPage() {
   const [editingId,     setEditingId]     = useState<string | null>(null);
   const [editForm,      setEditForm]      = useState<{ role: UserRole; isActive: boolean } | null>(null);
   const [userRole,      setUserRole]      = useState<UserRole | null>(null);
+  const [authzCan,      setAuthzCan]      = useState<((resource: string, action: string) => boolean) | null>(null);
   const [search,        setSearch]        = useState("");
   const [roleFilter,    setRoleFilter]    = useState("all");
   const [statusFilter,  setStatusFilter]  = useState("all");
@@ -44,14 +46,9 @@ export default function UsersPage() {
   useEffect(() => {
     const init = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        if (token) {
-          const res = await fetch(`${API_BASE_URL}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
-          if (res.ok) {
-            const d = await res.json();
-            setUserRole(d.role?.toLowerCase() as UserRole);
-          }
-        }
+        const me = await fetchMeAuthz();
+        setUserRole(me.role?.toLowerCase() as UserRole);
+        setAuthzCan(() => buildCan(me.permissions || []));
       } catch { /* silent */ }
       fetchUsers();
     };
@@ -87,9 +84,9 @@ export default function UsersPage() {
     } catch (e: any) { showToast.error(e.message || "Delete failed"); }
   };
 
-  const canEdit   = userRole && canAccess(userRole, "users", "update");
-  const canCreate = userRole && canAccess(userRole, "users", "create");
-  const canDelete = userRole && canAccess(userRole, "users", "delete");
+  const canEdit   = !!authzCan && authzCan("users", "update");
+  const canCreate = !!authzCan && authzCan("users", "create");
+  const canDelete = !!authzCan && authzCan("users", "delete");
 
   const filtered = users.filter((u) => {
     const matchSearch = !search || u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
@@ -118,8 +115,8 @@ export default function UsersPage() {
               <Users size={22} />
             </div>
             <div>
-              <h1 className="text-xl font-bold">Users Management</h1>
-              <p className="text-indigo-200 text-sm">Manage roles, permissions and access</p>
+              <h1 className="text-xl font-bold">{t("usersManagementTitle")}</h1>
+              <p className="text-indigo-200 text-sm">{t("usersManagementSubtitle")}</p>
             </div>
           </div>
           {canCreate && (
@@ -127,7 +124,7 @@ export default function UsersPage() {
               href="/dashboard/users/add"
               className="inline-flex items-center gap-2 bg-white text-[#5260ce] hover:bg-indigo-50 active:scale-95 text-sm font-bold px-5 py-2.5 rounded-xl transition-all shadow-sm"
             >
-              <Plus size={16} /> Add User
+              <Plus size={16} /> {t("usersAddUser")}
             </Link>
           )}
         </div>
@@ -135,10 +132,10 @@ export default function UsersPage() {
         {/* Stats row */}
         <div className="flex gap-4 mt-5 flex-wrap">
           {[
-            { label: "Total Users",   value: users.length,  icon: <Users size={14} /> },
-            { label: "Active",        value: activeCount,   icon: <UserCheck size={14} /> },
-            { label: "Inactive",      value: users.length - activeCount, icon: <UserX size={14} /> },
-            { label: "Admins",        value: adminCount,    icon: <Shield size={14} /> },
+            { label: t("usersStatTotalUsers"),   value: users.length,  icon: <Users size={14} /> },
+            { label: t("usersStatActive"),       value: activeCount,   icon: <UserCheck size={14} /> },
+            { label: t("usersStatInactive"),     value: users.length - activeCount, icon: <UserX size={14} /> },
+            { label: t("usersStatAdmins"),       value: adminCount,    icon: <Shield size={14} /> },
           ].map((s) => (
             <div key={s.label} className="flex items-center gap-2 bg-white/15 rounded-xl px-4 py-2">
               <span className="text-indigo-200">{s.icon}</span>
@@ -155,7 +152,7 @@ export default function UsersPage() {
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent"
-            placeholder="Search by name or email…"
+            placeholder={t("usersSearchPlaceholder")}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
@@ -165,7 +162,7 @@ export default function UsersPage() {
           value={roleFilter}
           onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
         >
-          <option value="all">All Roles</option>
+          <option value="all">{t("usersAllRoles")}</option>
           <option value="admin">Admin</option>
           <option value="editor">Editor</option>
           <option value="user">User</option>
@@ -175,9 +172,9 @@ export default function UsersPage() {
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
         >
-          <option value="all">All Status</option>
-          <option value="true">Active</option>
-          <option value="false">Inactive</option>
+          <option value="all">{t("usersAllStatus")}</option>
+          <option value="true">{t("usersStatusActive")}</option>
+          <option value="false">{t("usersStatusInactive")}</option>
         </select>
         <button onClick={fetchUsers} className="w-10 h-10 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-center transition-colors">
           <RefreshCw size={14} className={`text-gray-500 ${loading ? "animate-spin" : ""}`} />

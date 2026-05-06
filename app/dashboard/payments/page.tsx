@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/api";
-import { canAccess, type UserRole } from "@/lib/permissions";
+import { type UserRole } from "@/lib/permissions";
 import { API_BASE_URL } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Search, Filter, DollarSign, CheckCircle, XCircle, Clock, Eye, Download, RotateCcw, X } from "lucide-react";
 import Link from "next/link";
 import { showToast } from "@/lib/toast";
 import { t } from "@/lib/i18n";
+import { buildCan, fetchMeAuthz } from "@/lib/authz";
 
 interface Payment {
   id: string;
@@ -34,6 +35,7 @@ export default function PaymentsPage() {
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [authzCan, setAuthzCan] = useState<((resource: string, action: string) => boolean) | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [methodFilter, setMethodFilter] = useState<string>("all");
@@ -44,30 +46,36 @@ export default function PaymentsPage() {
   const [submittingRefund, setSubmittingRefund] = useState(false);
 
   useEffect(() => {
-    fetchUserRole();
-    fetchPayments();
+    (async () => {
+      const ok = await fetchUserRole();
+      if (ok) {
+        await fetchPayments();
+      } else {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   useEffect(() => {
     filterPayments();
   }, [searchTerm, statusFilter, methodFilter, payments]);
 
-  const fetchUserRole = async () => {
+  const fetchUserRole = async (): Promise<boolean> => {
     try {
-      const accessToken = localStorage.getItem("accessToken");
-      if (accessToken) {
-        const response = await fetch(`${API_BASE_URL}/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        if (response.ok) {
-          const userData = await response.json();
-          setUserRole(userData.role?.toLowerCase() as UserRole);
-        }
+      const me = await fetchMeAuthz();
+      const role = me.role?.toLowerCase() as UserRole;
+      setUserRole(role);
+      const can = buildCan(me.permissions || []);
+      setAuthzCan(() => can);
+
+      if (!can("payments", "read")) {
+        showToast.error("You don't have permission to view payments.");
+        return false;
       }
+      return true;
     } catch (error) {
       console.error("Error fetching user role:", error);
+      return false;
     }
   };
 

@@ -16,6 +16,7 @@ interface FormState {
   tagline:       string;
   logoUrl:       string;
   footerLogoUrl: string;
+  applicationFee: number;
 }
 
 const DEFAULT: FormState = {
@@ -23,6 +24,7 @@ const DEFAULT: FormState = {
   tagline:       "Your Gateway to Egyptian Universities",
   logoUrl:       "",
   footerLogoUrl: "",
+  applicationFee: 100,
 };
 
 export default function SiteSettingsPage() {
@@ -46,6 +48,7 @@ export default function SiteSettingsPage() {
         tagline:       (s["site.tagline"]       as string) ?? DEFAULT.tagline,
         logoUrl:       (s["site.logoUrl"]       as string) ?? "",
         footerLogoUrl: (s["site.footerLogoUrl"] as string) ?? "",
+        applicationFee: Number(s["site.applicationFee"]) || DEFAULT.applicationFee,
       });
     } catch { /* use defaults */ }
     finally { setLoading(false); }
@@ -61,6 +64,7 @@ export default function SiteSettingsPage() {
         settingsApi.set("site.tagline",       form.tagline),
         settingsApi.set("site.logoUrl",       form.logoUrl),
         settingsApi.set("site.footerLogoUrl", form.footerLogoUrl),
+        settingsApi.set("site.applicationFee", Number(form.applicationFee) || 100),
       ]);
       showToast("success", "Settings saved successfully!");
     } catch (e: any) {
@@ -203,6 +207,23 @@ export default function SiteSettingsPage() {
                 placeholder="Your Gateway to Egyptian Universities"
               />
               <p className="text-xs text-gray-400 mt-1.5">Shown below the logo or as a meta description</p>
+            </div>
+            <div>
+              <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
+                <div className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-[10px]">
+                  $
+                </div>
+                Application Process Fee ($)
+              </label>
+              <input
+                type="number"
+                min="0"
+                className={inp}
+                value={form.applicationFee}
+                onChange={(e) => setForm((prev) => ({ ...prev, applicationFee: Number(e.target.value) }))}
+                placeholder="100"
+              />
+              <p className="text-xs text-gray-400 mt-1.5">Mandatory fixed fee paid by students when submitting applications</p>
             </div>
 
             {/* Character counts */}

@@ -6,12 +6,13 @@ import Link from "next/link";
 import { apiGet } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import {
-  canAccess,
+  canAccess as legacyCanAccess,
   type UserRole,
   type Resource,
   type Action,
 } from "@/lib/permissions";
 import { API_BASE_URL } from "@/lib/constants";
+import { buildCan, fetchMeAuthz } from "@/lib/authz";
 import {
   GraduationCap,
   BookOpen,
@@ -81,8 +82,14 @@ export default function DashboardPage() {
   const [programsByCountry, setProgramsByCountry] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [authzCan, setAuthzCan] = useState<((resource: string, action: string) => boolean) | null>(null);
   const [currentLang, setCurrentLang] = useState<string>("en");
   const router = useRouter();
+
+  const canAccess = (role: UserRole, resource: Resource, action: Action) => {
+    if (authzCan) return authzCan(resource, action);
+    return legacyCanAccess(role, resource, action);
+  };
 
   useEffect(() => {
     setCurrentLang(getLanguage());
@@ -103,20 +110,10 @@ export default function DashboardPage() {
 
   const fetchStats = async () => {
     try {
-      const accessToken = localStorage.getItem("accessToken");
-      if (!accessToken) return;
-
-      const userResponse = await fetch(`${API_BASE_URL}/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!userResponse.ok) return;
-
-      const userData = await userResponse.json();
-      const role = userData.role?.toLowerCase() as UserRole;
+      const me = await fetchMeAuthz();
+      const role = me.role?.toLowerCase() as UserRole;
       setUserRole(role);
+      setAuthzCan(() => buildCan(me.permissions || []));
 
       const promises: Promise<any>[] = [];
 
@@ -177,9 +174,9 @@ export default function DashboardPage() {
       ).length;
 
       // Calculate revenue from paid applications
-      const totalRevenue = applications.reduce((sum: number, app: any) => {
-        return sum + (Number(app.totalFee) || 0);
-      }, 0);
+      const totalRevenue = canAccess(role, "payments", "read")
+        ? applications.reduce((sum: number, app: any) => sum + (Number(app.totalFee) || 0), 0)
+        : 0;
 
       // Applications this month
       const now = new Date();
@@ -190,14 +187,14 @@ export default function DashboardPage() {
       }).length;
 
       // Revenue this month
-      const revenueThisMonth = applications
-        .filter((app: any) => {
-          const appDate = new Date(app.createdAt);
-          return appDate >= startOfMonth;
-        })
-        .reduce((sum: number, app: any) => {
-          return sum + (Number(app.totalFee) || 0);
-        }, 0);
+      const revenueThisMonth = canAccess(role, "payments", "read")
+        ? applications
+            .filter((app: any) => {
+              const appDate = new Date(app.createdAt);
+              return appDate >= startOfMonth;
+            })
+            .reduce((sum: number, app: any) => sum + (Number(app.totalFee) || 0), 0)
+        : 0;
 
       // Generate monthly chart data (last 12 months)
       const monthlyData: ChartData[] = [];
@@ -212,9 +209,9 @@ export default function DashboardPage() {
           return appDate >= monthStart && appDate <= monthEnd;
         });
 
-        const monthRevenue = monthApps.reduce((sum: number, app: any) => {
-          return sum + (Number(app.totalFee) || 0);
-        }, 0);
+        const monthRevenue = canAccess(role, "payments", "read")
+          ? monthApps.reduce((sum: number, app: any) => sum + (Number(app.totalFee) || 0), 0)
+          : 0;
 
         const monthApproved = monthApps.filter((app: any) => app.status === "APPROVED").length;
         const monthPending = monthApps.filter((app: any) => app.status === "PENDING").length;
