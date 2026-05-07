@@ -135,7 +135,7 @@ export default async function UniversityDetailPage({
   const programsByDepartment: Record<string, any[]> = {};
   university.programs?.forEach((program: any) => {
     const department =
-      program.department || program.name.split(" ")[0] || "Other";
+      program.department || program.name.split(" ")[0] || t("otherDepartment");
     if (!programsByDepartment[department]) {
       programsByDepartment[department] = [];
     }
@@ -197,9 +197,19 @@ export default async function UniversityDetailPage({
             <div className="absolute top-4 left-4">
               {(() => {
                 const isOpen = university.admissionStatus !== "CLOSED";
+                const deadlineText = (() => {
+                  if (!isOpen || !university.admissionDeadline) return "";
+                  const locale = lang === "ar" ? "ar-EG" : "en-GB";
+                  const date = new Date(university.admissionDeadline).toLocaleDateString(locale, {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  });
+                  return t("admissionUntil").replace("{date}", date);
+                })();
                 return (
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold shadow-md backdrop-blur-sm border ${
+                    className={`inline-flex max-w-[calc(100vw-2rem)] flex-wrap items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold shadow-md backdrop-blur-sm border ${
                       isOpen
                         ? "bg-green-500/90 text-white border-green-400"
                         : "bg-red-500/90 text-white border-red-400"
@@ -212,10 +222,13 @@ export default async function UniversityDetailPage({
                     <span className="relative -ml-3.5">
                       <span className={`w-2 h-2 rounded-full inline-block ${isOpen ? "bg-white" : "bg-white/70"}`} />
                     </span>
-                    {isOpen ? "Admission Open" : "Admission Closed"}
-                    {isOpen && university.admissionDeadline && (
-                      <span className="opacity-80">
-                        &nbsp;· until {new Date(university.admissionDeadline).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                    <span className="whitespace-nowrap">
+                      {isOpen ? t("admissionOpen") : t("admissionClosed")}
+                    </span>
+                    {deadlineText && (
+                      <span className={`opacity-85 ${lang === "ar" ? "me-1" : ""}`}>
+                        <span className="mx-1">·</span>
+                        <span className="whitespace-nowrap">{deadlineText}</span>
                       </span>
                     )}
                   </span>
@@ -228,7 +241,7 @@ export default async function UniversityDetailPage({
               <div className="absolute top-4 right-4">
                 <Badge className="bg-[#5260ce]/90 text-white text-xs font-montserrat-semibold shadow-md backdrop-blur-sm border-0 px-3 py-1.5">
                   <Trophy className="w-3 h-3 mr-1.5" />
-                  #{university.worldRanking} World Ranking
+                  #{university.worldRanking} {t("worldRankingLabel")}
                 </Badge>
               </div>
             )}
@@ -294,7 +307,7 @@ export default async function UniversityDetailPage({
                       <div className="relative w-6 h-6 shrink-0">
                         <Image
                           src={getCountryFlag(university.country)}
-                          alt="Country"
+                          alt={t("countryAlt")}
                           fill
                           className="object-contain"
                           unoptimized
@@ -324,7 +337,7 @@ export default async function UniversityDetailPage({
                       <div className="relative w-6 h-6 shrink-0">
                         <Image
                           src={getLanguageFlag(university.language)}
-                          alt="Language"
+                          alt={t("languageAlt")}
                           fill
                           className="object-contain"
                           unoptimized
@@ -602,7 +615,7 @@ export default async function UniversityDetailPage({
                         {uni.worldRanking && (
                           <div className="absolute top-3 left-3">
                             <Badge className="bg-[#5260ce]/90 text-white text-xs font-montserrat-semibold shadow-sm">
-                              <Trophy className="w-3 h-3 mr-1" />#{uni.worldRanking} World
+                              <Trophy className="w-3 h-3 mr-1" />#{uni.worldRanking} {t("worldShort")}
                             </Badge>
                           </div>
                         )}

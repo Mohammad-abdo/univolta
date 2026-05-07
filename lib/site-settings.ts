@@ -37,6 +37,15 @@ export interface FooterContentSetting {
   socialLinks?: Array<{ platform: string; href: string }>;
 }
 
+export interface HomeVideoSetting {
+  url?: string;
+  posterUrl?: string;
+  titleEn?: string;
+  titleAr?: string;
+  subEn?: string;
+  subAr?: string;
+}
+
 export interface PublicSiteSettings {
   "site.name"?: string;
   "site.logoUrl"?: string;
@@ -44,6 +53,7 @@ export interface PublicSiteSettings {
   "site.tagline"?: string;
   "hero.slides"?: HeroSlideSetting[];
   "home.sections"?: HomeSectionSetting[];
+  "home.video"?: HomeVideoSetting;
   "home.stats"?: HomeStatsSetting;
   "footer.content"?: FooterContentSetting;
 }

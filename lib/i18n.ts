@@ -890,6 +890,11 @@ const translations: Record<Language, Record<string, string>> = {
     heroAriaPreviousSlide: "Previous slide",
     heroAriaNextSlide: "Next slide",
     heroAriaGoToSlide: "Go to slide {n}",
+    homeVideoBadge: "Video",
+    homeVideoPlay: "Play",
+    homeVideoPause: "Pause",
+    homeVideoMuted: "Muted",
+    homeVideoSound: "Sound",
     // Hero animated stats
     studentsStatLabel: "Students",
     universitiesStatLabel: "Universities",
@@ -1110,6 +1115,14 @@ const translations: Record<Language, Record<string, string>> = {
     usersStatusInactive: "Inactive",
     usersNoUsersFound: "No users found",
 
+    // University detail admission badge
+    admissionOpen: "Admission Open",
+    admissionUntil: "until {date}",
+    worldRankingLabel: "World Ranking",
+    worldShort: "World",
+    countryAlt: "Country",
+    languageAlt: "Language",
+    otherDepartment: "Other",
   },
   ar: {
     home: "الرئيسية",
@@ -1879,6 +1892,11 @@ const translations: Record<Language, Record<string, string>> = {
     heroAriaPreviousSlide: "الشريحة السابقة",
     heroAriaNextSlide: "الشريحة التالية",
     heroAriaGoToSlide: "الانتقال إلى الشريحة {n}",
+    homeVideoBadge: "فيديو",
+    homeVideoPlay: "تشغيل",
+    homeVideoPause: "إيقاف",
+    homeVideoMuted: "صامت",
+    homeVideoSound: "صوت",
     // Hero animated stats
     studentsStatLabel: "طالب",
     universitiesStatLabel: "جامعة",
@@ -2099,6 +2117,14 @@ const translations: Record<Language, Record<string, string>> = {
     usersStatusInactive: "غير نشط",
     usersNoUsersFound: "لا يوجد مستخدمون",
 
+    // University detail admission badge
+    admissionOpen: "القبول مفتوح",
+    admissionUntil: "حتى {date}",
+    worldRankingLabel: "التصنيف العالمي",
+    worldShort: "عالمي",
+    countryAlt: "الدولة",
+    languageAlt: "اللغة",
+    otherDepartment: "أخرى",
   },
 };
 

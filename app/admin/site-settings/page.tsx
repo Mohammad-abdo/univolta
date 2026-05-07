@@ -17,6 +17,12 @@ interface FormState {
   logoUrl:       string;
   footerLogoUrl: string;
   applicationFee: number;
+  homeVideoUrl: string;
+  homeVideoPosterUrl: string;
+  homeVideoTitleEn: string;
+  homeVideoTitleAr: string;
+  homeVideoSubEn: string;
+  homeVideoSubAr: string;
 }
 
 const DEFAULT: FormState = {
@@ -25,6 +31,12 @@ const DEFAULT: FormState = {
   logoUrl:       "",
   footerLogoUrl: "",
   applicationFee: 100,
+  homeVideoUrl: "",
+  homeVideoPosterUrl: "",
+  homeVideoTitleEn: "See how UniVolta works",
+  homeVideoTitleAr: "شاهد كيف تعمل UniVolta",
+  homeVideoSubEn: "A quick walkthrough of the student journey from choosing a university to submission and support.",
+  homeVideoSubAr: "جولة سريعة توضح رحلة الطالب من اختيار الجامعة حتى التقديم والدعم.",
 };
 
 export default function SiteSettingsPage() {
@@ -33,6 +45,7 @@ export default function SiteSettingsPage() {
   const [saving,     setSaving]     = useState(false);
   const [tab,        setTab]        = useState<Tab>("general");
   const [uploading,  setUploading]  = useState<"logoUrl" | "footerLogoUrl" | null>(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [toast,      setToast]      = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
   const showToast = (type: "success" | "error", msg: string) => {
@@ -43,12 +56,19 @@ export default function SiteSettingsPage() {
   const loadSettings = useCallback(async () => {
     try {
       const s = await settingsApi.getAll();
+      const homeVideo = (s["home.video"] as any) ?? {};
       setForm({
         siteName:      (s["site.name"]         as string) ?? DEFAULT.siteName,
         tagline:       (s["site.tagline"]       as string) ?? DEFAULT.tagline,
         logoUrl:       (s["site.logoUrl"]       as string) ?? "",
         footerLogoUrl: (s["site.footerLogoUrl"] as string) ?? "",
         applicationFee: Number(s["site.applicationFee"]) || DEFAULT.applicationFee,
+        homeVideoUrl: String(homeVideo?.url ?? ""),
+        homeVideoPosterUrl: String(homeVideo?.posterUrl ?? ""),
+        homeVideoTitleEn: String(homeVideo?.titleEn ?? DEFAULT.homeVideoTitleEn),
+        homeVideoTitleAr: String(homeVideo?.titleAr ?? DEFAULT.homeVideoTitleAr),
+        homeVideoSubEn: String(homeVideo?.subEn ?? DEFAULT.homeVideoSubEn),
+        homeVideoSubAr: String(homeVideo?.subAr ?? DEFAULT.homeVideoSubAr),
       });
     } catch { /* use defaults */ }
     finally { setLoading(false); }
@@ -65,6 +85,14 @@ export default function SiteSettingsPage() {
         settingsApi.set("site.logoUrl",       form.logoUrl),
         settingsApi.set("site.footerLogoUrl", form.footerLogoUrl),
         settingsApi.set("site.applicationFee", Number(form.applicationFee) || 100),
+        settingsApi.set("home.video", {
+          url: form.homeVideoUrl,
+          posterUrl: form.homeVideoPosterUrl,
+          titleEn: form.homeVideoTitleEn,
+          titleAr: form.homeVideoTitleAr,
+          subEn: form.homeVideoSubEn,
+          subAr: form.homeVideoSubAr,
+        }),
       ]);
       showToast("success", "Settings saved successfully!");
     } catch (e: any) {
@@ -89,6 +117,26 @@ export default function SiteSettingsPage() {
       else showToast("error", "Upload failed — no URL returned");
     } catch { showToast("error", "Upload failed"); }
     finally { setUploading(null); }
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingVideo(true);
+    const token = localStorage.getItem("accessToken");
+    const base  = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000/api/v1";
+    const fd    = new FormData();
+    fd.append("video", file);
+    try {
+      const res  = await fetch(`${base}/upload/video`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd });
+      const data = await res.json();
+      if (data.url) setForm((prev) => ({ ...prev, homeVideoUrl: data.url }));
+      else showToast("error", "Upload failed — no URL returned");
+    } catch {
+      showToast("error", "Upload failed");
+    } finally {
+      setUploadingVideo(false);
+    }
   };
 
   if (loading) {
@@ -331,6 +379,98 @@ export default function SiteSettingsPage() {
           ))}
         </div>
       )}
+
+      {/* Video */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+          <h2 className="font-bold text-gray-800 flex items-center gap-2">
+            <Upload size={16} className="text-[#5260ce]" /> Home Video
+          </h2>
+          <p className="text-xs text-gray-500 mt-0.5">Upload a short MP4/WebM and it will appear on the homepage</p>
+        </div>
+        <div className="p-6 space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-2 block">Video URL</label>
+              <input
+                type="text"
+                className={inp}
+                value={form.homeVideoUrl}
+                onChange={(e) => setForm((p) => ({ ...p, homeVideoUrl: e.target.value }))}
+                placeholder="/uploads/videos/home-video-xxx.mp4"
+              />
+              <div className="mt-3 flex items-center gap-3">
+                <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-sm font-semibold cursor-pointer transition-all">
+                  <Upload size={16} />
+                  {uploadingVideo ? "Uploading…" : "Upload video"}
+                  <input type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} disabled={uploadingVideo} />
+                </label>
+                <span className="text-xs text-gray-400">Max 100MB · mp4/webm/ogg/mov</span>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-2 block">Poster Image URL (optional)</label>
+              <input
+                type="text"
+                className={inp}
+                value={form.homeVideoPosterUrl}
+                onChange={(e) => setForm((p) => ({ ...p, homeVideoPosterUrl: e.target.value }))}
+                placeholder="/uploads/university-xxx.webp"
+              />
+              <p className="text-xs text-gray-400 mt-1.5">Use the image uploader above (Logos tab) or paste a URL</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-2 block">Title (EN)</label>
+              <input
+                type="text"
+                className={inp}
+                value={form.homeVideoTitleEn}
+                onChange={(e) => setForm((p) => ({ ...p, homeVideoTitleEn: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-2 block">Title (AR)</label>
+              <input
+                type="text"
+                className={inp}
+                value={form.homeVideoTitleAr}
+                onChange={(e) => setForm((p) => ({ ...p, homeVideoTitleAr: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-2 block">Subtitle (EN)</label>
+              <input
+                type="text"
+                className={inp}
+                value={form.homeVideoSubEn}
+                onChange={(e) => setForm((p) => ({ ...p, homeVideoSubEn: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-2 block">Subtitle (AR)</label>
+              <input
+                type="text"
+                className={inp}
+                value={form.homeVideoSubAr}
+                onChange={(e) => setForm((p) => ({ ...p, homeVideoSubAr: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          {form.homeVideoUrl && (
+            <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+              <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Preview</p>
+              <video src={form.homeVideoUrl} poster={form.homeVideoPosterUrl || undefined} controls className="w-full rounded-xl overflow-hidden bg-black" />
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Save Bar */}
       <div className="sticky bottom-0 z-10 bg-white/95 backdrop-blur-sm border-t border-gray-100 -mx-6 px-6 py-4 flex items-center justify-between">

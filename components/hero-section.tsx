@@ -30,7 +30,14 @@ const SLIDES = [
 const INTERVAL_MS = 5500;
 
 /* ── Component ──────────────────────────────────────────────────────────── */
-export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSetting[] }) {
+export function HeroSection({
+  slidesOverride,
+  ready = true,
+}: {
+  slidesOverride?: HeroSlideSetting[];
+  /** When false, do NOT show default slides yet (prevents flicker). */
+  ready?: boolean;
+}) {
   const [searchQuery,  setSearchQuery]  = useState("");
   /* Always start with "en" → server and first client render match (hydration-safe) */
   const [currentLang,  setCurrentLang]  = useState<Language>("en");
@@ -39,7 +46,7 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
   const [prevSlide,    setPrevSlide]    = useState<number | null>(null);
   const [paused,       setPaused]       = useState(false);
   const router = useRouter();
-  const slides = slidesOverride && slidesOverride.length > 0 ? slidesOverride : SLIDES;
+  const slides = ready ? (slidesOverride && slidesOverride.length > 0 ? slidesOverride : SLIDES) : [];
 
   /* isRTL is false until mounted → server HTML == initial client HTML */
   const isRTL = mounted && currentLang === "ar";
@@ -71,6 +78,32 @@ export function HeroSection({ slidesOverride }: { slidesOverride?: HeroSlideSett
     const id = setInterval(() => goTo(activeSlide + 1), INTERVAL_MS);
     return () => clearInterval(id);
   }, [activeSlide, paused, goTo]);
+
+  // While settings are still loading, render a stable placeholder (no default images).
+  if (!ready) {
+    const gradient = isRTL
+      ? "linear-gradient(to left,  white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)"
+      : "linear-gradient(to right, white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)";
+    return (
+      <section
+        className="relative min-h-[560px] overflow-hidden pt-20 lg:h-[793px] lg:min-h-0 lg:pt-0"
+        dir={isRTL ? "rtl" : "ltr"}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-[#f7f9ff] via-white to-white" />
+        <div className="absolute inset-0" style={{ background: gradient }} />
+        <div className="absolute inset-0 z-[2] pointer-events-none">
+          <ParticleField />
+        </div>
+        <div className="max-w-[1440px] mx-auto relative h-full px-4 md:px-5 z-[3]">
+          <div className="pt-6 lg:pt-24">
+            <div className="h-8 w-[260px] rounded-xl bg-gray-200/70 animate-pulse" />
+            <div className="mt-4 h-12 w-[520px] max-w-full rounded-2xl bg-gray-200/70 animate-pulse" />
+            <div className="mt-3 h-5 w-[420px] max-w-full rounded-xl bg-gray-200/60 animate-pulse" />
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const rotatingWords = [tl("heroWord1"), tl("heroWord2"), tl("heroWord3")];
   const currentSlideData = slides[activeSlide] as HeroSlideSetting | (typeof SLIDES)[number];

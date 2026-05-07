@@ -77,6 +77,7 @@ export interface SiteSettings {
   "site.applicationFee"?: number | string;
   "hero.slides"?:       HeroSlide[];
   "home.sections"?:     HomeSectionConfig[];
+  "home.video"?:        unknown;
   "home.stats"?:        HomeStatsSetting;
   "footer.content"?:    FooterContent;
 }
