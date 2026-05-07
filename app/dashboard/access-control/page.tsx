@@ -440,11 +440,29 @@ export default function AccessControlPage() {
       header: "Resource",
       render: (p) =>
         editingPermissionId === p.id && editPermissionForm ? (
-          <input
-            className="border border-gray-300 rounded px-2 py-1 text-sm w-full"
+          <select
+            className="border border-gray-300 rounded px-2 py-1 text-sm w-full focus:ring-2 focus:ring-[#5260ce]"
             value={editPermissionForm.resource}
             onChange={(e) => setEditPermissionForm({ ...editPermissionForm, resource: e.target.value })}
-          />
+          >
+            <option value="">{t("selectResource")}</option>
+            <option value="users">users</option>
+            <option value="roles">roles</option>
+            <option value="permissions">permissions</option>
+            <option value="universities">universities</option>
+            <option value="programs">programs</option>
+            <option value="departments">departments</option>
+            <option value="semesters">semesters</option>
+            <option value="degrees">degrees</option>
+            <option value="applications">applications</option>
+            <option value="testimonials">testimonials</option>
+            <option value="faqs">faqs</option>
+            <option value="settings">settings</option>
+            <option value="services">services</option>
+            <option value="contact-messages">contact-messages</option>
+            <option value="alerts">alerts</option>
+            <option value="advisors">advisors</option>
+          </select>
         ) : (
           <span className="font-semibold text-gray-900">{p.resource}</span>
         ),
@@ -454,11 +472,17 @@ export default function AccessControlPage() {
       header: "Action",
       render: (p) =>
         editingPermissionId === p.id && editPermissionForm ? (
-          <input
-            className="border border-gray-300 rounded px-2 py-1 text-sm w-full"
+          <select
+            className="border border-gray-300 rounded px-2 py-1 text-sm w-full focus:ring-2 focus:ring-[#5260ce]"
             value={editPermissionForm.action}
             onChange={(e) => setEditPermissionForm({ ...editPermissionForm, action: e.target.value })}
-          />
+          >
+            <option value="">{t("selectAction")}</option>
+            <option value="create">{t("create")}</option>
+            <option value="read">{t("read")}</option>
+            <option value="update">{t("update")}</option>
+            <option value="delete">{t("delete")}</option>
+          </select>
         ) : (
           <span className="font-mono text-xs text-gray-800">{p.action}</span>
         ),
@@ -813,21 +837,43 @@ export default function AccessControlPage() {
             <div className="mt-4 space-y-3">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">{t("accessControlResource")}</label>
-                <input
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                <select
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#5260ce]"
                   value={createPermissionForm.resource}
                   onChange={(e) => setCreatePermissionForm((p) => ({ ...p, resource: e.target.value }))}
-                  placeholder="e.g. applications"
-                />
+                >
+                  <option value="">{t("selectResource")}</option>
+                  <option value="users">users</option>
+                  <option value="roles">roles</option>
+                  <option value="permissions">permissions</option>
+                  <option value="universities">universities</option>
+                  <option value="programs">programs</option>
+                  <option value="departments">departments</option>
+                  <option value="semesters">semesters</option>
+                  <option value="degrees">degrees</option>
+                  <option value="applications">applications</option>
+                  <option value="testimonials">testimonials</option>
+                  <option value="faqs">faqs</option>
+                  <option value="settings">settings</option>
+                  <option value="services">services</option>
+                  <option value="contact-messages">contact-messages</option>
+                  <option value="alerts">alerts</option>
+                  <option value="advisors">advisors</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">{t("accessControlAction")}</label>
-                <input
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                <select
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#5260ce]"
                   value={createPermissionForm.action}
                   onChange={(e) => setCreatePermissionForm((p) => ({ ...p, action: e.target.value }))}
-                  placeholder="e.g. read"
-                />
+                >
+                  <option value="">{t("selectAction")}</option>
+                  <option value="create">{t("create")}</option>
+                  <option value="read">{t("read")}</option>
+                  <option value="update">{t("update")}</option>
+                  <option value="delete">{t("delete")}</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">{t("accessControlDescription")}</label>
