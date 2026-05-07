@@ -179,6 +179,12 @@ export default function ApplicationDetailPage() {
   const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
   const [loadingEmailLogs, setLoadingEmailLogs] = useState(false);
 
+  // Manual Advisor Assignment
+  const [advisors, setAdvisors] = useState<any[]>([]);
+  const [editingAdvisor, setEditingAdvisor] = useState(false);
+  const [selectedAdvisorId, setSelectedAdvisorId] = useState<string | null>(null);
+  const [savingAdvisor, setSavingAdvisor] = useState(false);
+
   // Rejection preset reasons
   const REJECTION_REASONS = [
     "Insufficient GPA / المعدل غير كافي",
@@ -192,10 +198,20 @@ export default function ApplicationDetailPage() {
     if (applicationId) {
       fetchUserRole();
       fetchApplication();
+      fetchAdvisors();
     } else {
       setLoading(false);
     }
   }, [params?.id]);
+
+  const fetchAdvisors = async () => {
+    try {
+      const data = await apiGet<any[]>("/advisors");
+      setAdvisors(data);
+    } catch {
+      // User might not have permission, silently fail
+    }
+  };
 
   const fetchUserRole = async () => {
     try {
@@ -395,6 +411,21 @@ export default function ApplicationDetailPage() {
       showToast.error(error.message || "Failed to save notes");
     } finally {
       setSavingNotes(false);
+    }
+  };
+
+  const saveAdvisor = async () => {
+    if (!application) return;
+    setSavingAdvisor(true);
+    try {
+      await apiPatch(`/applications/${application.id}/advisor`, { advisorId: selectedAdvisorId });
+      showToast.success("Advisor updated successfully!");
+      setEditingAdvisor(false);
+      await fetchApplication();
+    } catch (error: any) {
+      showToast.error(error.message || "Failed to update advisor");
+    } finally {
+      setSavingAdvisor(false);
     }
   };
 
@@ -839,55 +870,85 @@ export default function ApplicationDetailPage() {
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-6">
           {/* Application Advisor */}
-          {application.advisor ? (
-            <div className="bg-white rounded-lg shadow border border-[#CBD5F5] p-5 space-y-4">
+          <div className="bg-white rounded-lg shadow border border-[#CBD5F5] p-5 space-y-4">
+            <div className="flex items-center justify-between">
               <h3 className="text-base font-montserrat-bold text-[#121c67] flex items-center gap-2">
                 <User className="w-5 h-5 text-[#5260ce]" />
                 {t("appDetailApplicationAdvisor")}
               </h3>
-              <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                <div
-                  className="w-14 h-14 rounded-full shrink-0 flex items-center justify-center text-white font-bold text-sm bg-gradient-to-br from-[#5260ce] to-[#7c3aed]"
-                  aria-hidden
+              {canUpdate && !editingAdvisor && (
+                <Button size="sm" variant="outline" onClick={() => {
+                  setSelectedAdvisorId(application.advisor?.id || null);
+                  setEditingAdvisor(true);
+                }} className="text-xs h-7 px-2">
+                  <Edit className="w-3 h-3 mr-1" /> Edit
+                </Button>
+              )}
+            </div>
+
+            {editingAdvisor ? (
+              <div className="space-y-3">
+                <select
+                  value={selectedAdvisorId || ""}
+                  onChange={(e) => setSelectedAdvisorId(e.target.value || null)}
+                  className="w-full p-2 border border-[#CBD5F5] rounded-lg text-sm focus:ring-2 focus:ring-[#5260ce]"
                 >
-                  {advisorInitials(application.advisor.name)}
-                </div>
-                <div className="min-w-0 flex-1 space-y-1">
-                  <p className="font-bold text-[#121c67] leading-tight">{application.advisor.name}</p>
-                  <p className="text-sm text-gray-600">{application.advisor.title}</p>
-                  {application.advisor.institution ? (
-                    <p className="text-sm text-gray-500">{application.advisor.institution}</p>
-                  ) : null}
-                  {application.advisor.availability ? (
-                    <p className="text-xs text-gray-400 mt-2 flex items-start gap-1.5">
-                      <Clock className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden />
-                      <span>{application.advisor.availability}</span>
-                    </p>
-                  ) : null}
+                  <option value="">-- No Advisor --</option>
+                  {advisors.map(adv => (
+                    <option key={adv.id} value={adv.id}>{adv.name} ({adv.title})</option>
+                  ))}
+                </select>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={saveAdvisor} disabled={savingAdvisor} className="flex-1 bg-[#5260ce] hover:bg-[#4350b0]">
+                    <Save className="w-4 h-4 mr-1" /> {savingAdvisor ? "Saving..." : "Save"}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setEditingAdvisor(false)} className="flex-1">
+                    Cancel
+                  </Button>
                 </div>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full border-[#CBD5F5] text-[#121c67] hover:bg-[#EEF2FF] rounded-xl"
-                onClick={() => {
-                  const digits = application.advisor!.whatsappE164.replace(/\D/g, "");
-                  if (digits) window.open(`https://wa.me/${digits}`, "_blank", "noopener,noreferrer");
-                }}
-              >
-                <MessageCircle className="w-4 h-4 mr-2 rtl:mr-0 rtl:ml-2" />
-                {t("appDetailSendMessage")}
-              </Button>
-            </div>
-          ) : (
-            <div className="bg-gray-50 rounded-lg border border-dashed border-gray-200 p-5">
-              <h3 className="text-sm font-montserrat-bold text-gray-600 flex items-center gap-2 mb-1">
-                <User className="w-4 h-4" />
-                {t("appDetailApplicationAdvisor")}
-              </h3>
-              <p className="text-xs text-gray-500">{t("dashboardApplicationNoAdvisor")}</p>
-            </div>
-          )}
+            ) : application.advisor ? (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                  <div
+                    className="w-14 h-14 rounded-full shrink-0 flex items-center justify-center text-white font-bold text-sm bg-gradient-to-br from-[#5260ce] to-[#7c3aed]"
+                    aria-hidden
+                  >
+                    {advisorInitials(application.advisor.name)}
+                  </div>
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <p className="font-bold text-[#121c67] leading-tight">{application.advisor.name}</p>
+                    <p className="text-sm text-gray-600">{application.advisor.title}</p>
+                    {application.advisor.institution ? (
+                      <p className="text-sm text-gray-500">{application.advisor.institution}</p>
+                    ) : null}
+                    {application.advisor.availability ? (
+                      <p className="text-xs text-gray-400 mt-2 flex items-start gap-1.5">
+                        <Clock className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden />
+                        <span>{application.advisor.availability}</span>
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-[#CBD5F5] text-[#121c67] hover:bg-[#EEF2FF] rounded-xl"
+                  onClick={() => {
+                    const digits = application.advisor!.whatsappE164.replace(/\D/g, "");
+                    if (digits) window.open(`https://wa.me/${digits}`, "_blank", "noopener,noreferrer");
+                  }}
+                >
+                  <MessageCircle className="w-4 h-4 mr-2 rtl:mr-0 rtl:ml-2" />
+                  {t("appDetailSendMessage")}
+                </Button>
+              </>
+            ) : (
+              <div className="bg-gray-50 rounded-lg border border-dashed border-gray-200 p-5 mt-2">
+                <p className="text-xs text-gray-500">{t("dashboardApplicationNoAdvisor")}</p>
+              </div>
+            )}
+          </div>
 
           {/* Status Update */}
           {canUpdate && (
