@@ -73,6 +73,30 @@ const egyptianCities = [
   { en: "Kafr El Dawwar", ar: "كفر الدوار" },
 ];
 
+const countryOptions = [
+  { code: "EG", dialCode: "+20", en: "Egypt", ar: "مصر" },
+  { code: "SA", dialCode: "+966", en: "Saudi Arabia", ar: "السعودية" },
+  { code: "AE", dialCode: "+971", en: "United Arab Emirates", ar: "الإمارات" },
+  { code: "QA", dialCode: "+974", en: "Qatar", ar: "قطر" },
+  { code: "KW", dialCode: "+965", en: "Kuwait", ar: "الكويت" },
+  { code: "BH", dialCode: "+973", en: "Bahrain", ar: "البحرين" },
+  { code: "OM", dialCode: "+968", en: "Oman", ar: "عُمان" },
+  { code: "JO", dialCode: "+962", en: "Jordan", ar: "الأردن" },
+  { code: "LB", dialCode: "+961", en: "Lebanon", ar: "لبنان" },
+  { code: "IQ", dialCode: "+964", en: "Iraq", ar: "العراق" },
+  { code: "MA", dialCode: "+212", en: "Morocco", ar: "المغرب" },
+  { code: "DZ", dialCode: "+213", en: "Algeria", ar: "الجزائر" },
+  { code: "TN", dialCode: "+216", en: "Tunisia", ar: "تونس" },
+  { code: "LY", dialCode: "+218", en: "Libya", ar: "ليبيا" },
+  { code: "SD", dialCode: "+249", en: "Sudan", ar: "السودان" },
+  { code: "TR", dialCode: "+90", en: "Turkey", ar: "تركيا" },
+  { code: "DE", dialCode: "+49", en: "Germany", ar: "ألمانيا" },
+  { code: "FR", dialCode: "+33", en: "France", ar: "فرنسا" },
+  { code: "GB", dialCode: "+44", en: "United Kingdom", ar: "المملكة المتحدة" },
+  { code: "US", dialCode: "+1", en: "United States", ar: "الولايات المتحدة" },
+  { code: "CA", dialCode: "+1", en: "Canada", ar: "كندا" },
+];
+
 /** When true, `POST /applications` sends Bearer token so the app is linked to the current user (no auto signup). */
 function hasAccessToken(): boolean {
   if (typeof window === "undefined") return false;
@@ -101,7 +125,7 @@ function UniversityRegisterContent() {
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [appFee, setAppFee] = useState(100);
-  /** Shown after step 1 when backend created a new student account and emailed credentials */
+  /** Previously shown after step 1 when backend created a student account; kept for compatibility. */
   const [accountEmailNotice, setAccountEmailNotice] = useState("");
   const [availableServices, setAvailableServices] = useState<PublicService[]>(
     []
@@ -121,7 +145,6 @@ function UniversityRegisterContent() {
     // Step 2: Additional Services
     selectedServiceIds: [] as string[],
     universityCity: "",
-    expectedArrivalDate: "",
     additionalNotes: "",
     // Step 3: Documents
     documents: {} as Record<string, { file: File; url: string }>,
@@ -139,6 +162,27 @@ function UniversityRegisterContent() {
   const [program, setProgram] = useState<any>(null);
   const lang = getLanguage();
   const isRTL = lang === "ar";
+
+  const [phoneCountryCode, setPhoneCountryCode] = useState("+20");
+  const [phoneNationalNumber, setPhoneNationalNumber] = useState("");
+  const [phoneCodeManuallySet, setPhoneCodeManuallySet] = useState(false);
+
+  const dialCodeByCountryName = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const c of countryOptions) {
+      map.set(c.en.toLowerCase(), c.dialCode);
+      map.set(c.ar.toLowerCase(), c.dialCode);
+    }
+    return map;
+  }, []);
+
+  // Keep formData.phone as E.164-like string.
+  useEffect(() => {
+    const digits = phoneNationalNumber.replace(/[^\d]/g, "");
+    const code = phoneCountryCode.startsWith("+") ? phoneCountryCode : `+${phoneCountryCode}`;
+    const next = digits ? `${code}${digits}` : "";
+    setFormData((prev) => (prev.phone === next ? prev : { ...prev, phone: next }));
+  }, [phoneCountryCode, phoneNationalNumber]);
 
   const selectedServices = useMemo(
     () =>
@@ -355,9 +399,6 @@ function UniversityRegisterContent() {
             formData.additionalNotes?.trim() || "",
             formData.universityCity
               ? `Preferred city: ${formData.universityCity}`
-              : "",
-            formData.expectedArrivalDate
-              ? `Expected arrival date: ${formData.expectedArrivalDate}`
               : "",
           ]
             .filter(Boolean)
@@ -727,7 +768,7 @@ function UniversityRegisterContent() {
                   </div>
                   <div className="mt-4 md:mt-6 flex justify-center">
                     <Image
-                      src="/117030 1.png"
+                      src="/copywriting-icon.png"
                       alt=""
                       width={100}
                       height={100}
@@ -780,23 +821,73 @@ function UniversityRegisterContent() {
                           { label: t("fullName"),               key: "fullName",              type: "text",  required: true },
                           { label: t("email"),                  key: "email",                 type: "email", required: true },
                           { label: t("personalAddress"),        key: "personalAddress",       type: "text",  required: false },
-                          { label: t("country"),                key: "country",               type: "text",  required: true },
+                          { label: t("country"),                key: "country",               type: "select_country",  required: true },
                           { label: t("dateOfBirth"),            key: "dateOfBirth",           type: "date",  required: false },
                           { label: t("academicQualification"),  key: "academicQualification", type: "text",  required: false },
                           { label: t("idPassportNumber"),       key: "identityNumber",        type: "text",  required: false },
-                          { label: t("phone"),                  key: "phone",                 type: "tel",   required: false },
+                          { label: t("phone"),                  key: "phone",                 type: "phone_e164",   required: false },
                         ].map(({ label, key, type, required }) => (
                           <div key={key}>
                             <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">
                               {label} {required && <span className="text-red-500">*</span>}
                             </label>
-                            <input
-                              type={type}
-                              value={(formData as any)[key]}
-                              onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
-                              required={required}
-                              className="input-enhanced"
-                            />
+                            {type === "select_country" ? (
+                              <select
+                                value={formData.country}
+                                onChange={(e) => {
+                                  const country = e.target.value;
+                                  setFormData((prev) => ({ ...prev, country }));
+                                  if (!phoneCodeManuallySet) {
+                                    const dial = dialCodeByCountryName.get(country.toLowerCase());
+                                    if (dial) setPhoneCountryCode(dial);
+                                  }
+                                }}
+                                required={required}
+                                className="input-enhanced"
+                              >
+                                <option value="">{isRTL ? "اختر الدولة" : "Select country"}</option>
+                                {countryOptions.map((c) => (
+                                  <option key={c.code} value={isRTL ? c.ar : c.en}>
+                                    {isRTL ? c.ar : c.en}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : type === "phone_e164" ? (
+                              <div className="flex gap-2 items-stretch">
+                                <select
+                                  value={phoneCountryCode}
+                                  onChange={(e) => {
+                                    setPhoneCountryCode(e.target.value);
+                                    setPhoneCodeManuallySet(true);
+                                  }}
+                                  className="flex-none w-[104px] sm:w-[120px] border-[1.5px] border-[#e0e6f1] rounded-xl px-3 py-3 bg-white text-sm font-montserrat-regular text-[#2e2e2e] outline-none focus:border-[#5260ce] focus:shadow-[0_0_0_3px_rgba(82,96,206,0.12)]"
+                                >
+                                  {countryOptions
+                                    .map((c) => c.dialCode)
+                                    .filter((v, i, arr) => arr.indexOf(v) === i)
+                                    .map((dial) => (
+                                      <option key={dial} value={dial}>
+                                        {dial}
+                                      </option>
+                                    ))}
+                                </select>
+                                <input
+                                  type="tel"
+                                  value={phoneNationalNumber}
+                                  onChange={(e) => setPhoneNationalNumber(e.target.value)}
+                                  placeholder={isRTL ? "رقم الهاتف" : "Phone number"}
+                                  className="input-enhanced flex-1 min-w-0"
+                                />
+                              </div>
+                            ) : (
+                              <input
+                                type={type}
+                                value={(formData as any)[key]}
+                                onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                                required={required}
+                                className="input-enhanced"
+                              />
+                            )}
                           </div>
                         ))}
                       </div>
@@ -906,28 +997,6 @@ function UniversityRegisterContent() {
                               </option>
                             ))}
                           </select>
-                        </div>
-                        <div>
-                          <label className="block font-montserrat-semibold text-sm mb-2">
-                            {t("expectedArrivalDate")}
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="date"
-                              value={formData.expectedArrivalDate}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  expectedArrivalDate: e.target.value,
-                                })
-                              }
-                              placeholder={t("specifyArrivalDate")}
-                              className="input-enhanced pr-10"
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                              📅
-                            </span>
-                          </div>
                         </div>
                         <div>
                           <label className="block font-montserrat-semibold text-sm mb-2">
@@ -1125,7 +1194,7 @@ function UniversityRegisterContent() {
                         <label className="block font-montserrat-semibold text-sm mb-3">
                           {t("paymentOptions")}
                         </label>
-                        <div className="flex gap-4 mb-4">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
                           <label className="flex items-center gap-2 cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-[#5260ce] transition-colors flex-1">
                             <input
                               type="radio"
@@ -1172,7 +1241,7 @@ function UniversityRegisterContent() {
 
                         {formData.paymentMethod === "credit_card" && (
                           <div className="bg-[#f9fafe] rounded-xl p-4 border border-gray-100 space-y-4">
-                            <div className="grid md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="md:col-span-2">
                                 <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">{t("cardNumber")}</label>
                                 <input type="text" value={formData.cardNumber} onChange={(e) => setFormData({ ...formData, cardNumber: e.target.value })} placeholder="1234 5678 9012 3456" className="input-enhanced" />
@@ -1181,7 +1250,7 @@ function UniversityRegisterContent() {
                                 <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">{t("cardholderName")}</label>
                                 <input type="text" value={formData.cardholderName} onChange={(e) => setFormData({ ...formData, cardholderName: e.target.value })} placeholder="John Doe" className="input-enhanced" />
                               </div>
-                              <div className="grid grid-cols-2 gap-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                   <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">{t("expiry")}</label>
                                   <input type="text" value={formData.expiryDate} onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })} placeholder="MM/YY" className="input-enhanced" />
