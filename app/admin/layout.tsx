@@ -16,6 +16,7 @@ import {
   Globe,
 } from "lucide-react";
 import { CreditBar } from "@/components/credit-bar";
+import { t } from "@/lib/i18n";
 
 interface NavItem {
   href:  string;
@@ -25,12 +26,12 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/admin",              label: "CMS Dashboard",   icon: <LayoutDashboard size={18} /> },
-  { href: "/admin/dashboard",    label: "Full Dashboard",  icon: <LayoutDashboard size={18} /> },
-  { href: "/admin/site-settings",label: "Site Settings",   icon: <Settings         size={18} /> },
-  { href: "/admin/homepage",     label: "Home Page",       icon: <Home             size={18} /> },
-  { href: "/admin/footer",       label: "Footer",          icon: <Globe            size={18} /> },
-  { href: "/admin/messages",     label: "Messages",        icon: <MessageSquare    size={18} /> },
+  { href: "/admin",               label: t("adminCmsDashboard"),  icon: <LayoutDashboard size={18} /> },
+  { href: "/admin/dashboard",     label: t("adminFullDashboard"), icon: <LayoutDashboard size={18} /> },
+  { href: "/admin/site-settings", label: t("sidebarCmsSiteSettings"), icon: <Settings size={18} /> },
+  { href: "/admin/homepage",      label: t("sidebarCmsHomepage"), icon: <Home size={18} /> },
+  { href: "/admin/footer",        label: t("sidebarCmsFooter"), icon: <Globe size={18} /> },
+  { href: "/admin/messages",      label: t("sidebarCmsMessages"), icon: <MessageSquare size={18} /> },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -38,7 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router    = useRouter();
   const [open, setOpen]           = useState(false);
   const [unread, setUnread]       = useState(0);
-  const [adminName, setAdminName] = useState("Admin");
+  const [adminName, setAdminName] = useState(t("admin"));
 
   useEffect(() => {
     // Check authentication
@@ -93,7 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             <div>
               <p className="text-white font-bold text-sm leading-none">UniVolta</p>
-              <p className="text-indigo-300 text-xs mt-0.5">Admin Panel</p>
+              <p className="text-indigo-300 text-xs mt-0.5">{t("adminPanel")}</p>
             </div>
           </div>
         </div>
@@ -140,7 +141,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             <div className="min-w-0">
               <p className="text-white text-sm font-medium truncate">{adminName}</p>
-              <p className="text-indigo-300 text-xs">Administrator</p>
+              <p className="text-indigo-300 text-xs">{t("administrator")}</p>
             </div>
           </div>
           <button
@@ -148,7 +149,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-indigo-200 hover:bg-white/10 hover:text-white text-sm transition-all"
           >
             <LogOut size={16} />
-            <span>Logout</span>
+            <span>{t("logout")}</span>
           </button>
         </div>
       </aside>

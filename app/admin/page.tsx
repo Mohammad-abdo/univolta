@@ -13,6 +13,7 @@ import {
   CheckCircle,
   TrendingUp,
 } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 interface Stats {
   totalMessages: number;
@@ -40,9 +41,9 @@ export default function AdminDashboard() {
     {
       href:    "/admin/messages",
       icon:    <MessageSquare size={22} />,
-      label:   "Messages",
+      label:   t("sidebarCmsMessages"),
       value:   loading ? "–" : String(stats.totalMessages),
-      sub:     loading ? "" : `${stats.unreadMessages} unread`,
+      sub:     loading ? "" : t("adminUnreadMessagesCount").replace("{count}", String(stats.unreadMessages)),
       color:   "from-[#5260ce] to-[#7c3aed]",
       textBg:  "bg-indigo-50",
       textCol: "text-indigo-600",
@@ -50,9 +51,9 @@ export default function AdminDashboard() {
     {
       href:    "/admin/homepage",
       icon:    <Home size={22} />,
-      label:   "Home Page",
-      value:   "Manage",
-      sub:     "Hero, sections & content",
+      label:   t("sidebarCmsHomepage"),
+      value:   t("adminManage"),
+      sub:     t("adminHomeCardSub"),
       color:   "from-[#0ea5e9] to-[#2563eb]",
       textBg:  "bg-sky-50",
       textCol: "text-sky-600",
@@ -60,9 +61,9 @@ export default function AdminDashboard() {
     {
       href:    "/admin/site-settings",
       icon:    <Settings size={22} />,
-      label:   "Site Settings",
-      value:   "Configure",
-      sub:     "Logos, name & colours",
+      label:   t("sidebarCmsSiteSettings"),
+      value:   t("adminConfigure"),
+      sub:     t("adminSiteSettingsCardSub"),
       color:   "from-[#f59e0b] to-[#d97706]",
       textBg:  "bg-amber-50",
       textCol: "text-amber-600",
@@ -70,9 +71,9 @@ export default function AdminDashboard() {
     {
       href:    "/admin/footer",
       icon:    <Globe size={22} />,
-      label:   "Footer",
-      value:   "Edit",
-      sub:     "Links, contacts & social",
+      label:   t("sidebarCmsFooter"),
+      value:   t("edit"),
+      sub:     t("adminFooterCardSub"),
       color:   "from-[#10b981] to-[#059669]",
       textBg:  "bg-emerald-50",
       textCol: "text-emerald-600",
@@ -83,16 +84,16 @@ export default function AdminDashboard() {
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Welcome */}
       <div className="bg-gradient-to-r from-[#1e1b4b] to-[#312e81] rounded-2xl p-6 text-white">
-        <h2 className="text-2xl font-bold mb-1">Welcome to UniVolta Admin</h2>
+        <h2 className="text-2xl font-bold mb-1">{t("adminWelcomeTitle")}</h2>
         <p className="text-indigo-200 text-sm">
-          Manage your site content, hero banner, footer, and incoming messages from one place.
+          {t("adminWelcomeSubtitle")}
         </p>
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-2 mt-4 bg-indigo-500/70 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-xl transition-all"
         >
           <ShieldCheck size={15} />
-          Open Full Management Dashboard
+          {t("adminOpenFullDashboard")}
           <ArrowRight size={14} />
         </Link>
         {stats.unreadMessages > 0 && (
@@ -101,7 +102,7 @@ export default function AdminDashboard() {
             className="inline-flex items-center gap-2 mt-4 ml-3 bg-white/20 hover:bg-white/30 text-white text-sm font-medium px-4 py-2 rounded-xl transition-all"
           >
             <Mail size={15} />
-            You have {stats.unreadMessages} unread message{stats.unreadMessages > 1 ? "s" : ""}
+            {t("adminYouHaveUnread").replace("{count}", String(stats.unreadMessages))}
             <ArrowRight size={14} />
           </Link>
         )}
@@ -124,7 +125,7 @@ export default function AdminDashboard() {
               <p className="text-2xl font-bold text-gray-800">{card.value}</p>
               <p className="text-gray-400 text-xs mt-0.5">{card.sub}</p>
               <div className={`flex items-center gap-1 mt-3 ${card.textCol} text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity`}>
-                <span>Go to {card.label}</span>
+                <span>{t("adminGoTo").replace("{label}", card.label)}</span>
                 <ArrowRight size={12} />
               </div>
             </div>
@@ -136,15 +137,15 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
           <TrendingUp size={18} className="text-indigo-500" />
-          Quick Actions
+          {t("quickActions")}
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
-            { href: "/dashboard", label: "Open full backend panel", sub: "Users, roles, universities, programs and more" },
-            { href: "/admin/homepage", label: "Edit hero slides",     sub: "Change banner images and text" },
-            { href: "/admin/homepage", label: "Toggle home sections", sub: "Show/hide sections on the home page" },
-            { href: "/admin/site-settings", label: "Update logos",    sub: "Change site logo and footer logo" },
-            { href: "/admin/footer",   label: "Update contact info",  sub: "Phone, email, and address" },
+            { href: "/dashboard", label: t("adminQuickOpenBackend"), sub: t("adminQuickOpenBackendSub") },
+            { href: "/admin/homepage", label: t("adminQuickEditHero"),     sub: t("adminQuickEditHeroSub") },
+            { href: "/admin/homepage", label: t("adminQuickToggleSections"), sub: t("adminQuickToggleSectionsSub") },
+            { href: "/admin/site-settings", label: t("adminQuickUpdateLogos"),    sub: t("adminQuickUpdateLogosSub") },
+            { href: "/admin/footer",   label: t("adminQuickUpdateContact"),  sub: t("adminQuickUpdateContactSub") },
           ].map((a) => (
             <Link
               key={a.label}

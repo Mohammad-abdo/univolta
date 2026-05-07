@@ -60,7 +60,7 @@ export default function UsersPage() {
     try {
       const data = await apiGet<User[]>("/users");
       setUsers(data);
-    } catch { showToast.error("Failed to load users"); }
+    } catch { showToast.error(t("failedToLoadUsers")); }
     finally { setLoading(false); }
   };
 
@@ -71,17 +71,17 @@ export default function UsersPage() {
       await fetchUsers();
       setEditingId(null);
       setEditForm(null);
-      showToast.success("User updated!");
-    } catch (e: any) { showToast.error(e.message || "Update failed"); }
+      showToast.success(t("userUpdated"));
+    } catch (e: any) { showToast.error(e.message || t("updateFailed")); }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this user? This cannot be undone.")) return;
+    if (!confirm(t("confirmDeleteUser"))) return;
     try {
       await apiDelete(`/users/${id}`);
-      showToast.success("User deleted!");
+      showToast.success(t("userDeleted"));
       fetchUsers();
-    } catch (e: any) { showToast.error(e.message || "Delete failed"); }
+    } catch (e: any) { showToast.error(e.message || t("deleteFailed")); }
   };
 
   const canEdit   = !!authzCan && authzCan("users", "update");

@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock, ShieldCheck, ChevronRight, Loader2, AlertCircle, GraduationCap, Users, Edit3 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/constants";
 import { showToast } from "@/lib/toast";
+import { t } from "@/lib/i18n";
 
 const ROLES = [
   {
     key: "admin",
     icon: <ShieldCheck size={16} />,
-    label: "Admin",
+    label: t("admin"),
     email: "admin@univolta.com",
     password: "admin123",
     color: "from-violet-500 to-indigo-600",
@@ -22,7 +23,7 @@ const ROLES = [
   {
     key: "editor",
     icon: <Edit3 size={16} />,
-    label: "Editor",
+    label: t("editor"),
     email: "editor@univolta.com",
     password: "user123",
     color: "from-amber-500 to-orange-500",
@@ -34,7 +35,7 @@ const ROLES = [
   {
     key: "university",
     icon: <GraduationCap size={16} />,
-    label: "University",
+    label: t("university"),
     email: "admin@cairouniversity.univolta.com",
     password: "university123",
     color: "from-sky-500 to-cyan-500",
@@ -108,7 +109,7 @@ export default function DashboardLoginPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        const msg  = data.message || data.error || `Login failed (${res.status})`;
+        const msg  = data.message || data.error || `${t("dashLoginFailed")} (${res.status})`;
         setError(msg);
         showToast.error(msg);
         return;
@@ -120,16 +121,16 @@ export default function DashboardLoginPage() {
       if (role === "admin" || role === "editor" || role === "university" || data.user?.universityId) {
         localStorage.setItem("accessToken",  data.accessToken);
         localStorage.setItem("refreshToken", data.refreshToken);
-        showToast.success(`Welcome back, ${data.user?.name || "User"}!`);
+        showToast.success(t("dashLoginWelcomeBack").replace("{name}", data.user?.name || t("user")));
         router.push(role === "university" || data.user?.universityId ? "/dashboard/partner" : "/dashboard");
         router.refresh();
       } else {
-        const msg = "Access denied. Admin, Editor, or University role required.";
+        const msg = t("dashLoginAccessDenied");
         setError(msg);
         showToast.error(msg);
       }
     } catch {
-      const msg = "Connection error. Please try again.";
+      const msg = t("dashLoginConnectionError");
       setError(msg);
       showToast.error(msg);
     } finally {
@@ -230,13 +231,13 @@ export default function DashboardLoginPage() {
 
           {/* Heading */}
           <div className="mb-8">
-            <h1 className="text-3xl font-extrabold text-white leading-tight">Sign in</h1>
-            <p className="text-white/40 text-sm mt-1.5">Enter your credentials to access the dashboard</p>
+            <h1 className="text-3xl font-extrabold text-white leading-tight">{t("dashLoginSignInTitle")}</h1>
+            <p className="text-white/40 text-sm mt-1.5">{t("dashLoginSignInSubtitle")}</p>
           </div>
 
           {/* Role quick-select */}
           <div className="mb-7">
-            <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-3">Quick select role</p>
+            <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-3">{t("dashLoginQuickSelectRole")}</p>
             <div className="grid grid-cols-3 gap-2">
               {ROLES.map((r) => (
                 <button
@@ -264,7 +265,7 @@ export default function DashboardLoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div className="space-y-1.5">
-              <label className="text-white/50 text-xs font-semibold uppercase tracking-wider">Email address</label>
+              <label className="text-white/50 text-xs font-semibold uppercase tracking-wider">{t("dashLoginEmailAddress")}</label>
               <div className="relative">
                 <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
                 <input
@@ -273,7 +274,7 @@ export default function DashboardLoginPage() {
                   onChange={(e) => { setEmail(e.target.value); setActiveRole(null); }}
                   required
                   autoComplete="email"
-                  placeholder="your@email.com"
+                  placeholder={t("dashLoginEmailPlaceholder")}
                   className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
                 />
               </div>
@@ -281,7 +282,7 @@ export default function DashboardLoginPage() {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label className="text-white/50 text-xs font-semibold uppercase tracking-wider">Password</label>
+              <label className="text-white/50 text-xs font-semibold uppercase tracking-wider">{t("password")}</label>
               <div className="relative">
                 <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
                 <input
@@ -318,9 +319,9 @@ export default function DashboardLoginPage() {
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-60 active:scale-[0.98] text-white font-bold text-sm py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-indigo-900/50 mt-2"
             >
               {loading ? (
-                <><Loader2 size={16} className="animate-spin" /> Signing in…</>
+                <><Loader2 size={16} className="animate-spin" /> {t("dashLoginSigningIn")}</>
               ) : (
-                <>Sign In <ChevronRight size={16} /></>
+                <>{t("dashLoginSignInButton")} <ChevronRight size={16} /></>
               )}
             </button>
           </form>
@@ -328,7 +329,7 @@ export default function DashboardLoginPage() {
           {/* Divider */}
           <div className="flex items-center gap-3 my-7">
             <div className="flex-1 h-px bg-white/10" />
-            <span className="text-white/20 text-xs font-medium">credentials reference</span>
+            <span className="text-white/20 text-xs font-medium">{t("dashLoginCredentialsReference")}</span>
             <div className="flex-1 h-px bg-white/10" />
           </div>
 
@@ -344,11 +345,11 @@ export default function DashboardLoginPage() {
                 </div>
                 <div className="space-y-0.5">
                   <p className="text-white/40 text-[11px]">
-                    <span className="text-white/25">Email: </span>
+                    <span className="text-white/25">{t("dashLoginEmailShort")}: </span>
                     <span className="text-white/50 font-mono">{r.email}</span>
                   </p>
                   <p className="text-white/40 text-[11px]">
-                    <span className="text-white/25">Pass: </span>
+                    <span className="text-white/25">{t("dashLoginPassShort")}: </span>
                     <span className="text-white/50 font-mono">{r.password}</span>
                   </p>
                 </div>
@@ -358,7 +359,7 @@ export default function DashboardLoginPage() {
 
           {/* Bottom note */}
           <p className="text-center text-white/20 text-xs mt-8">
-            UniVolta Admin Portal — Internal use only
+            {t("dashLoginInternalUseOnly")}
           </p>
         </div>
       </div>

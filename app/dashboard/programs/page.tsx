@@ -6,6 +6,7 @@ import { apiGet, apiDelete } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import { canAccess, type UserRole } from "@/lib/permissions";
 import { API_BASE_URL } from "@/lib/constants";
+import { t } from "@/lib/i18n";
 import {
   Plus, Edit2, Trash2, Eye, Search, RefreshCw,
   BookOpen, Clock, Globe, DollarSign, GraduationCap,
@@ -83,17 +84,17 @@ export default function ProgramsPage() {
     try {
       const data = await apiGet<Program[]>("/programs");
       setPrograms(data);
-    } catch { showToast.error("Failed to load programs"); }
+    } catch { showToast.error(t("failedToLoadPrograms")); }
     finally { setLoading(false); }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this program? This cannot be undone.")) return;
+    if (!confirm(t("confirmDeleteProgram"))) return;
     try {
       await apiDelete(`/programs/${id}`);
-      showToast.success("Program deleted");
+      showToast.success(t("programDeleted"));
       fetchPrograms();
-    } catch (e: any) { showToast.error(e.message || "Delete failed"); }
+    } catch (e: any) { showToast.error(e.message || t("deleteFailed")); }
   };
 
   const degrees = Array.from(new Set(programs.map((p) => p.degree).filter(Boolean))) as string[];
@@ -121,25 +122,25 @@ export default function ProgramsPage() {
               <BookOpen size={22} />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight">Programs</h1>
-              <p className="text-emerald-200 text-sm mt-0.5">Manage all academic programs</p>
+              <h1 className="text-2xl font-extrabold tracking-tight">{t("programs")}</h1>
+              <p className="text-emerald-200 text-sm mt-0.5">{t("programsSubtitle")}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-center">
               <p className="text-xl font-bold">{programs.length}</p>
-              <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider">Total</p>
+              <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider">{t("total")}</p>
             </div>
             <div className="bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-center">
               <p className="text-xl font-bold">{active}</p>
-              <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider">Active</p>
+              <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider">{t("active")}</p>
             </div>
             {userRole && canAccess(userRole, "programs", "create") && (
               <Link
                 href="/dashboard/programs/add"
                 className="inline-flex items-center gap-2 bg-white text-emerald-700 hover:bg-emerald-50 active:scale-95 font-bold text-sm px-5 py-2.5 rounded-xl transition-all shadow-sm"
               >
-                <Plus size={16} /> Add Program
+                <Plus size={16} /> {t("addProgram")}
               </Link>
             )}
           </div>
@@ -152,7 +153,7 @@ export default function ProgramsPage() {
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-transparent"
-            placeholder="Search programs, university, degree…"
+            placeholder={t("searchProgramsDashboard")}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
@@ -162,9 +163,9 @@ export default function ProgramsPage() {
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
         >
-          <option value="all">All Status</option>
-          <option value="true">Active</option>
-          <option value="false">Inactive</option>
+          <option value="all">{t("allStatus")}</option>
+          <option value="true">{t("active")}</option>
+          <option value="false">{t("inactive")}</option>
         </select>
         {degrees.length > 0 && (
           <select
@@ -172,7 +173,7 @@ export default function ProgramsPage() {
             value={degreeFilter}
             onChange={(e) => { setDegreeFilter(e.target.value); setPage(1); }}
           >
-            <option value="all">All Degrees</option>
+            <option value="all">{t("allDegrees")}</option>
             {degrees.map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
         )}
@@ -206,13 +207,13 @@ export default function ProgramsPage() {
             <BookOpen size={24} className="text-gray-300" />
           </div>
           <div className="text-center">
-            <p className="font-semibold text-gray-600">No programs found</p>
-            <p className="text-sm text-gray-400 mt-1">{search ? "Try a different search" : "Add your first program to get started"}</p>
+            <p className="font-semibold text-gray-600">{t("noProgramsFoundDashboard")}</p>
+            <p className="text-sm text-gray-400 mt-1">{search ? t("tryDifferentSearch") : t("addFirstProgramHint")}</p>
           </div>
           {!search && userRole && canAccess(userRole, "programs", "create") && (
             <Link href="/dashboard/programs/add"
               className="inline-flex items-center gap-2 bg-emerald-600 text-white font-bold text-sm px-5 py-2.5 rounded-xl hover:bg-emerald-700 transition-all">
-              <Plus size={16} /> Add Program
+              <Plus size={16} /> {t("addProgram")}
             </Link>
           )}
         </div>
@@ -233,7 +234,7 @@ export default function ProgramsPage() {
                     prog.isActive ? "bg-emerald-500/90 text-white" : "bg-red-500/90 text-white"
                   }`}>
                     {prog.isActive ? <CheckCircle size={9} /> : <XCircle size={9} />}
-                    {prog.isActive ? "Active" : "Inactive"}
+                    {prog.isActive ? t("active") : t("inactive")}
                   </div>
                 </div>
 

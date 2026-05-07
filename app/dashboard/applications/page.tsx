@@ -28,10 +28,10 @@ interface Application {
 }
 
 const STATUS_CONFIG = {
-  PENDING:  { bg: "bg-amber-50",   text: "text-amber-700",   border: "border-amber-200",   icon: <Clock      size={12} />, dot: "bg-amber-400",   label: "Pending"  },
-  REVIEW:   { bg: "bg-blue-50",    text: "text-blue-700",    border: "border-blue-200",    icon: <AlertCircle size={12} />, dot: "bg-blue-400",   label: "Review"   },
-  APPROVED: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", icon: <CheckCircle size={12} />, dot: "bg-emerald-400", label: "Approved" },
-  REJECTED: { bg: "bg-red-50",     text: "text-red-700",     border: "border-red-200",     icon: <XCircle    size={12} />, dot: "bg-red-400",    label: "Rejected" },
+  PENDING:  { bg: "bg-amber-50",   text: "text-amber-700",   border: "border-amber-200",   icon: <Clock      size={12} />, dot: "bg-amber-400",   label: t("pending")  },
+  REVIEW:   { bg: "bg-blue-50",    text: "text-blue-700",    border: "border-blue-200",    icon: <AlertCircle size={12} />, dot: "bg-blue-400",   label: t("review")   },
+  APPROVED: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", icon: <CheckCircle size={12} />, dot: "bg-emerald-400", label: t("approved") },
+  REJECTED: { bg: "bg-red-50",     text: "text-red-700",     border: "border-red-200",     icon: <XCircle    size={12} />, dot: "bg-red-400",    label: t("rejected") },
 };
 
 const PAYMENT_CONFIG: Record<string, { bg: string; text: string }> = {
@@ -78,16 +78,16 @@ export default function ApplicationsPage() {
     try {
       const data = await apiGet<Application[]>("/applications");
       setApplications(Array.isArray(data) ? data : []);
-    } catch (e: any) { showToast.error(e.message || "Failed to load applications"); setApplications([]); }
+    } catch (e: any) { showToast.error(e.message || t("failedToLoadApplications") || "Failed to load applications"); setApplications([]); }
     finally { setLoading(false); }
   };
 
   const updateStatus = async (id: string, status: Application["status"]) => {
     try {
       await apiPatch(`/applications/${id}/status`, { status });
-      showToast.success("Status updated");
+      showToast.success(t("statusUpdated") || "Status updated");
       fetchApplications();
-    } catch (e: any) { showToast.error(e.message || "Failed to update status"); }
+    } catch (e: any) { showToast.error(e.message || t("failedToUpdateStatus") || "Failed to update status"); }
   };
 
   const counts = {
@@ -123,8 +123,8 @@ export default function ApplicationsPage() {
               <FileText size={22} />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight">Applications</h1>
-              <p className="text-purple-300 text-sm mt-0.5">Review and manage student applications</p>
+              <h1 className="text-2xl font-extrabold tracking-tight">{t("applications")}</h1>
+              <p className="text-purple-300 text-sm mt-0.5">{t("applicationsSubtitle") || "Review and manage student applications"}</p>
             </div>
           </div>
           {/* Stats */}
@@ -153,12 +153,12 @@ export default function ApplicationsPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: "Total",    value: counts.all,      icon: <FileText size={18} />,   from: "from-[#5260ce]", to: "to-[#7c3aed]" },
-          { label: "Pending",  value: counts.PENDING,  icon: <Clock size={18} />,       from: "from-amber-500",  to: "to-orange-600" },
-          { label: "Approved", value: counts.APPROVED, icon: <CheckCircle size={18} />, from: "from-emerald-500", to: "to-teal-600" },
-          { label: "Rejected", value: counts.REJECTED, icon: <XCircle size={18} />,     from: "from-red-500",    to: "to-rose-600" },
-        ].map((s) => (
+          {[
+            { label: t("total") || "Total",    value: counts.all,      icon: <FileText size={18} />,   from: "from-[#5260ce]", to: "to-[#7c3aed]" },
+            { label: t("pending"),  value: counts.PENDING,  icon: <Clock size={18} />,       from: "from-amber-500",  to: "to-orange-600" },
+            { label: t("approved"), value: counts.APPROVED, icon: <CheckCircle size={18} />, from: "from-emerald-500", to: "to-teal-600" },
+            { label: t("rejected"), value: counts.REJECTED, icon: <XCircle size={18} />,     from: "from-red-500",    to: "to-rose-600" },
+          ].map((s) => (
           <div key={s.label} className={`bg-gradient-to-br ${s.from} ${s.to} rounded-2xl p-4 text-white shadow-sm`}>
             <div className="flex items-center justify-between mb-2">
               <p className="text-white/70 text-xs font-medium uppercase tracking-wider">{s.label}</p>
@@ -175,18 +175,18 @@ export default function ApplicationsPage() {
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent"
-            placeholder="Search by name, email, university…"
+            placeholder={t("searchApplications")}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
         </div>
         <div className="flex gap-1 bg-gray-100/80 p-1 rounded-xl">
           {[
-            { v: "all", label: "All" },
-            { v: "PENDING",  label: "Pending" },
-            { v: "REVIEW",   label: "Review" },
-            { v: "APPROVED", label: "Approved" },
-            { v: "REJECTED", label: "Rejected" },
+            { v: "all", label: t("all") || "All" },
+            { v: "PENDING",  label: t("pending") },
+            { v: "REVIEW",   label: t("review") },
+            { v: "APPROVED", label: t("approved") },
+            { v: "REJECTED", label: t("rejected") },
           ].map((f) => (
             <button key={f.v}
               onClick={() => { setStatusFilter(f.v); setPage(1); }}
@@ -230,8 +230,8 @@ export default function ApplicationsPage() {
             <FileText size={24} className="text-gray-300" />
           </div>
           <div className="text-center">
-            <p className="font-semibold text-gray-600">No applications found</p>
-            <p className="text-sm text-gray-400 mt-1">{search ? "Try a different search" : "No applications submitted yet"}</p>
+            <p className="font-semibold text-gray-600">{t("noApplicationsFound")}</p>
+            <p className="text-sm text-gray-400 mt-1">{search ? t("tryDifferentSearch") : t("noApplicationsSubmittedYet")}</p>
           </div>
         </div>
       ) : (
@@ -310,7 +310,7 @@ export default function ApplicationsPage() {
                   <div className="flex items-center gap-2 pt-1 border-t border-gray-50">
                     <Link href={`/dashboard/applications/${app.id}`}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 text-gray-600 hover:border-purple-300 hover:text-purple-600 hover:bg-purple-50 text-xs font-semibold transition-all">
-                      <Eye size={13} /> View Details
+                      <Eye size={13} /> {t("viewDetails")}
                     </Link>
                     {userRole && canAccess(userRole, "applications", "update") && (
                       <select
@@ -319,10 +319,10 @@ export default function ApplicationsPage() {
                         onClick={(e) => e.stopPropagation()}
                         className="flex-1 border border-gray-200 rounded-xl px-2 py-2 text-xs font-semibold text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white cursor-pointer hover:border-purple-300 transition-all"
                       >
-                        <option value="PENDING">Pending</option>
-                        <option value="REVIEW">Review</option>
-                        <option value="APPROVED">Approved</option>
-                        <option value="REJECTED">Rejected</option>
+                        <option value="PENDING">{t("pending")}</option>
+                        <option value="REVIEW">{t("review")}</option>
+                        <option value="APPROVED">{t("approved")}</option>
+                        <option value="REJECTED">{t("rejected")}</option>
                       </select>
                     )}
                   </div>

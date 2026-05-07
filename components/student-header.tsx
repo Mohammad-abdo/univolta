@@ -11,6 +11,7 @@ import {
 import { figmaAssets } from "@/lib/figma-assets";
 import { API_BASE_URL } from "@/lib/constants";
 import { getImageUrl } from "@/lib/image-utils";
+import { t, getLanguage } from "@/lib/i18n";
 
 export interface StudentUser {
   id?: string;
@@ -36,14 +37,27 @@ interface Props {
 }
 
 /* ── Time-ago helper ── */
-function timeAgo(iso: string) {
+function timeAgo(iso: string, lang: "en" | "ar") {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
-  if (m < 1)  return "just now";
-  if (m < 60) return `${m}m ago`;
+  if (m < 1) return lang === "ar" ? t("notifJustNow", "ar") : t("notifJustNow", "en");
+  if (m < 60) {
+    const v = String(m);
+    return lang === "ar"
+      ? t("notifMinutesAgo", "ar").replace("{m}", v)
+      : t("notifMinutesAgo", "en").replace("{m}", v);
+  }
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
+  if (h < 24) {
+    const v = String(h);
+    return lang === "ar"
+      ? t("notifHoursAgo", "ar").replace("{h}", v)
+      : t("notifHoursAgo", "en").replace("{h}", v);
+  }
+  const d = Math.floor(h / 24);
+  return lang === "ar"
+    ? t("notifDaysAgo", "ar").replace("{d}", String(d))
+    : t("notifDaysAgo", "en").replace("{d}", String(d));
 }
 
 /* ── Notification icon by type ── */
@@ -57,6 +71,8 @@ function NotifIcon({ type }: { type: string }) {
 
 export function StudentHeader({ user, onLogout, activePage }: Props) {
   const router = useRouter();
+  const lang = getLanguage();
+  const isRTL = lang === "ar";
 
   const [search,     setSearch]     = useState("");
   const [menuOpen,   setMenuOpen]   = useState(false);
@@ -67,6 +83,15 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
 
   const menuRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
+
+  const sanitizeText = (value: string | null | undefined) => {
+    if (!value) return "";
+    return String(value)
+      .replace(/\r?\n/g, " ")
+      .replace(/\s+/g, " ")
+      .replace(/^\.+\s*/g, "")
+      .trim();
+  };
 
   /* close dropdowns on outside click */
   useEffect(() => {
@@ -152,7 +177,7 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
           className="hidden md:flex items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#5260ce] px-3 py-1.5 rounded-lg hover:bg-[#F0F4FF] transition-colors shrink-0 border border-gray-100"
         >
           <Globe className="w-3.5 h-3.5" />
-          Website
+          {t("studentWebsite")}
         </Link>
 
         <div className="hidden md:block h-5 w-px bg-gray-100 shrink-0" />
@@ -169,7 +194,7 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
                 if (e.key === "Enter")
                   router.push(search.trim() ? `/universities?search=${encodeURIComponent(search)}` : "/universities");
               }}
-              placeholder="Search universities..."
+              placeholder={t("studentSearchUniversitiesPlaceholder")}
               suppressHydrationWarning
               className="w-full h-10 pl-9 pr-4 rounded-xl border border-gray-200 bg-[#F5F6FA] text-sm text-[#2e2e2e] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#5260ce]/60 transition-colors"
             />
@@ -180,7 +205,7 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
         <div className="flex items-center gap-1 ml-auto shrink-0">
 
           {/* Mobile home icon */}
-          <Link href="/" className="md:hidden p-2 rounded-xl hover:bg-[#F0F4FF] transition-colors text-[#6B7280]" title="Website">
+          <Link href="/" className="md:hidden p-2 rounded-xl hover:bg-[#F0F4FF] transition-colors text-[#6B7280]" title={t("studentWebsite")}>
             <Home className="w-5 h-5" />
           </Link>
 
@@ -199,14 +224,16 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
             </button>
 
             {bellOpen && (
-              <div className="absolute right-0 mt-2 w-[360px] bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] border border-gray-100 overflow-hidden z-50">
+              <div className={`absolute ${isRTL ? "left-0" : "right-0"} mt-2 w-[360px] bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] border border-gray-100 overflow-hidden z-50`}>
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-[#F9FAFE]">
                   <div className="flex items-center gap-2">
                     <Bell className="w-4 h-4 text-[#5260ce]" />
-                    <span className="font-bold text-sm text-[#1B2559]">Notifications</span>
+                    <span className={`font-bold text-sm text-[#1B2559] ${isRTL ? "text-right" : "text-left"}`}>{t("notifications")}</span>
                     {unread > 0 && (
-                      <span className="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{unread} new</span>
+                      <span className="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                        {t("notifNewCount").replace("{count}", String(unread))}
+                      </span>
                     )}
                   </div>
                   {notifs.length > 0 && (
@@ -214,7 +241,7 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
                       onClick={markAllRead}
                       className="text-xs text-[#5260ce] hover:underline flex items-center gap-1"
                     >
-                      <CheckCheck className="w-3.5 h-3.5" /> Mark all read
+                      <CheckCheck className="w-3.5 h-3.5" /> {t("notifMarkAllRead")}
                     </button>
                   )}
                 </div>
@@ -228,7 +255,7 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
                   ) : notifs.length === 0 ? (
                     <div className="py-12 text-center">
                       <Bell className="w-10 h-10 mx-auto mb-2 text-gray-200" />
-                      <p className="text-sm text-[#A0AEC0]">No notifications yet</p>
+                      <p className="text-sm text-[#A0AEC0]">{t("notifNoNotificationsYet")}</p>
                     </div>
                   ) : (
                     notifs.map((n) => (
@@ -251,10 +278,10 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <p className={`text-[13px] leading-tight ${!n.isRead ? "font-semibold text-[#1B2559]" : "text-[#374151]"}`}>
-                            {n.title}
+                            {sanitizeText(n.title)}
                           </p>
-                          <p className="text-[11px] text-[#718096] mt-0.5 leading-relaxed line-clamp-2">{n.body}</p>
-                          <p className="text-[10px] text-[#A0AEC0] mt-1">{timeAgo(n.createdAt)}</p>
+                          <p className="text-[11px] text-[#718096] mt-0.5 leading-relaxed line-clamp-2">{sanitizeText(n.body)}</p>
+                          <p className="text-[10px] text-[#A0AEC0] mt-1">{timeAgo(n.createdAt, lang)}</p>
                         </div>
 
                         {/* Unread dot + delete */}
@@ -276,7 +303,7 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
                 {notifs.length > 0 && (
                   <div className="px-4 py-2.5 border-t border-gray-100 bg-[#F9FAFE]">
                     <Link href="/my-applications" onClick={() => setBellOpen(false)} className="text-xs text-[#5260ce] hover:underline">
-                      View all applications →
+                      {t("notifViewAllApplications")}
                     </Link>
                   </div>
                 )}

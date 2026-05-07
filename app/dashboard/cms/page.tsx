@@ -8,6 +8,7 @@ import {
   ScrollText,
   ArrowRight,
 } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 type CmsCard = {
   title: string;
@@ -18,32 +19,32 @@ type CmsCard = {
 
 const cmsCards: CmsCard[] = [
   {
-    title: "Homepage",
-    description: "Manage hero slides and home sections.",
+    title: t("sidebarCmsHomepage"),
+    description: t("dashCmsHomepageDesc"),
     href: "/dashboard/cms/homepage",
     icon: Images,
   },
   {
-    title: "Site Settings",
-    description: "Update branding and global site identity.",
+    title: t("sidebarCmsSiteSettings"),
+    description: t("dashCmsSiteSettingsDesc"),
     href: "/dashboard/cms/site-settings",
     icon: Globe2,
   },
   {
-    title: "Footer",
-    description: "Edit footer links and contact details.",
+    title: t("sidebarCmsFooter"),
+    description: t("dashCmsFooterDesc"),
     href: "/dashboard/cms/footer",
     icon: PanelBottom,
   },
   {
-    title: "Messages",
-    description: "Review messages coming from the public website.",
+    title: t("sidebarCmsMessages"),
+    description: t("dashCmsMessagesDesc"),
     href: "/dashboard/cms/messages",
     icon: Inbox,
   },
   {
-    title: "Terms & Conditions",
-    description: "Edit the legal terms shown to users.",
+    title: t("sidebarTermsAndConditions"),
+    description: t("dashCmsTermsDesc"),
     href: "/dashboard/cms/terms",
     icon: ScrollText,
   },
@@ -65,9 +66,9 @@ export default function CmsOverviewPage() {
             <LayoutGrid className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-2xl font-extrabold tracking-tight">CMS Overview</h1>
+            <h1 className="text-2xl font-extrabold tracking-tight">{t("dashCmsOverviewTitle")}</h1>
             <p className="mt-1 text-sm text-white/70">
-              Quick access to manage public website content.
+              {t("dashCmsOverviewSubtitle")}
             </p>
           </div>
         </div>

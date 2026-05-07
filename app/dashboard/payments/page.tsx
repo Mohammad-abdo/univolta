@@ -157,11 +157,12 @@ export default function PaymentsPage() {
   };
 
   const statusConfig = {
-    completed: { color: "bg-green-100 text-green-800", icon: CheckCircle, label: "Completed" },
-    paid: { color: "bg-green-100 text-green-800", icon: CheckCircle, label: "Paid" },
-    pending: { color: "bg-yellow-100 text-yellow-800", icon: Clock, label: "Pending" },
-    failed: { color: "bg-red-100 text-red-800", icon: XCircle, label: "Failed" },
-    refunded: { color: "bg-gray-100 text-gray-800", icon: XCircle, label: "Refunded" },
+    completed: { color: "bg-green-100 text-green-800", icon: CheckCircle, label: t("completed") },
+    // Treat "paid" as completed in UI copy
+    paid: { color: "bg-green-100 text-green-800", icon: CheckCircle, label: t("completed") },
+    pending: { color: "bg-yellow-100 text-yellow-800", icon: Clock, label: t("pending") },
+    failed: { color: "bg-red-100 text-red-800", icon: XCircle, label: t("failed") },
+    refunded: { color: "bg-gray-100 text-gray-800", icon: XCircle, label: t("refunded") },
   };
 
   const getStatusConfig = (status: string) => {
@@ -178,7 +179,7 @@ export default function PaymentsPage() {
     const res = await fetch(`${API_BASE_URL}/payments/export/${type}?format=${format}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) { showToast.error("Export failed"); return; }
+    if (!res.ok) { showToast.error(t("exportFailed") || "Export failed"); return; }
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -202,13 +203,13 @@ export default function PaymentsPage() {
         }),
       });
       if (!res.ok) throw new Error();
-      showToast.success("Payment refunded successfully");
+      showToast.success(t("paymentRefundedSuccessfully") || "Payment refunded successfully");
       setRefundingId(null);
       setRefundReason("");
       setRefundAmount("");
       fetchPayments();
     } catch {
-      showToast.error("Refund failed");
+      showToast.error(t("refundFailed") || "Refund failed");
     } finally {
       setSubmittingRefund(false);
     }
@@ -228,7 +229,7 @@ export default function PaymentsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading...</div>
+        <div className="text-lg">{t("loading")}</div>
       </div>
     );
   }
@@ -256,7 +257,7 @@ export default function PaymentsPage() {
           </div>
           <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
             <Filter className="w-4 h-4 mr-2" />
-            Filters
+            {t("filter")}
           </Button>
         </div>
       </div>
@@ -275,20 +276,20 @@ export default function PaymentsPage() {
             </div>
             <div className="space-y-3">
               <div>
-                <label className="text-sm font-semibold text-gray-700">Refund Amount (leave blank for full amount)</label>
+                <label className="text-sm font-semibold text-gray-700">{t("refundAmountLabel") || "Refund Amount (leave blank for full amount)"}</label>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-gray-500">$</span>
                   <input type="number" min="0" step="0.01" value={refundAmount}
                     onChange={(e) => setRefundAmount(e.target.value)}
-                    placeholder="Full amount"
+                    placeholder={t("refundFullAmountPlaceholder") || "Full amount"}
                     className="flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400"
                   />
                 </div>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-700">Reason <span className="text-red-500">*</span></label>
+                <label className="text-sm font-semibold text-gray-700">{t("reason")} <span className="text-red-500">*</span></label>
                 <textarea value={refundReason} onChange={(e) => setRefundReason(e.target.value)}
-                  rows={3} placeholder="Enter refund reason…"
+                  rows={3} placeholder={t("refundReasonPlaceholder") || "Enter refund reason…"}
                   className="w-full mt-1 p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400"
                 />
               </div>
@@ -296,9 +297,9 @@ export default function PaymentsPage() {
             <div className="flex gap-2 pt-2">
               <Button onClick={submitRefund} disabled={!refundReason || submittingRefund}
                 className="flex-1 bg-orange-500 hover:bg-orange-600 text-white">
-                <RotateCcw className="w-4 h-4 mr-1" />{submittingRefund ? "Processing…" : "Confirm Refund"}
+                <RotateCcw className="w-4 h-4 mr-1" />{submittingRefund ? (t("processing") || "Processing…") : (t("confirmRefund") || "Confirm Refund")}
               </Button>
-              <Button variant="outline" onClick={() => setRefundingId(null)} className="flex-1">Cancel</Button>
+              <Button variant="outline" onClick={() => setRefundingId(null)} className="flex-1">{t("cancel")}</Button>
             </div>
           </div>
         </div>
@@ -475,7 +476,7 @@ export default function PaymentsPage() {
                             onClick={() => { setRefundingId(payment.applicationId); setRefundReason(""); setRefundAmount(""); }}
                             className="text-orange-600 border-orange-300 hover:bg-orange-50">
                             <RotateCcw className="w-3 h-3 mr-1" />
-                            Refund
+                            {t("refund")}
                           </Button>
                         )}
                       </div>
@@ -489,8 +490,8 @@ export default function PaymentsPage() {
         {filteredPayments.length === 0 && (
           <div className="text-center py-12 text-gray-500">
             {searchTerm || statusFilter !== "all" || methodFilter !== "all"
-              ? "No payments match your filters"
-              : "No payments found"}
+              ? t("noPaymentsMatchFilters")
+              : t("noPayments")}
           </div>
         )}
       </div>

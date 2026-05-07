@@ -103,7 +103,7 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
       },
       {
         href: "/dashboard/partner/email-center",
-        label: "Email Center",
+        label: t("sidebarEmailCenter"),
         icon: Mail,
       },
       {
@@ -154,7 +154,7 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
     },
     {
       href: "/dashboard/cms/terms",
-      label: "Terms & Conditions",
+        label: t("sidebarTermsAndConditions"),
       icon: ScrollText,
     },
     {
@@ -195,7 +195,7 @@ const getMenuItems = (isPartner: boolean = false, role?: UserRole): MenuItem[] =
     },
     {
       href: "/dashboard/arrivals",
-      label: "Student Arrivals",
+        label: t("sidebarStudentArrivals"),
       icon: CalendarRange,
       permission: { resource: "applications", action: "read" },
     },
@@ -548,7 +548,7 @@ export default function DashboardLayout({
                 type="button"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="shrink-0 rounded-lg p-2 hover:bg-gray-100"
-                aria-label={currentLang === "ar" ? "إغلاق القائمة" : "Close menu"}
+                aria-label={t("closeMenu")}
               >
                 <X className="h-5 w-5" />
               </button>

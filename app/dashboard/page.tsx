@@ -102,6 +102,11 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, [currentLang]);
 
+  const formatMonthYear = (date: Date) => {
+    const locale = currentLang === "ar" ? "ar-EG" : "en-US";
+    return new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }).format(date);
+  };
+
   useEffect(() => {
     fetchStats();
     fetchRecentApplications();
@@ -217,7 +222,7 @@ export default function DashboardPage() {
         const monthPending = monthApps.filter((app: any) => app.status === "PENDING").length;
 
         monthlyData.push({
-          month: date.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+          month: formatMonthYear(date),
           applications: monthApps.length,
           revenue: monthRevenue,
           approved: monthApproved,
@@ -289,7 +294,7 @@ export default function DashboardPage() {
         revenueThisMonth,
       });
     } catch (error: any) {
-      showToast.error("Failed to load dashboard statistics");
+      showToast.error(t("failedToLoadDashboardStatistics"));
     } finally {
       setLoading(false);
     }

@@ -7,6 +7,7 @@ import { apiGet, apiDelete } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import { canAccess, type UserRole } from "@/lib/permissions";
 import { API_BASE_URL } from "@/lib/constants";
+import { t } from "@/lib/i18n";
 import {
   Plus, Edit2, Trash2, Eye, Search, RefreshCw,
   GraduationCap, MapPin, Globe, ChevronLeft, ChevronRight,
@@ -72,17 +73,17 @@ export default function UniversitiesPage() {
       setUniversities(data);
     } catch (e: any) {
       if (e.statusCode === 401 || e.statusCode === 403) { localStorage.removeItem("accessToken"); router.push("/dashboard/login"); }
-      else showToast.error("Failed to load universities");
+      else showToast.error(t("failedToLoadUniversities"));
     } finally { setLoading(false); }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this university? This cannot be undone.")) return;
+    if (!confirm(t("confirmDeleteUniversity"))) return;
     try {
       await apiDelete(`/universities/${id}`);
-      showToast.success("University deleted");
+      showToast.success(t("universityDeleted"));
       fetchUniversities();
-    } catch (e: any) { showToast.error(e.message || "Delete failed"); }
+    } catch (e: any) { showToast.error(e.message || t("deleteFailed")); }
   };
 
   const languages = Array.from(new Set(universities.map((u) => u.language).filter(Boolean)));
@@ -110,25 +111,25 @@ export default function UniversitiesPage() {
               <Building2 size={22} />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight">Universities</h1>
-              <p className="text-indigo-300 text-sm mt-0.5">Manage all partner universities</p>
+              <h1 className="text-2xl font-extrabold tracking-tight">{t("universities")}</h1>
+              <p className="text-indigo-300 text-sm mt-0.5">{t("universitiesSubtitle")}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-center">
               <p className="text-xl font-bold">{universities.length}</p>
-              <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider">Total</p>
+              <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider">{t("total")}</p>
             </div>
             <div className="bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-center">
               <p className="text-xl font-bold">{active}</p>
-              <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider">Active</p>
+              <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider">{t("active")}</p>
             </div>
             {userRole && canAccess(userRole, "universities", "create") && (
               <Link
                 href="/dashboard/universities/add"
                 className="inline-flex items-center gap-2 bg-white text-[#5260ce] hover:bg-indigo-50 active:scale-95 font-bold text-sm px-5 py-2.5 rounded-xl transition-all shadow-sm"
               >
-                <Plus size={16} /> Add University
+                <Plus size={16} /> {t("addUniversity")}
               </Link>
             )}
           </div>
@@ -141,7 +142,7 @@ export default function UniversitiesPage() {
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent"
-            placeholder="Search universities, city, country…"
+            placeholder={t("searchUniversitiesDashboard")}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
@@ -151,9 +152,9 @@ export default function UniversitiesPage() {
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
         >
-          <option value="all">All Status</option>
-          <option value="true">Active</option>
-          <option value="false">Inactive</option>
+          <option value="all">{t("allStatus")}</option>
+          <option value="true">{t("active")}</option>
+          <option value="false">{t("inactive")}</option>
         </select>
         {languages.length > 0 && (
           <select
@@ -161,7 +162,7 @@ export default function UniversitiesPage() {
             value={langFilter}
             onChange={(e) => { setLangFilter(e.target.value); setPage(1); }}
           >
-            <option value="all">All Languages</option>
+            <option value="all">{t("allLanguages")}</option>
             {languages.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
         )}
@@ -195,13 +196,13 @@ export default function UniversitiesPage() {
             <Building2 size={24} className="text-gray-300" />
           </div>
           <div className="text-center">
-            <p className="font-semibold text-gray-600">No universities found</p>
-            <p className="text-sm text-gray-400 mt-1">{search ? "Try a different search" : "Add your first university to get started"}</p>
+            <p className="font-semibold text-gray-600">{t("noUniversitiesFoundDashboard")}</p>
+            <p className="text-sm text-gray-400 mt-1">{search ? t("tryDifferentSearch") : t("addFirstUniversityHint")}</p>
           </div>
           {!search && userRole && canAccess(userRole, "universities", "create") && (
             <Link href="/dashboard/universities/add"
               className="inline-flex items-center gap-2 bg-[#5260ce] text-white font-bold text-sm px-5 py-2.5 rounded-xl hover:bg-[#4251be] transition-all">
-              <Plus size={16} /> Add University
+              <Plus size={16} /> {t("addUniversity")}
             </Link>
           )}
         </div>
@@ -221,7 +222,7 @@ export default function UniversitiesPage() {
                     uni.isActive ? "bg-emerald-500/90 text-white" : "bg-red-500/90 text-white"
                   }`}>
                     {uni.isActive ? <CheckCircle size={10} /> : <XCircle size={10} />}
-                    {uni.isActive ? "Active" : "Inactive"}
+                    {uni.isActive ? t("active") : t("inactive")}
                   </div>
                 </div>
 

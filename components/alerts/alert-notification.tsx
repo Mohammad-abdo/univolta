@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Bell, X, Check, CheckCheck, Volume2, VolumeX } from "lucide-react";
 import { apiGet, apiRequest } from "@/lib/api";
 import { formatDistanceToNow } from "date-fns";
+import { t, getLanguage } from "@/lib/i18n";
 
 interface Alert {
   id: string;
@@ -57,6 +58,8 @@ const playNotificationSound = () => {
 };
 
 export function AlertNotification({ className = "" }: AlertNotificationProps) {
+  const lang = getLanguage();
+  const isRTL = lang === "ar";
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [previousUnreadCount, setPreviousUnreadCount] = useState<number | null>(null);
@@ -189,6 +192,15 @@ export function AlertNotification({ className = "" }: AlertNotificationProps) {
     }
   };
 
+  const sanitizeText = (value: string | null | undefined) => {
+    if (!value) return "";
+    return String(value)
+      .replace(/\r?\n/g, " ")
+      .replace(/\s+/g, " ")
+      .replace(/^\.+\s*/g, "")
+      .trim();
+  };
+
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case "SUCCESS":
@@ -220,7 +232,7 @@ export function AlertNotification({ className = "" }: AlertNotificationProps) {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-        aria-label="Notifications"
+        aria-label={t("notifications")}
       >
         <Bell className="w-6 h-6" />
         {unreadCount > 0 && (
@@ -233,7 +245,7 @@ export function AlertNotification({ className = "" }: AlertNotificationProps) {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-[600px] overflow-hidden flex flex-col">
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+            <h3 className={`text-lg font-semibold text-gray-900 ${isRTL ? "text-right" : "text-left"}`}>{t("notifications")}</h3>
             <div className="flex items-center gap-2">
               <button
                 onClick={toggleSound}
@@ -242,8 +254,8 @@ export function AlertNotification({ className = "" }: AlertNotificationProps) {
                     ? "text-blue-600 hover:bg-blue-50"
                     : "text-gray-400 hover:bg-gray-100"
                 }`}
-                aria-label={soundEnabled ? "Disable sound" : "Enable sound"}
-                title={soundEnabled ? "Sound enabled" : "Sound disabled"}
+                aria-label={soundEnabled ? t("notifDisableSound") : t("notifEnableSound")}
+                title={soundEnabled ? t("notifSoundEnabled") : t("notifSoundDisabled")}
               >
                 {soundEnabled ? (
                   <Volume2 className="w-4 h-4" />
@@ -257,7 +269,7 @@ export function AlertNotification({ className = "" }: AlertNotificationProps) {
                   className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
                 >
                   <CheckCheck className="w-4 h-4" />
-                  Mark all read
+                  {t("notifMarkAllRead")}
                 </button>
               )}
               <button
@@ -271,11 +283,11 @@ export function AlertNotification({ className = "" }: AlertNotificationProps) {
 
           <div className="overflow-y-auto flex-1">
             {loading ? (
-              <div className="p-4 text-center text-gray-500">Loading...</div>
+              <div className="p-4 text-center text-gray-500">{t("loading")}</div>
             ) : alerts.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 <Bell className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                <p>No notifications</p>
+                <p>{t("notifNoNotifications")}</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
@@ -302,10 +314,10 @@ export function AlertNotification({ className = "" }: AlertNotificationProps) {
                                 !alert.isRead ? "text-gray-900" : "text-gray-700"
                               }`}
                             >
-                              {alert.title}
+                              {sanitizeText(alert.title)}
                             </p>
                             <p className="text-sm text-gray-600 mt-1">
-                              {alert.message}
+                              {sanitizeText(alert.message)}
                             </p>
                             <p className="text-xs text-gray-400 mt-2">
                               {formatDistanceToNow(new Date(alert.createdAt), {
@@ -317,7 +329,7 @@ export function AlertNotification({ className = "" }: AlertNotificationProps) {
                             <button
                               onClick={() => markAsRead(alert.id)}
                               className="flex-shrink-0 p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                              aria-label="Mark as read"
+                              aria-label={t("notifMarkAsRead")}
                             >
                               <Check className="w-4 h-4" />
                             </button>
@@ -338,7 +350,7 @@ export function AlertNotification({ className = "" }: AlertNotificationProps) {
                 className="block text-center text-sm text-blue-600 hover:text-blue-800 font-medium"
                 onClick={() => setIsOpen(false)}
               >
-                View all notifications
+                {t("notifViewAll")}
               </a>
             </div>
           )}
