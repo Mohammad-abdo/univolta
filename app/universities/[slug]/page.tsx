@@ -503,16 +503,22 @@ export default async function UniversityDetailPage({
 
                 {/* Bachelor's/Master's Tabs */}
                 <div className="flex gap-2 md:gap-5">
-                  <div className="flex-1 bg-[rgba(117,211,247,0.1)] border border-[#75d3f7] rounded-[10px] px-2 md:px-4 py-2 md:py-2.5 flex items-center justify-center">
+                  <Link
+                    href={`/universities/${slug}/programs?degree=bachelor`}
+                    className="flex-1 bg-[rgba(117,211,247,0.1)] border border-[#75d3f7] rounded-[10px] px-2 md:px-4 py-2 md:py-2.5 flex items-center justify-center hover:opacity-90 transition-opacity"
+                  >
                     <p className="font-montserrat-regular text-sm md:text-[18px] leading-[1.4] text-[#121c67] text-center">
                       {t("bachelors")} ({bachelorPrograms.length})
                     </p>
-                  </div>
-                  <div className="flex-1 border border-[#b1b2bf] rounded-[10px] px-2 md:px-4 py-2 md:py-2.5 flex items-center justify-center">
+                  </Link>
+                  <Link
+                    href={`/universities/${slug}/programs?degree=master`}
+                    className="flex-1 border border-[#b1b2bf] rounded-[10px] px-2 md:px-4 py-2 md:py-2.5 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                  >
                     <p className="font-montserrat-regular text-sm md:text-[18px] leading-[1.4] text-[#65666f] text-center">
                       {t("masters")} ({masterPrograms.length})
                     </p>
-                  </div>
+                  </Link>
                 </div>
 
                 {/* Programs List by Department */}

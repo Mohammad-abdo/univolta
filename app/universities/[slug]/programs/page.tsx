@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
-import { useSearchParams, useParams } from "next/navigation";
+import { useEffect, useMemo, useState, Suspense } from "react";
+import { useSearchParams, useParams, useRouter, usePathname } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
@@ -174,17 +174,32 @@ function ProgramCard({ program, slug, index }: { program: Program; slug: string;
 function ProgramsContent() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const slug = params?.slug as string;
 
   const [university, setUniversity] = useState<University | null>(null);
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDegree, setSelectedDegree] = useState<"bachelor" | "master">("bachelor");
+  const degreeFromUrl = (searchParams?.get("degree") || "").toLowerCase();
+  const initialDegree = degreeFromUrl === "master" ? "master" : "bachelor";
+  const [selectedDegree, setSelectedDegree] = useState<"bachelor" | "master">(initialDegree);
   const [selectedFaculty, setSelectedFaculty] = useState<string>(searchParams?.get("department") || "");
   const [currentPage, setCurrentPage] = useState(1);
   const programsPerPage = 6;
 
   useEffect(() => { fetchData(); }, [slug, selectedDegree, selectedFaculty]);
+
+  // Keep state in sync if URL changes (e.g., coming from university detail tabs)
+  useEffect(() => {
+    const d = (searchParams?.get("degree") || "").toLowerCase();
+    const next: "bachelor" | "master" = d === "master" ? "master" : "bachelor";
+    if (next !== selectedDegree) {
+      setSelectedDegree(next);
+      setCurrentPage(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const fetchData = async () => {
     try {
@@ -280,7 +295,14 @@ function ProgramsContent() {
                   ].map(({ key, label }) => (
                     <button
                       key={key}
-                      onClick={() => { setSelectedDegree(key as "bachelor" | "master"); setCurrentPage(1); }}
+                      onClick={() => {
+                        const next = key as "bachelor" | "master";
+                        setSelectedDegree(next);
+                        setCurrentPage(1);
+                        const sp = new URLSearchParams(searchParams?.toString() || "");
+                        sp.set("degree", next);
+                        router.replace(`${pathname}?${sp.toString()}`);
+                      }}
                       className={`flex-1 md:flex-none md:px-8 py-2.5 rounded-xl font-montserrat-semibold text-sm transition-all duration-200 ${
                         selectedDegree === key
                           ? "bg-[#5260ce] text-white shadow-[0_4px_16px_rgba(82,96,206,0.3)]"
