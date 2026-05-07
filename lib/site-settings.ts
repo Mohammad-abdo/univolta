@@ -17,6 +17,13 @@ export interface HomeSectionSetting {
   order?: number;
 }
 
+export interface HomeStatsSetting {
+  universitiesCount: number;
+  studentsCount: number;
+  acceptanceRate: number;
+  programsCount: number;
+}
+
 export interface FooterContentSetting {
   titleEn?: string;
   titleAr?: string;
@@ -37,6 +44,7 @@ export interface PublicSiteSettings {
   "site.tagline"?: string;
   "hero.slides"?: HeroSlideSetting[];
   "home.sections"?: HomeSectionSetting[];
+  "home.stats"?: HomeStatsSetting;
   "footer.content"?: FooterContentSetting;
 }
 

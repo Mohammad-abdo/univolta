@@ -45,7 +45,11 @@ export default function AddFAQPage() {
       showToast.success("FAQ created successfully!");
       router.push("/dashboard/faqs");
     } catch (error: any) {
-      const errorMsg = error.message || "Failed to create FAQ";
+      let errorMsg = error.message || "Failed to create FAQ";
+      // If the API provided details, append them
+      if (error.details && Array.isArray(error.details)) {
+        errorMsg += ": " + error.details.map((d: any) => `${d.path.join(".")}: ${d.message}`).join(", ");
+      }
       showToast.error(errorMsg);
       setError(errorMsg);
     } finally {

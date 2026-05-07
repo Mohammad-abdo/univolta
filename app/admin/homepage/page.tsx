@@ -8,9 +8,10 @@ import {
   Save, Plus, Trash2, Eye, EyeOff, RefreshCw,
   CheckCircle, AlertCircle, ChevronUp, ChevronDown,
   Layers, Layout, Sparkles, Upload, X, ImageIcon,
-  ArrowLeft, Edit3, GripVertical,
+  ArrowLeft, Edit3, GripVertical, TrendingUp
 } from "lucide-react";
 import Image from "next/image";
+import { type HomeStatsSetting } from "@/lib/site-settings";
 
 type View = "list" | "edit";
 
@@ -48,8 +49,14 @@ export default function HomepageManager() {
   const [loading,       setLoading]       = useState(true);
   const [saving,        setSaving]        = useState(false);
   const [uploading,     setUploading]     = useState(false);
-  const [tab,           setTab]           = useState<"slides" | "sections">("slides");
+  const [tab,           setTab]           = useState<"slides" | "sections" | "stats">("slides");
   const [view,          setView]          = useState<View>("list");
+  const [stats,         setStats]         = useState<HomeStatsSetting>({
+    universitiesCount: 150,
+    studentsCount: 5000,
+    acceptanceRate: 95,
+    programsCount: 30,
+  });
   const [editSlide,     setEditSlide]     = useState<HeroSlide | null>(null);
   const [isNew,         setIsNew]         = useState(false);
   const [toast,         setToast]         = useState<{ type: "success" | "error"; msg: string } | null>(null);
@@ -66,6 +73,9 @@ export default function HomepageManager() {
         setSlides(s["hero.slides"] as HeroSlide[]);
       if (Array.isArray(s["home.sections"]) && (s["home.sections"] as HomeSectionConfig[]).length)
         setSections(s["home.sections"] as HomeSectionConfig[]);
+      if (s["home.stats"]) {
+        setStats(s["home.stats"] as HomeStatsSetting);
+      }
     } catch { /* use defaults */ }
     finally { setLoading(false); }
   }, []);
@@ -79,6 +89,7 @@ export default function HomepageManager() {
       await Promise.all([
         settingsApi.set("hero.slides",   updatedSlides ?? slides),
         settingsApi.set("home.sections", sections),
+        settingsApi.set("home.stats",    stats),
       ]);
       showToast("success", "Homepage saved!");
     } catch (e: any) {
@@ -445,6 +456,7 @@ export default function HomepageManager() {
         {([
           { key: "slides",   label: "Hero Banners",  icon: <Layers size={15} /> },
           { key: "sections", label: "Page Sections", icon: <Layout size={15} /> },
+          { key: "stats",    label: "Statistics",    icon: <TrendingUp size={15} /> },
         ] as const).map((t) => (
           <button
             key={t.key}
@@ -634,6 +646,37 @@ export default function HomepageManager() {
                   </span>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── STATS TAB ─────────────────────────────────────────── */}
+      {tab === "stats" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-500 font-medium">Homepage Statistics</p>
+            <button onClick={() => saveAll()} disabled={saving} className="flex items-center gap-2 bg-[#5260ce] hover:bg-[#4251be] active:scale-95 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-indigo-200 disabled:opacity-60">
+              {saving ? <RefreshCw size={15} className="animate-spin" /> : <Save size={15} />}
+              {saving ? "Saving…" : "Save Stats"}
+            </button>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Universities Count</label>
+              <input type="number" className={inp} value={stats.universitiesCount} onChange={(e) => setStats(prev => ({ ...prev, universitiesCount: parseInt(e.target.value) || 0 }))} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Students Helped Count</label>
+              <input type="number" className={inp} value={stats.studentsCount} onChange={(e) => setStats(prev => ({ ...prev, studentsCount: parseInt(e.target.value) || 0 }))} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Acceptance Rate (%)</label>
+              <input type="number" className={inp} value={stats.acceptanceRate} onChange={(e) => setStats(prev => ({ ...prev, acceptanceRate: parseInt(e.target.value) || 0 }))} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Programs Count</label>
+              <input type="number" className={inp} value={stats.programsCount} onChange={(e) => setStats(prev => ({ ...prev, programsCount: parseInt(e.target.value) || 0 }))} />
             </div>
           </div>
         </div>

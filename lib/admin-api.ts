@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "./constants";
 import { apiRequest } from "./api";
+import { type HomeStatsSetting } from "./site-settings";
 
 async function adminFetch<T>(
   path: string,
@@ -76,6 +77,7 @@ export interface SiteSettings {
   "site.applicationFee"?: number | string;
   "hero.slides"?:       HeroSlide[];
   "home.sections"?:     HomeSectionConfig[];
+  "home.stats"?:        HomeStatsSetting;
   "footer.content"?:    FooterContent;
 }
 

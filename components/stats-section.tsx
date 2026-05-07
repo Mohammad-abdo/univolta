@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { Users, Building2, TrendingUp, BookOpen } from "lucide-react";
 import { t, getLanguage, type Language } from "@/lib/i18n";
+import { fetchPublicSiteSettings, type HomeStatsSetting } from "@/lib/site-settings";
 
 function Counter({ end, suffix = "", duration = 2200 }: { end: number; suffix?: string; duration?: number }) {
   const [count, setCount] = useState(0);
@@ -37,16 +38,15 @@ function Counter({ end, suffix = "", duration = 2200 }: { end: number; suffix?: 
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
 }
 
-const STATS = [
-  { icon: Building2, endValue: 150, suffix: "+", labelKey: "stat1Label", color: "from-[#5260ce]/15 to-[#5260ce]/5", iconColor: "text-[#5260ce]" },
-  { icon: Users,     endValue: 5000, suffix: "+", labelKey: "stat2Label", color: "from-[#75d3f7]/20 to-[#75d3f7]/5", iconColor: "text-[#1971c2]" },
-  { icon: TrendingUp,endValue: 95,   suffix: "%", labelKey: "stat3Label", color: "from-[#5cb85c]/15 to-[#5cb85c]/5", iconColor: "text-[#5cb85c]" },
-  { icon: BookOpen,  endValue: 30,   suffix: "+", labelKey: "stat4Label", color: "from-[#f4c23b]/15 to-[#f4c23b]/5", iconColor: "text-[#d4a017]" },
-] as const;
-
 export function StatsSection() {
   const [lang, setLang] = useState<Language>("en");
   const [mounted, setMounted] = useState(false);
+  const [statsData, setStatsData] = useState<HomeStatsSetting>({
+    universitiesCount: 150,
+    studentsCount: 5000,
+    acceptanceRate: 95,
+    programsCount: 30,
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -55,7 +55,22 @@ export function StatsSection() {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    fetchPublicSiteSettings().then((settings) => {
+      if (settings["home.stats"]) {
+        setStatsData(settings["home.stats"]);
+      }
+    });
+  }, []);
+
   const tl = (key: string) => t(key, lang);
+
+  const DYNAMIC_STATS = [
+    { icon: Building2, endValue: statsData.universitiesCount, suffix: "+", labelKey: "stat1Label", color: "from-[#5260ce]/15 to-[#5260ce]/5", iconColor: "text-[#5260ce]" },
+    { icon: Users,     endValue: statsData.studentsCount, suffix: "+", labelKey: "stat2Label", color: "from-[#75d3f7]/20 to-[#75d3f7]/5", iconColor: "text-[#1971c2]" },
+    { icon: TrendingUp,endValue: statsData.acceptanceRate,   suffix: "%", labelKey: "stat3Label", color: "from-[#5cb85c]/15 to-[#5cb85c]/5", iconColor: "text-[#5cb85c]" },
+    { icon: BookOpen,  endValue: statsData.programsCount,   suffix: "+", labelKey: "stat4Label", color: "from-[#f4c23b]/15 to-[#f4c23b]/5", iconColor: "text-[#d4a017]" },
+  ];
 
   return (
     <section className="relative py-16 md:py-24 overflow-hidden">
@@ -83,7 +98,7 @@ export function StatsSection() {
         </ScrollReveal>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {STATS.map(({ icon: Icon, endValue, suffix, labelKey, color, iconColor }, i) => (
+          {DYNAMIC_STATS.map(({ icon: Icon, endValue, suffix, labelKey, color, iconColor }, i) => (
             <ScrollReveal key={labelKey} direction="up" delay={i * 100}>
               <div className="group relative rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-6 md:p-8 text-center hover:bg-white/15 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,0.3)]">
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
