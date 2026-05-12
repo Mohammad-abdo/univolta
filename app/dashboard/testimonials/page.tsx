@@ -8,6 +8,8 @@ import { canAccess, type UserRole } from "@/lib/permissions";
 import { API_BASE_URL } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2 } from "lucide-react";
+import { t, getLanguage } from "@/lib/i18n";
+import { pickLocalized } from "@/lib/localized";
 
 interface Testimonial {
   id: string;
@@ -16,7 +18,7 @@ interface Testimonial {
   content: string;
   rating?: number;
   isPublished: boolean;
-  university?: { name: string };
+  university?: { name: string; nameI18n?: unknown };
 }
 
 export default function TestimonialsPage() {
@@ -29,7 +31,7 @@ export default function TestimonialsPage() {
       const data = await apiGet<Testimonial[]>("/testimonials");
       setTestimonials(data);
     } catch (error: any) {
-      showToast.error("Failed to load testimonials");
+      showToast.error(t("dashTestimonialsLoadFailed"));
     } finally {
       setLoading(false);
     }
@@ -50,10 +52,10 @@ export default function TestimonialsPage() {
             const userData = await response.json();
             setUserRole(userData.role?.toLowerCase() as UserRole);
           }
+        }
+      } catch {
+        /* silent */
       }
-    } catch (error) {
-      // Silent fail for role check
-    }
     };
 
     fetchUserRole();
@@ -61,32 +63,34 @@ export default function TestimonialsPage() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this testimonial?")) {
+    if (!confirm(t("dashTestimonialsDeleteConfirm"))) {
       return;
     }
 
     try {
       await apiDelete(`/testimonials/${id}`);
-      showToast.success("Testimonial deleted successfully!");
+      showToast.success(t("dashTestimonialsDeleted"));
       await fetchTestimonials();
     } catch (error: any) {
-      showToast.error(error.message || "Failed to delete testimonial");
+      showToast.error(error.message || t("dashTestimonialsDeleteFailed"));
     }
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>;
+    return <div className="flex items-center justify-center h-64">{t("loading")}</div>;
   }
+
+  const lang = getLanguage();
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-montserrat-bold text-[#121c67]">Testimonials</h1>
+        <h1 className="text-3xl font-montserrat-bold text-[#121c67]">{t("dashTestimonialsTitle")}</h1>
         {userRole && canAccess(userRole, "testimonials", "create") && (
           <Link href="/dashboard/testimonials/add">
             <Button className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold">
               <Plus className="w-4 h-4 mr-2" />
-              Add Testimonial
+              {t("dashTestimonialsAdd")}
             </Button>
           </Link>
         )}
@@ -105,13 +109,16 @@ export default function TestimonialsPage() {
             </div>
             <p className="text-gray-700 mb-2">{testimonial.content}</p>
             {testimonial.university && (
-              <p className="text-sm text-gray-500">University: {testimonial.university.name}</p>
+              <p className="text-sm text-gray-500">
+                {t("dashTestimonialsUniversity")}{" "}
+                {pickLocalized(testimonial.university.nameI18n ?? testimonial.university.name, lang)}
+              </p>
             )}
             <div className="flex items-center justify-between mt-4">
               <span className={`inline-block px-2 py-1 rounded text-xs ${
                 testimonial.isPublished ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
               }`}>
-                {testimonial.isPublished ? "Published" : "Draft"}
+                {testimonial.isPublished ? t("dashStatusPublished") : t("dashStatusDraft")}
               </span>
               {(userRole && (canAccess(userRole, "testimonials", "update") || canAccess(userRole, "testimonials", "delete"))) && (
                 <div className="flex items-center gap-2">
@@ -134,7 +141,7 @@ export default function TestimonialsPage() {
           </div>
         ))}
         {testimonials.length === 0 && (
-          <div className="text-center py-12 text-gray-500">No testimonials found</div>
+          <div className="text-center py-12 text-gray-500">{t("dashTestimonialsEmpty")}</div>
         )}
       </div>
     </div>

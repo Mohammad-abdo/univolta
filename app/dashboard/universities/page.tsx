@@ -7,7 +7,9 @@ import { apiGet, apiDelete } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import { canAccess, type UserRole } from "@/lib/permissions";
 import { API_BASE_URL } from "@/lib/constants";
-import { t } from "@/lib/i18n";
+import { t, getLanguage } from "@/lib/i18n";
+import { pickLocalized } from "@/lib/localized";
+import { formatCountryLabel, formatInstructionLanguages } from "@/lib/university-program-display";
 import {
   Plus, Edit2, Trash2, Eye, Search, RefreshCw,
   GraduationCap, MapPin, Globe, ChevronLeft, ChevronRight,
@@ -17,6 +19,7 @@ import {
 interface University {
   id: string;
   name: string;
+  nameI18n?: unknown;
   slug: string;
   country: string;
   city: string;
@@ -39,7 +42,11 @@ const GRADIENTS = [
 const PAGE_SIZE = 12;
 
 function initials(name: string) {
-  return name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  const a = parts[0][0] ?? "";
+  const b = parts.length > 1 ? parts[1][0] ?? "" : (parts[0][1] ?? "");
+  return (a + b).toUpperCase();
 }
 
 export default function UniversitiesPage() {
@@ -89,8 +96,21 @@ export default function UniversitiesPage() {
   const languages = Array.from(new Set(universities.map((u) => u.language).filter(Boolean)));
 
   const filtered = universities.filter((u) => {
-    const q = search.toLowerCase();
-    const matchSearch = !q || u.name.toLowerCase().includes(q) || u.city?.toLowerCase().includes(q) || u.country?.toLowerCase().includes(q);
+    const q = search.toLowerCase().trim();
+    const dispName = pickLocalized(u.nameI18n ?? u.name, getLanguage());
+    const nameEn = pickLocalized(u.nameI18n ?? u.name, "en").toLowerCase();
+    const nameAr = pickLocalized(u.nameI18n ?? u.name, "ar").toLowerCase();
+    const city = (u.city ?? "").toLowerCase();
+    const country = (u.country ?? "").toLowerCase();
+    const countryAr = formatCountryLabel(u.country, "ar").toLowerCase();
+    const matchSearch =
+      !q ||
+      nameEn.includes(q) ||
+      nameAr.includes(q) ||
+      dispName.toLowerCase().includes(q) ||
+      city.includes(q) ||
+      country.includes(q) ||
+      countryAr.includes(q);
     const matchStatus = statusFilter === "all" || String(u.isActive) === statusFilter;
     const matchLang   = langFilter   === "all" || u.language === langFilter;
     return matchSearch && matchStatus && matchLang;
@@ -99,6 +119,9 @@ export default function UniversitiesPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paged      = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const active     = universities.filter((u) => u.isActive).length;
+  const lang = getLanguage();
+  const dateLocale = lang === "ar" ? "ar-EG" : "en-US";
+  const locSep = lang === "ar" ? "، " : ", ";
 
   return (
     <div className="space-y-6">
@@ -171,7 +194,9 @@ export default function UniversitiesPage() {
         </button>
         {filtered.length !== universities.length && (
           <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full">
-            {filtered.length} of {universities.length} shown
+            {t("dashboardFilteredCount")
+              .replace("{filtered}", String(filtered.length))
+              .replace("{total}", String(universities.length))}
           </span>
         )}
       </div>
@@ -209,13 +234,14 @@ export default function UniversitiesPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {paged.map((uni, idx) => {
-            const grad = GRADIENTS[(uni.name.charCodeAt(0) || 0) % GRADIENTS.length];
+            const displayName = pickLocalized(uni.nameI18n ?? uni.name, lang);
+            const grad = GRADIENTS[(displayName.charCodeAt(0) || 0) % GRADIENTS.length];
             return (
               <div key={uni.id} className="group bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
                 {/* Card top banner */}
                 <div className={`relative h-24 bg-gradient-to-br ${grad} flex items-center justify-center`}>
                   <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center">
-                    <span className="text-white font-extrabold text-lg">{initials(uni.name)}</span>
+                    <span className="text-white font-extrabold text-lg">{initials(displayName)}</span>
                   </div>
                   {/* Status dot */}
                   <div className={`absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold backdrop-blur-sm ${
@@ -229,17 +255,20 @@ export default function UniversitiesPage() {
                 {/* Card body */}
                 <div className="p-4 space-y-3">
                   <div>
-                    <h3 className="font-bold text-gray-800 text-sm leading-tight line-clamp-2">{uni.name}</h3>
+                    <h3 className="font-bold text-gray-800 text-sm leading-tight line-clamp-2">{displayName}</h3>
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2 text-xs text-gray-500">
                       <MapPin size={11} className="text-gray-400 shrink-0" />
-                      <span className="truncate">{uni.city}{uni.country ? `, ${uni.country}` : ""}</span>
+                      <span className="truncate">
+                        {uni.city}
+                        {uni.country ? `${locSep}${formatCountryLabel(uni.country, lang)}` : ""}
+                      </span>
                     </div>
                     {uni.language && (
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <Globe size={11} className="text-gray-400 shrink-0" />
-                        <span>{uni.language}</span>
+                        <span>{formatInstructionLanguages(uni.language, t)}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-2 text-xs">
@@ -251,12 +280,13 @@ export default function UniversitiesPage() {
                         }`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full ${uni.admissionStatus === "OPEN" ? "bg-emerald-500" : "bg-rose-500"}`} />
-                        Admission {uni.admissionStatus === "OPEN" ? "Open" : "Closed"}
+                        {uni.admissionStatus === "OPEN" ? t("admissionOpen") : t("admissionClosed")}
                       </span>
                     </div>
                     {uni.admissionDeadline && (
                       <div className="text-[11px] text-gray-400">
-                        Deadline: {new Date(uni.admissionDeadline).toLocaleDateString("en-US")}
+                        {t("admissionDeadlineLabel")}{" "}
+                        {new Date(uni.admissionDeadline).toLocaleDateString(dateLocale)}
                       </div>
                     )}
                   </div>
@@ -266,12 +296,12 @@ export default function UniversitiesPage() {
                 <div className="px-4 pb-4 flex items-center gap-2">
                   <Link href={`/dashboard/universities/${uni.id}`}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 text-xs font-semibold transition-all">
-                    <Eye size={13} /> View
+                    <Eye size={13} /> {t("view")}
                   </Link>
                   {userRole && canAccess(userRole, "universities", "update") && (
                     <Link href={`/dashboard/universities/${uni.id}/edit`}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 text-xs font-semibold transition-all">
-                      <Edit2 size={13} /> Edit
+                      <Edit2 size={13} /> {t("edit")}
                     </Link>
                   )}
                   {userRole && canAccess(userRole, "universities", "delete") && (
@@ -293,7 +323,10 @@ export default function UniversitiesPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-2">
           <span className="text-xs text-gray-500 font-medium">
-            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+            {t("dashboardPaginationSummary")
+              .replace("{from}", String((page - 1) * PAGE_SIZE + 1))
+              .replace("{to}", String(Math.min(page * PAGE_SIZE, filtered.length)))
+              .replace("{total}", String(filtered.length))}
           </span>
           <div className="flex items-center gap-1">
             <button onClick={() => setPage((p) => p - 1)} disabled={page <= 1}

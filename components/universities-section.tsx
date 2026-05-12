@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { t, getLanguage, type Language } from "@/lib/i18n";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import { getLocaleHeaders } from "@/lib/api";
+import { formatCountryLabel, formatInstructionLanguages } from "@/lib/university-program-display";
 
 type University = {
   id: string;
@@ -75,11 +77,14 @@ function UniversityCard({
   index?: number;
   isRTL: boolean;
 }) {
+  const lang = getLanguage();
   const logoSrc = university.logoUrl || university.logo;
   const bannerSrc =
     getImageUrl(university.bannerUrl) ||
     getImageUrl(university.image1) ||
     figmaAssets.universityLogo1;
+  const displayCountry = formatCountryLabel(university.country, lang);
+  const displayLanguages = formatInstructionLanguages(university.language, t);
 
   return (
     <Card className="group overflow-hidden border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-400 hover:-translate-y-2 bg-white h-full flex flex-col">
@@ -98,7 +103,7 @@ function UniversityCard({
           {/* Country flag badge – top-right */}
           <div className="absolute top-3 right-3">
             <Badge className="bg-white/90 text-[#121c67] hover:bg-white font-montserrat-semibold text-xs shadow-sm">
-              {university.country}
+              {displayCountry}
             </Badge>
           </div>
 
@@ -107,7 +112,7 @@ function UniversityCard({
             <div className="absolute top-3 left-3">
               <Badge className="bg-[#5260ce]/90 text-white hover:bg-[#5260ce] text-xs font-montserrat-semibold shadow-sm">
                 <Trophy className="w-3 h-3 mr-1" />
-                #{university.worldRanking} World
+                #{university.worldRanking} {t("worldShort")}
               </Badge>
             </div>
           )}
@@ -159,7 +164,7 @@ function UniversityCard({
               className="border-[#5260ce]/30 text-[#2e2e2e] bg-[rgba(82,96,206,0.06)] text-xs font-montserrat-regular gap-1 rounded-full"
             >
               <Globe className="w-3 h-3 text-[#5260ce]" />
-              {university.language}
+              {displayLanguages}
             </Badge>
             {university.studentsNumber && (
               <Badge
@@ -245,19 +250,19 @@ function SectionBanner({ isRTL }: { isRTL: boolean }) {
       {/* Floating stat pills */}
       <div className="absolute inset-0 flex items-end justify-end p-6 gap-3 pointer-events-none">
         {[
-          { value: "150+", label: "Students" },
-          { value: "50+", label: "Universities" },
-          { value: "30+", label: "Countries" },
+          { value: "150+", labelKey: "studentsStatLabel" as const },
+          { value: "50+", labelKey: "universitiesStatLabel" as const },
+          { value: "30+", labelKey: "countriesStatLabel" as const },
         ].map((stat) => (
           <div
-            key={stat.label}
+            key={stat.labelKey}
             className="hidden md:flex flex-col items-center bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/30"
           >
             <span className="font-montserrat-bold text-white text-xl leading-none">
               {stat.value}
             </span>
             <span className="font-montserrat-regular text-white/80 text-xs mt-0.5">
-              {stat.label}
+              {t(stat.labelKey)}
             </span>
           </div>
         ))}
@@ -283,10 +288,6 @@ export function UniversitiesSection() {
   const [currentLang, setCurrentLang] = useState<Language>(getLanguage());
 
   useEffect(() => {
-    fetchUniversities();
-  }, []);
-
-  useEffect(() => {
     const interval = setInterval(() => {
       const lang = getLanguage();
       if (lang !== currentLang) setCurrentLang(lang);
@@ -294,21 +295,25 @@ export function UniversitiesSection() {
     return () => clearInterval(interval);
   }, [currentLang]);
 
-  const fetchUniversities = async () => {
-    try {
-      const res = await fetch(
-        `${API_BASE_URL}/public/universities?limit=3`
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setUniversities(data.data || []);
+  useEffect(() => {
+    const fetchUniversities = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`${API_BASE_URL}/public/universities?limit=3`, {
+          headers: getLocaleHeaders(),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUniversities(data.data || []);
+        }
+      } catch {
+        /* keep empty */
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      // stay with empty – skeleton fades naturally
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    fetchUniversities();
+  }, [currentLang]);
 
   const isRTL = currentLang === "ar";
 

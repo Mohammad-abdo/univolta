@@ -6,6 +6,7 @@ import { showToast } from "@/lib/toast";
 import { Plus, Trash2, GripVertical, Save, RotateCcw, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { pickLocalized } from "@/lib/localized";
+import { t, getLanguage } from "@/lib/i18n";
 
 interface TermsItem {
   type: "body" | "list";
@@ -40,7 +41,9 @@ export default function TermsEditorPage() {
   const [data, setData] = useState<TermsData>(DEFAULT_DATA);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"en" | "ar">("en");
+  const [activeTab, setActiveTab] = useState<"en" | "ar">(() =>
+    getLanguage() === "ar" ? "ar" : "en"
+  );
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -71,15 +74,15 @@ export default function TermsEditorPage() {
       });
       if (!res.ok) throw new Error();
       setData(payload);
-      showToast.success("Terms saved successfully");
+      showToast.success(t("dashTermsSavedToast"));
     } catch {
-      showToast.error("Failed to save terms");
+      showToast.error(t("dashTermsSaveFailedToast"));
     } finally {
       setSaving(false);
     }
   };
 
-  const reset = () => { setData(DEFAULT_DATA); showToast.success("Reset to defaults"); };
+  const reset = () => { setData(DEFAULT_DATA); showToast.success(t("dashTermsResetToast")); };
 
   const addSection = () => {
     const id = Date.now().toString();
@@ -153,18 +156,20 @@ export default function TermsEditorPage() {
             <FileText className="h-5 w-5 text-[#5260ce]" />
           </div>
           <div>
-            <h1 className="text-xl font-montserrat-bold text-[#121c67]">Terms & Conditions Editor</h1>
+            <h1 className="text-xl font-montserrat-bold text-[#121c67]">{t("dashTermsEditorTitle")}</h1>
             <p className="text-xs text-gray-500">
-              {data.lastUpdated ? `Last updated: ${new Date(data.lastUpdated).toLocaleDateString()}` : "Not yet saved"}
+              {data.lastUpdated
+                ? `${t("dashTermsLastUpdatedPrefix")} ${new Date(data.lastUpdated).toLocaleDateString(getLanguage() === "ar" ? "ar-EG" : "en-US")}`
+                : t("dashTermsNotYetSaved")}
             </p>
           </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={reset} className="gap-1.5 text-gray-600">
-            <RotateCcw className="h-3.5 w-3.5" /> Reset
+            <RotateCcw className="h-3.5 w-3.5" /> {t("dashTermsReset")}
           </Button>
           <Button size="sm" onClick={save} disabled={saving} className="gap-1.5 bg-[#5260ce] hover:bg-[#4352b8]">
-            <Save className="h-3.5 w-3.5" /> {saving ? "Saving…" : "Save Changes"}
+            <Save className="h-3.5 w-3.5" /> {saving ? t("saving") : t("saveChanges")}
           </Button>
         </div>
       </div>
@@ -179,7 +184,7 @@ export default function TermsEditorPage() {
               activeTab === lang ? "bg-white text-[#5260ce] shadow-sm" : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            {lang === "en" ? "🇬🇧 English" : "🇸🇦 Arabic"}
+            {lang === "en" ? t("dashTermsTabEnglish") : t("dashTermsTabArabic")}
           </button>
         ))}
       </div>
@@ -187,7 +192,7 @@ export default function TermsEditorPage() {
       {/* Welcome Message */}
       <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
         <label className="mb-2 block text-sm font-montserrat-semibold text-[#121c67]">
-          Welcome / Intro Message {activeTab === "ar" && "(Arabic)"}
+          {t("dashTermsWelcomeLabel")} {activeTab === "ar" && t("dashTermsWelcomeArabicSuffix")}
         </label>
         <textarea
           rows={3}
@@ -214,10 +219,11 @@ export default function TermsEditorPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-montserrat-bold text-[#121c67]">
-            Sections <span className="text-sm font-normal text-gray-400">({data.sections.length})</span>
+            {t("dashTermsSectionsHeading")}{" "}
+            <span className="text-sm font-normal text-gray-400">({data.sections.length})</span>
           </h2>
           <Button size="sm" variant="outline" onClick={addSection} className="gap-1.5 border-[#5260ce] text-[#5260ce]">
-            <Plus className="h-3.5 w-3.5" /> Add Section
+            <Plus className="h-3.5 w-3.5" /> {t("dashTermsAddSection")}
           </Button>
         </div>
 
@@ -231,7 +237,7 @@ export default function TermsEditorPage() {
               <input
                 dir={activeTab === "ar" ? "rtl" : "ltr"}
                 className="flex-1 bg-transparent text-sm font-montserrat-semibold text-[#121c67] focus:outline-none placeholder:text-gray-400"
-                placeholder={activeTab === "en" ? "Section title…" : "عنوان القسم…"}
+                placeholder={activeTab === "en" ? t("dashTermsSectionTitlePhEn") : t("dashTermsSectionTitlePhAr")}
                 value={activeTab === "en" ? pickLocalized(section.title, "en") : pickLocalized(section.title, "ar")}
                 onChange={(e) =>
                   updateSection(section.id, {
@@ -265,7 +271,7 @@ export default function TermsEditorPage() {
                     }
                     className={`rounded-md px-3 py-1 font-montserrat-semibold transition-all ${section.data.type === type ? "bg-white text-[#5260ce] shadow-sm" : "text-gray-400"}`}
                   >
-                    {type === "body" ? "Paragraph" : "Bullet List"}
+                    {type === "body" ? t("dashTermsTypeParagraph") : t("dashTermsTypeBulletList")}
                   </button>
                 ))}
               </div>
@@ -275,7 +281,7 @@ export default function TermsEditorPage() {
                   rows={3}
                   dir={activeTab === "ar" ? "rtl" : "ltr"}
                   className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#5260ce] focus:outline-none focus:ring-2 focus:ring-[#5260ce]/20 resize-none"
-                  placeholder={activeTab === "en" ? "Section content…" : "محتوى القسم…"}
+                  placeholder={activeTab === "en" ? t("dashTermsSectionContentPhEn") : t("dashTermsSectionContentPhAr")}
                   value={activeTab === "en" ? pickLocalized(section.data.content, "en") : pickLocalized(section.data.content, "ar")}
                   onChange={(e) =>
                     updateSectionData(section.id, {
@@ -294,7 +300,11 @@ export default function TermsEditorPage() {
                       <input
                         dir={activeTab === "ar" ? "rtl" : "ltr"}
                         className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#5260ce] focus:outline-none focus:ring-2 focus:ring-[#5260ce]/20"
-                        placeholder={activeTab === "en" ? `Item ${i + 1}…` : `البند ${i + 1}…`}
+                        placeholder={
+                          activeTab === "en"
+                            ? t("dashTermsListItemPhEn").replace("{n}", String(i + 1))
+                            : t("dashTermsListItemPhAr").replace("{n}", String(i + 1))
+                        }
                         value={activeTab === "en" ? pickLocalized(item, "en") : pickLocalized(item, "ar")}
                         onChange={(e) => {
                           const en = activeTab === "en" ? e.target.value : pickLocalized(item, "en");
@@ -314,7 +324,7 @@ export default function TermsEditorPage() {
                     onClick={() => addListItem(section.id)}
                     className="flex items-center gap-1.5 text-xs text-[#5260ce] hover:underline"
                   >
-                    <Plus className="h-3 w-3" /> Add item
+                    <Plus className="h-3 w-3" /> {t("dashTermsAddItem")}
                   </button>
                 </div>
               )}
@@ -325,7 +335,7 @@ export default function TermsEditorPage() {
         {data.sections.length === 0 && (
           <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 py-12 text-center">
             <FileText className="mb-3 h-10 w-10 text-gray-300" />
-            <p className="text-sm text-gray-400">No sections yet. Click "Add Section" to get started.</p>
+            <p className="text-sm text-gray-400">{t("dashTermsNoSections")}</p>
           </div>
         )}
       </div>
@@ -333,7 +343,7 @@ export default function TermsEditorPage() {
       {/* Bottom Save */}
       <div className="flex justify-end pt-2">
         <Button onClick={save} disabled={saving} className="gap-2 bg-[#5260ce] px-8 hover:bg-[#4352b8]">
-          <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save All Changes"}
+          <Save className="h-4 w-4" /> {saving ? t("saving") : t("dashTermsSaveAll")}
         </Button>
       </div>
     </div>

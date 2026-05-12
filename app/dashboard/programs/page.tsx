@@ -6,7 +6,14 @@ import { apiGet, apiDelete } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import { canAccess, type UserRole } from "@/lib/permissions";
 import { API_BASE_URL } from "@/lib/constants";
-import { t } from "@/lib/i18n";
+import { t, getLanguage } from "@/lib/i18n";
+import { pickLocalized } from "@/lib/localized";
+import {
+  formatDegreeLabel,
+  formatDurationLabel,
+  formatInstructionLanguages,
+  formatTuitionPeriod,
+} from "@/lib/university-program-display";
 import {
   Plus, Edit2, Trash2, Eye, Search, RefreshCw,
   BookOpen, Clock, Globe, DollarSign, GraduationCap,
@@ -16,6 +23,7 @@ import {
 interface Program {
   id: string;
   name: string;
+  nameI18n?: unknown;
   slug: string;
   degree?: string;
   duration?: string;
@@ -24,6 +32,7 @@ interface Program {
   isActive: boolean;
   university: {
     name: string;
+    nameI18n?: unknown;
     admissionStatus?: "OPEN" | "CLOSED";
     admissionStartDate?: string | null;
     admissionDeadline?: string | null;
@@ -100,8 +109,18 @@ export default function ProgramsPage() {
   const degrees = Array.from(new Set(programs.map((p) => p.degree).filter(Boolean))) as string[];
 
   const filtered = programs.filter((p) => {
-    const q = search.toLowerCase();
-    const matchSearch = !q || p.name.toLowerCase().includes(q) || p.university?.name?.toLowerCase().includes(q) || p.degree?.toLowerCase().includes(q);
+    const q = search.toLowerCase().trim();
+    const nameEn = pickLocalized(p.nameI18n ?? p.name, "en").toLowerCase();
+    const nameAr = pickLocalized(p.nameI18n ?? p.name, "ar").toLowerCase();
+    const uniEn = pickLocalized(p.university?.nameI18n ?? p.university?.name, "en").toLowerCase();
+    const uniAr = pickLocalized(p.university?.nameI18n ?? p.university?.name, "ar").toLowerCase();
+    const matchSearch =
+      !q ||
+      nameEn.includes(q) ||
+      nameAr.includes(q) ||
+      uniEn.includes(q) ||
+      uniAr.includes(q) ||
+      (p.degree ?? "").toLowerCase().includes(q);
     const matchStatus = statusFilter === "all" || String(p.isActive) === statusFilter;
     const matchDegree = degreeFilter === "all" || p.degree === degreeFilter;
     return matchSearch && matchStatus && matchDegree;
@@ -110,6 +129,8 @@ export default function ProgramsPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paged      = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const active     = programs.filter((p) => p.isActive).length;
+  const lang = getLanguage();
+  const dateLocale = lang === "ar" ? "ar-EG" : "en-US";
 
   return (
     <div className="space-y-6">
@@ -174,7 +195,11 @@ export default function ProgramsPage() {
             onChange={(e) => { setDegreeFilter(e.target.value); setPage(1); }}
           >
             <option value="all">{t("allDegrees")}</option>
-            {degrees.map((d) => <option key={d} value={d}>{d}</option>)}
+            {degrees.map((d) => (
+              <option key={d} value={d}>
+                {formatDegreeLabel(d, t)}
+              </option>
+            ))}
           </select>
         )}
         <button onClick={fetchPrograms} className="w-10 h-10 border border-gray-200 bg-white rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors">
@@ -182,7 +207,9 @@ export default function ProgramsPage() {
         </button>
         {filtered.length !== programs.length && (
           <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full">
-            {filtered.length} of {programs.length} shown
+            {t("dashboardFilteredCount")
+              .replace("{filtered}", String(filtered.length))
+              .replace("{total}", String(programs.length))}
           </span>
         )}
       </div>
@@ -243,13 +270,17 @@ export default function ProgramsPage() {
                   {/* Degree badge */}
                   {prog.degree && (
                     <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border ${dStyle.bg} ${dStyle.text} ${dStyle.border}`}>
-                      {prog.degree}
+                      {formatDegreeLabel(prog.degree, t)}
                     </span>
                   )}
-                  <h3 className="font-bold text-gray-800 text-sm leading-tight line-clamp-2">{prog.name}</h3>
+                  <h3 className="font-bold text-gray-800 text-sm leading-tight line-clamp-2">
+                    {pickLocalized(prog.nameI18n ?? prog.name, lang)}
+                  </h3>
                   <div className="flex items-center gap-1.5 text-xs text-gray-500">
                     <Building2 size={10} className="text-gray-400 shrink-0" />
-                    <span className="truncate">{prog.university?.name}</span>
+                    <span className="truncate">
+                      {pickLocalized(prog.university?.nameI18n ?? prog.university?.name, lang)}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span
@@ -260,28 +291,30 @@ export default function ProgramsPage() {
                       }`}
                     >
                       <span className={`w-1.5 h-1.5 rounded-full ${prog.university?.admissionStatus === "OPEN" ? "bg-emerald-500" : "bg-rose-500"}`} />
-                      {prog.university?.admissionStatus === "OPEN" ? "Admission Open" : "Admission Closed"}
+                      {prog.university?.admissionStatus === "OPEN"
+                        ? t("admissionOpen")
+                        : t("admissionClosed")}
                     </span>
                     {prog.university?.admissionDeadline && (
                       <span className="text-[10px] text-gray-400">
-                        {new Date(prog.university.admissionDeadline).toLocaleDateString("en-US")}
+                        {new Date(prog.university.admissionDeadline).toLocaleDateString(dateLocale)}
                       </span>
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {prog.duration && (
                       <div className="flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-lg">
-                        <Clock size={10} /> {prog.duration}
+                        <Clock size={10} /> {formatDurationLabel(prog.duration, t)}
                       </div>
                     )}
                     {prog.language && (
                       <div className="flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-lg">
-                        <Globe size={10} /> {prog.language}
+                        <Globe size={10} /> {formatInstructionLanguages(prog.language, t)}
                       </div>
                     )}
                     {prog.tuition && (
                       <div className="flex items-center gap-1 text-[11px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg font-medium">
-                        <DollarSign size={10} /> {prog.tuition}
+                        <DollarSign size={10} /> {formatTuitionPeriod(prog.tuition, t)}
                       </div>
                     )}
                   </div>
@@ -291,12 +324,12 @@ export default function ProgramsPage() {
                 <div className="px-4 pb-4 flex items-center gap-2">
                   <Link href={`/dashboard/programs/${prog.id}`}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50 text-xs font-semibold transition-all">
-                    <Eye size={13} /> View
+                    <Eye size={13} /> {t("view")}
                   </Link>
                   {userRole && canAccess(userRole, "programs", "update") && (
                     <Link href={`/dashboard/programs/${prog.id}/edit`}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 text-xs font-semibold transition-all">
-                      <Edit2 size={13} /> Edit
+                      <Edit2 size={13} /> {t("edit")}
                     </Link>
                   )}
                   {userRole && canAccess(userRole, "programs", "delete") && (
@@ -318,7 +351,10 @@ export default function ProgramsPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-2">
           <span className="text-xs text-gray-500 font-medium">
-            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+            {t("dashboardPaginationSummary")
+              .replace("{from}", String((page - 1) * PAGE_SIZE + 1))
+              .replace("{to}", String(Math.min(page * PAGE_SIZE, filtered.length)))
+              .replace("{total}", String(filtered.length))}
           </span>
           <div className="flex items-center gap-1">
             <button onClick={() => setPage((p) => p - 1)} disabled={page <= 1}

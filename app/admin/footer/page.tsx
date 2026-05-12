@@ -8,6 +8,7 @@ import {
   Globe, Link2, Phone, Mail, MapPin, Copyright, Share2,
   Facebook, Instagram, Twitter, Linkedin, ExternalLink,
 } from "lucide-react";
+import { t, getLanguage } from "@/lib/i18n";
 
 type Tab = "contact" | "links" | "social";
 
@@ -82,9 +83,9 @@ export default function FooterManager() {
           { en: (data.addressEn ?? data.address ?? "").trim(), ar: (data.addressAr ?? "").trim() || undefined },
       };
       await settingsApi.set("footer.content", payload);
-      showToast("success", "Footer saved successfully!");
+      showToast("success", t("dashFooterSaved"));
     } catch (e: any) {
-      showToast("error", e.message ?? "Save failed");
+      showToast("error", e.message ?? t("dashFooterSaveFailed"));
     } finally {
       setSaving(false);
     }
@@ -118,17 +119,19 @@ export default function FooterManager() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <div className="w-12 h-12 border-4 border-[#5260ce] border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-gray-500 font-medium">Loading footer settings…</p>
+        <p className="text-sm text-gray-500 font-medium">{t("dashFooterLoading")}</p>
       </div>
     );
   }
 
   const inp = "w-full border border-gray-200 bg-white rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5260ce]/30 focus:border-[#5260ce] transition-all";
 
-  const tabs: { key: Tab; label: string; icon: React.ReactNode; count?: number }[] = [
-    { key: "contact", label: "Contact Info", icon: <Phone   size={15} /> },
-    { key: "links",   label: "Quick Links",  icon: <Link2   size={15} />, count: data.quickLinks?.length ?? 0 },
-    { key: "social",  label: "Social Media", icon: <Share2  size={15} />, count: data.socialLinks?.length ?? 0 },
+  const uiLang = getLanguage();
+
+  const tabs: { key: Tab; labelKey: string; icon: React.ReactNode; count?: number }[] = [
+    { key: "contact", labelKey: "dashFooterTabContact", icon: <Phone   size={15} /> },
+    { key: "links",   labelKey: "dashFooterTabLinks",  icon: <Link2   size={15} />, count: data.quickLinks?.length ?? 0 },
+    { key: "social",  labelKey: "dashFooterTabSocial", icon: <Share2  size={15} />, count: data.socialLinks?.length ?? 0 },
   ];
 
   return (
@@ -152,14 +155,14 @@ export default function FooterManager() {
               <Globe size={22} />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight">Footer Manager</h1>
-              <p className="text-white/60 text-sm mt-0.5">Contact info · Navigation links · Social media</p>
+              <h1 className="text-2xl font-extrabold tracking-tight">{t("dashFooterTitle")}</h1>
+              <p className="text-white/60 text-sm mt-0.5">{t("dashFooterSubtitle")}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-center backdrop-blur-sm">
               <p className="text-xl font-bold">{(data.quickLinks?.length ?? 0) + (data.socialLinks?.length ?? 0)}</p>
-              <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider">Total Links</p>
+              <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider">{t("dashFooterTotalLinksLabel")}</p>
             </div>
           </div>
         </div>
@@ -167,23 +170,23 @@ export default function FooterManager() {
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100/80 p-1 rounded-2xl w-full md:w-auto md:inline-flex">
-        {tabs.map((t) => (
+        {tabs.map((tabItem) => (
           <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
+            key={tabItem.key}
+            onClick={() => setTab(tabItem.key)}
             className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-              tab === t.key
+              tab === tabItem.key
                 ? "bg-white text-[#5260ce] shadow-md shadow-black/5"
                 : "text-gray-500 hover:text-gray-700 hover:bg-white/50"
             }`}
           >
-            <span className={tab === t.key ? "text-[#5260ce]" : "text-gray-400"}>{t.icon}</span>
-            {t.label}
-            {t.count !== undefined && (
+            <span className={tab === tabItem.key ? "text-[#5260ce]" : "text-gray-400"}>{tabItem.icon}</span>
+            {t(tabItem.labelKey)}
+            {tabItem.count !== undefined && (
               <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
-                tab === t.key ? "bg-[#5260ce]/10 text-[#5260ce]" : "bg-gray-200 text-gray-500"
+                tab === tabItem.key ? "bg-[#5260ce]/10 text-[#5260ce]" : "bg-gray-200 text-gray-500"
               }`}>
-                {t.count}
+                {tabItem.count}
               </span>
             )}
           </button>
@@ -195,59 +198,103 @@ export default function FooterManager() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
             <h2 className="font-bold text-gray-800 flex items-center gap-2">
-              <Phone size={16} className="text-[#5260ce]" /> Contact Information
+              <Phone size={16} className="text-[#5260ce]" /> {t("dashFooterContactBlockTitle")}
             </h2>
-            <p className="text-xs text-gray-500 mt-0.5">Displayed in the footer section of your website</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t("dashFooterContactBlockDesc")}</p>
           </div>
           <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div>
-              <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
-                <div className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Globe size={10} /></div>
-                Footer Title (English)
-              </label>
-              <input className={inp} value={data.titleEn ?? ""} onChange={(e) => setField("titleEn", e.target.value)} placeholder="UniVolta" />
-            </div>
-            <div>
-              <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
-                <div className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Globe size={10} /></div>
-                Footer Title (Arabic)
-              </label>
-              <input className={inp} value={data.titleAr ?? ""} onChange={(e) => setField("titleAr", e.target.value)} placeholder="يوني فولتا" />
-            </div>
+            {uiLang === "ar" ? (
+              <>
+                <div>
+                  <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
+                    <div className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Globe size={10} /></div>
+                    {t("dashFooterLabelTitleAr")}
+                  </label>
+                  <input className={inp} dir="rtl" value={data.titleAr ?? ""} onChange={(e) => setField("titleAr", e.target.value)} placeholder="يوني فولتا" />
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
+                    <div className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Globe size={10} /></div>
+                    {t("dashFooterLabelTitleEn")}
+                  </label>
+                  <input className={inp} value={data.titleEn ?? ""} onChange={(e) => setField("titleEn", e.target.value)} placeholder="UniVolta" />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
+                    <div className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Globe size={10} /></div>
+                    {t("dashFooterLabelTitleEn")}
+                  </label>
+                  <input className={inp} value={data.titleEn ?? ""} onChange={(e) => setField("titleEn", e.target.value)} placeholder="UniVolta" />
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
+                    <div className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><Globe size={10} /></div>
+                    {t("dashFooterLabelTitleAr")}
+                  </label>
+                  <input className={inp} dir="rtl" value={data.titleAr ?? ""} onChange={(e) => setField("titleAr", e.target.value)} placeholder="يوني فولتا" />
+                </div>
+              </>
+            )}
             <div>
               <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
                 <div className="w-5 h-5 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><Phone size={10} /></div>
-                Phone Number
+                {t("dashFooterLabelPhone")}
               </label>
               <input className={inp} value={data.phone ?? ""} onChange={(e) => setField("phone", e.target.value)} placeholder="+20 100 000 0000" />
             </div>
             <div>
               <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
                 <div className="w-5 h-5 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center"><Mail size={10} /></div>
-                Email Address
+                {t("dashFooterLabelEmail")}
               </label>
               <input className={inp} type="email" value={data.email ?? ""} onChange={(e) => setField("email", e.target.value)} placeholder="info@univolta.com" />
             </div>
-            <div className="sm:col-span-2">
-              <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
-                <div className="w-5 h-5 rounded-lg bg-red-100 text-red-500 flex items-center justify-center"><MapPin size={10} /></div>
-                Address (English)
-              </label>
-              <input className={inp} value={data.addressEn ?? ""} onChange={(e) => setField("addressEn", e.target.value)} placeholder="Cairo, Egypt" />
-              <p className="mt-1 text-[11px] text-gray-400">Shown when the site language is English.</p>
-            </div>
-            <div className="sm:col-span-2">
-              <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
-                <div className="w-5 h-5 rounded-lg bg-red-100 text-red-500 flex items-center justify-center"><MapPin size={10} /></div>
-                Address (Arabic)
-              </label>
-              <input className={inp} value={data.addressAr ?? ""} onChange={(e) => setField("addressAr", e.target.value)} placeholder="القاهرة، مصر" />
-              <p className="mt-1 text-[11px] text-gray-400">Shown when the site language is Arabic.</p>
-            </div>
+            {uiLang === "ar" ? (
+              <>
+                <div className="sm:col-span-2">
+                  <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
+                    <div className="w-5 h-5 rounded-lg bg-red-100 text-red-500 flex items-center justify-center"><MapPin size={10} /></div>
+                    {t("dashFooterLabelAddressAr")}
+                  </label>
+                  <input className={inp} dir="rtl" value={data.addressAr ?? ""} onChange={(e) => setField("addressAr", e.target.value)} placeholder="القاهرة، مصر" />
+                  <p className="mt-1 text-[11px] text-gray-400">{t("dashFooterHintAddressAr")}</p>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
+                    <div className="w-5 h-5 rounded-lg bg-red-100 text-red-500 flex items-center justify-center"><MapPin size={10} /></div>
+                    {t("dashFooterLabelAddressEn")}
+                  </label>
+                  <input className={inp} value={data.addressEn ?? ""} onChange={(e) => setField("addressEn", e.target.value)} placeholder="Cairo, Egypt" />
+                  <p className="mt-1 text-[11px] text-gray-400">{t("dashFooterHintAddressEn")}</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="sm:col-span-2">
+                  <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
+                    <div className="w-5 h-5 rounded-lg bg-red-100 text-red-500 flex items-center justify-center"><MapPin size={10} /></div>
+                    {t("dashFooterLabelAddressEn")}
+                  </label>
+                  <input className={inp} value={data.addressEn ?? ""} onChange={(e) => setField("addressEn", e.target.value)} placeholder="Cairo, Egypt" />
+                  <p className="mt-1 text-[11px] text-gray-400">{t("dashFooterHintAddressEn")}</p>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
+                    <div className="w-5 h-5 rounded-lg bg-red-100 text-red-500 flex items-center justify-center"><MapPin size={10} /></div>
+                    {t("dashFooterLabelAddressAr")}
+                  </label>
+                  <input className={inp} dir="rtl" value={data.addressAr ?? ""} onChange={(e) => setField("addressAr", e.target.value)} placeholder="القاهرة، مصر" />
+                  <p className="mt-1 text-[11px] text-gray-400">{t("dashFooterHintAddressAr")}</p>
+                </div>
+              </>
+            )}
             <div className="sm:col-span-2">
               <label className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
                 <div className="w-5 h-5 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center"><Copyright size={10} /></div>
-                Copyright Text
+                {t("dashFooterLabelCopyright")}
               </label>
               <input className={inp} value={data.copyright ?? ""} onChange={(e) => setField("copyright", e.target.value)} placeholder="© 2024 UniVolta. All rights reserved." />
             </div>
@@ -261,15 +308,15 @@ export default function FooterManager() {
           <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white flex items-center justify-between">
             <div>
               <h2 className="font-bold text-gray-800 flex items-center gap-2">
-                <Link2 size={16} className="text-[#5260ce]" /> Quick Links
+                <Link2 size={16} className="text-[#5260ce]" /> {t("dashFooterLinksTitle")}
               </h2>
-              <p className="text-xs text-gray-500 mt-0.5">Navigation links shown in the footer</p>
+              <p className="text-xs text-gray-500 mt-0.5">{t("dashFooterLinksDesc")}</p>
             </div>
             <button
               onClick={() => addLink("quickLinks")}
               className="inline-flex items-center gap-2 bg-[#5260ce] hover:bg-[#4251be] active:scale-95 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-all shadow-md shadow-indigo-200"
             >
-              <Plus size={15} /> Add Link
+              <Plus size={15} /> {t("dashFooterAddLink")}
             </button>
           </div>
 
@@ -279,20 +326,20 @@ export default function FooterManager() {
                 <div className="w-14 h-14 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center">
                   <Link2 size={22} className="opacity-40" />
                 </div>
-                <p className="font-medium text-sm">No links yet</p>
+                <p className="font-medium text-sm">{t("dashFooterNoLinks")}</p>
                 <button
                   onClick={() => addLink("quickLinks")}
                   className="inline-flex items-center gap-2 bg-[#5260ce] hover:bg-[#4251be] text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all mt-1"
                 >
-                  <Plus size={15} /> Add Your First Link
+                  <Plus size={15} /> {t("dashFooterAddFirstLink")}
                 </button>
               </div>
             ) : (
               <>
                 <div className="grid grid-cols-[24px_1fr_1fr_36px] gap-3 px-1 mb-1">
                   <div />
-                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Label</p>
-                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">URL / Path</p>
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("dashFooterColLabel")}</p>
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("dashFooterColUrl")}</p>
                   <div />
                 </div>
                 {(data.quickLinks ?? []).map((link, idx) => (
@@ -302,14 +349,14 @@ export default function FooterManager() {
                     </div>
                     <input
                       className={inp}
-                      placeholder="e.g. Home"
+                      placeholder={t("dashFooterPhLinkLabel")}
                       value={link.label}
                       onChange={(e) => updateLink("quickLinks", idx, "label", e.target.value)}
                     />
                     <div className="relative">
                       <input
                         className={`${inp} pr-9`}
-                        placeholder="/path or https://…"
+                        placeholder={t("dashFooterPhUrl")}
                         value={link.href}
                         onChange={(e) => updateLink("quickLinks", idx, "href", e.target.value)}
                       />
@@ -332,7 +379,7 @@ export default function FooterManager() {
                   onClick={() => addLink("quickLinks")}
                   className="w-full mt-2 flex items-center justify-center gap-2 border-2 border-dashed border-indigo-200 text-indigo-500 hover:border-indigo-400 hover:bg-indigo-50/50 rounded-xl py-3 text-sm font-semibold transition-all"
                 >
-                  <Plus size={16} /> Add Another Link
+                  <Plus size={16} /> {t("dashFooterAddAnotherLink")}
                 </button>
               </>
             )}
@@ -346,15 +393,15 @@ export default function FooterManager() {
           <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white flex items-center justify-between">
             <div>
               <h2 className="font-bold text-gray-800 flex items-center gap-2">
-                <Share2 size={16} className="text-[#5260ce]" /> Social Media Links
+                <Share2 size={16} className="text-[#5260ce]" /> {t("dashFooterSocialBlockTitle")}
               </h2>
-              <p className="text-xs text-gray-500 mt-0.5">Social platform icons in the footer</p>
+              <p className="text-xs text-gray-500 mt-0.5">{t("dashFooterSocialBlockDesc")}</p>
             </div>
             <button
               onClick={() => addLink("socialLinks")}
               className="inline-flex items-center gap-2 bg-[#5260ce] hover:bg-[#4251be] active:scale-95 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-all shadow-md shadow-indigo-200"
             >
-              <Plus size={15} /> Add Platform
+              <Plus size={15} /> {t("dashFooterAddPlatform")}
             </button>
           </div>
 
@@ -364,20 +411,20 @@ export default function FooterManager() {
                 <div className="w-14 h-14 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center">
                   <Share2 size={22} className="opacity-40" />
                 </div>
-                <p className="font-medium text-sm">No social links yet</p>
+                <p className="font-medium text-sm">{t("dashFooterNoSocial")}</p>
                 <button
                   onClick={() => addLink("socialLinks")}
                   className="inline-flex items-center gap-2 bg-[#5260ce] hover:bg-[#4251be] text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all mt-1"
                 >
-                  <Plus size={15} /> Add First Platform
+                  <Plus size={15} /> {t("dashFooterAddFirstPlatform")}
                 </button>
               </div>
             ) : (
               <>
                 <div className="grid grid-cols-[24px_160px_1fr_36px] gap-3 px-1 mb-1">
                   <div />
-                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Platform</p>
-                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Profile URL</p>
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("dashFooterColPlatform")}</p>
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("dashFooterColProfileUrl")}</p>
                   <div />
                 </div>
                 {(data.socialLinks ?? []).map((link, idx) => {
@@ -394,7 +441,7 @@ export default function FooterManager() {
                         </div>
                         <input
                           className={`${inp} pl-8`}
-                          placeholder="e.g. Facebook"
+                          placeholder={t("dashFooterPhPlatform")}
                           value={(link as any).platform ?? ""}
                           onChange={(e) => updateLink("socialLinks", idx, "platform", e.target.value)}
                         />
@@ -402,7 +449,7 @@ export default function FooterManager() {
                       <div className="relative">
                         <input
                           className={`${inp} pr-9`}
-                          placeholder="https://…"
+                          placeholder={t("dashFooterPhHttps")}
                           value={link.href}
                           onChange={(e) => updateLink("socialLinks", idx, "href", e.target.value)}
                         />
@@ -426,7 +473,7 @@ export default function FooterManager() {
                   onClick={() => addLink("socialLinks")}
                   className="w-full mt-2 flex items-center justify-center gap-2 border-2 border-dashed border-indigo-200 text-indigo-500 hover:border-indigo-400 hover:bg-indigo-50/50 rounded-xl py-3 text-sm font-semibold transition-all"
                 >
-                  <Plus size={16} /> Add Another Platform
+                  <Plus size={16} /> {t("dashFooterAddAnotherPlatform")}
                 </button>
               </>
             )}
@@ -436,14 +483,14 @@ export default function FooterManager() {
 
       {/* Save Bar */}
       <div className="sticky bottom-0 z-10 bg-white/95 backdrop-blur-sm border-t border-gray-100 -mx-6 px-6 py-4 flex items-center justify-between">
-        <p className="text-xs text-gray-400 font-medium">Changes are not saved automatically</p>
+        <p className="text-xs text-gray-400 font-medium">{t("dashFooterNotAutoSaved")}</p>
         <button
           onClick={save}
           disabled={saving}
           className="inline-flex items-center gap-2 bg-[#5260ce] hover:bg-[#4251be] active:scale-95 text-white text-sm font-bold px-7 py-3 rounded-xl transition-all shadow-lg shadow-indigo-200 disabled:opacity-60"
         >
           {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-          {saving ? "Saving…" : "Save Footer"}
+          {saving ? t("saving") : t("dashFooterSave")}
         </button>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { canAccess, type UserRole } from "@/lib/permissions";
 import { API_BASE_URL } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, Link2 } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 export interface ApplicationAdvisor {
   id: string;
@@ -54,7 +55,7 @@ export default function AdvisorsPage() {
         const data = await apiGet<ApplicationAdvisor[]>("/advisors");
         setRows(data);
       } catch {
-        showToast.error("Failed to load advisors");
+        showToast.error(t("dashAdvisorsLoadFailed"));
       } finally {
         setLoading(false);
       }
@@ -64,33 +65,33 @@ export default function AdvisorsPage() {
   const copyReferral = (token: string) => {
     const url = `${origin}/r/${token}`;
     void navigator.clipboard.writeText(url);
-    showToast.success("Referral link copied");
+    showToast.success(t("dashAdvisorsReferralCopied"));
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this advisor?")) return;
+    if (!confirm(t("dashAdvisorsDeleteConfirm"))) return;
     try {
       await apiDelete(`/advisors/${id}`);
-      showToast.success("Advisor deleted");
+      showToast.success(t("dashAdvisorsDeleted"));
       setRows((r) => r.filter((x) => x.id !== id));
     } catch (e: unknown) {
-      showToast.error(e instanceof Error ? e.message : "Delete failed");
+      showToast.error(e instanceof Error ? e.message : t("dashAdvisorsDeleteFailed"));
     }
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>;
+    return <div className="flex items-center justify-center h-64">{t("loading")}</div>;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-montserrat-bold text-[#121c67]">Application advisors</h1>
+        <h1 className="text-3xl font-montserrat-bold text-[#121c67]">{t("dashAdvisorsTitle")}</h1>
         {userRole && canAccess(userRole, "advisors", "create") && (
           <Link href="/dashboard/advisors/add">
             <Button className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold">
               <Plus className="w-4 h-4 mr-2" />
-              Add advisor
+              {t("dashAdvisorsAdd")}
             </Button>
           </Link>
         )}
@@ -104,20 +105,20 @@ export default function AdvisorsPage() {
                 <p className="text-sm text-gray-600">{a.title}</p>
                 {a.institution && <p className="text-sm text-gray-500">{a.institution}</p>}
                 <p className="text-xs text-gray-400 mt-1">
-                  WhatsApp: {a.whatsappE164} · Order: {a.sortOrder}{" "}
-                  {!a.isActive && <span className="text-orange-600 font-semibold">(inactive)</span>}
+                  {t("dashAdvisorsWhatsApp")} {a.whatsappE164} · {t("dashAdvisorsOrder")} {a.sortOrder}{" "}
+                  {!a.isActive && <span className="text-orange-600 font-semibold">{t("dashAdvisorsInactive")}</span>}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={() => copyReferral(a.referralToken)}>
                   <Link2 className="w-4 h-4 mr-1" />
-                  Copy referral link
+                  {t("dashAdvisorsCopyReferral")}
                 </Button>
                 {userRole && canAccess(userRole, "advisors", "update") && (
                   <Link href={`/dashboard/advisors/${a.id}/edit`}>
                     <Button variant="outline" size="sm">
                       <Edit className="w-4 h-4 mr-1" />
-                      Edit
+                      {t("edit")}
                     </Button>
                   </Link>
                 )}
@@ -126,7 +127,7 @@ export default function AdvisorsPage() {
                     type="button"
                     onClick={() => handleDelete(a.id)}
                     className="text-red-600 hover:text-red-800 p-2"
-                    aria-label="Delete"
+                    aria-label={t("delete")}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -135,7 +136,7 @@ export default function AdvisorsPage() {
             </div>
           </div>
         ))}
-        {rows.length === 0 && <div className="text-center py-12 text-gray-500">No advisors yet.</div>}
+        {rows.length === 0 && <div className="text-center py-12 text-gray-500">{t("dashAdvisorsEmpty")}</div>}
       </div>
     </div>
   );

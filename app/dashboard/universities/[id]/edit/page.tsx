@@ -10,6 +10,7 @@ import { API_BASE_URL } from "@/lib/constants";
 import { getImageUrl } from "@/lib/image-utils";
 import Link from "next/link";
 import Image from "next/image";
+import { t } from "@/lib/i18n";
 
 export default function EditUniversityPage() {
   const router = useRouter();
@@ -113,7 +114,7 @@ export default function EditUniversityPage() {
         setTourImagePreviews(data.tourImages.map((img: string) => getImageUrl(img)));
       }
     } catch (error: any) {
-      const errorMsg = error.message || "Failed to load university";
+      const errorMsg = error.message || t("dashboardFailedToLoadUniversity");
       showToast.error(errorMsg);
       setError(errorMsg);
     } finally {
@@ -140,7 +141,7 @@ export default function EditUniversityPage() {
         setTourImagePreviews([...tourImagePreviews, URL.createObjectURL(file)]);
       }
     } catch (error: any) {
-      showToast.error(error.message || "Failed to upload image");
+      showToast.error(error.message || t("dashboardFailedToUploadImage"));
     } finally {
       setUploading(null);
     }
@@ -158,7 +159,7 @@ export default function EditUniversityPage() {
         setTourImagePreviews((prev) => [...prev, getImageUrl(url)]);
       });
     } catch (error: any) {
-      showToast.error(error.message || "Failed to upload images");
+      showToast.error(error.message || t("dashboardFailedToUploadImages"));
     } finally {
       setUploading(null);
     }
@@ -253,10 +254,10 @@ export default function EditUniversityPage() {
         admissionStartDate: formData.admissionStartDate ? new Date(formData.admissionStartDate).toISOString() : null,
       });
 
-      showToast.success("University updated successfully!");
+      showToast.success(t("dashboardUniversityUpdated"));
       router.push("/dashboard/universities");
     } catch (error: any) {
-      const errorMsg = error.message || "Failed to update university";
+      const errorMsg = error.message || t("dashboardUniversityUpdateFailed");
       showToast.error(errorMsg);
       setError(errorMsg);
     } finally {
@@ -267,7 +268,7 @@ export default function EditUniversityPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading...</div>
+        <div className="text-lg">{t("loading")}</div>
       </div>
     );
   }
@@ -280,7 +281,7 @@ export default function EditUniversityPage() {
             <ArrowLeft className="w-4 h-4" />
           </Button>
         </Link>
-        <h1 className="text-3xl font-montserrat-bold text-[#121c67]">Edit University</h1>
+        <h1 className="text-3xl font-montserrat-bold text-[#121c67]">{t("editUniversity")}</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
@@ -291,10 +292,10 @@ export default function EditUniversityPage() {
         {/* University Admin Account Section */}
         {universityUser && (
           <div className="mb-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
-            <h2 className="text-xl font-montserrat-bold text-[#121c67] mb-4">University Admin Account</h2>
+            <h2 className="text-xl font-montserrat-bold text-[#121c67] mb-4">{t("universityAdminAccount")}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block font-montserrat-semibold text-sm mb-2">Admin Email *</label>
+                <label className="block font-montserrat-semibold text-sm mb-2">{t("adminEmailRequired")}</label>
                 <input
                   type="email"
                   value={userFormData.email}
@@ -304,23 +305,23 @@ export default function EditUniversityPage() {
                 />
               </div>
               <div>
-                <label className="block font-montserrat-semibold text-sm mb-2">New Password</label>
+                <label className="block font-montserrat-semibold text-sm mb-2">{t("authNewPassword")}</label>
                 <input
                   type="password"
                   value={userFormData.password}
                   onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })}
-                  placeholder="Leave empty to keep current password"
+                  placeholder={t("dashboardLeavePasswordEmpty")}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
                 />
-                <p className="text-xs text-gray-500 mt-1">Leave empty to keep current password</p>
+                <p className="text-xs text-gray-500 mt-1">{t("dashboardLeavePasswordEmpty")}</p>
               </div>
               <div>
-                <label className="block font-montserrat-semibold text-sm mb-2">Confirm Password</label>
+                <label className="block font-montserrat-semibold text-sm mb-2">{t("authConfirmPassword")}</label>
                 <input
                   type="password"
                   value={userFormData.confirmPassword}
                   onChange={(e) => setUserFormData({ ...userFormData, confirmPassword: e.target.value })}
-                  placeholder="Confirm new password"
+                  placeholder={t("dashboardConfirmNewPasswordPlaceholder")}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
                 />
               </div>
@@ -330,7 +331,7 @@ export default function EditUniversityPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-2">University Name (English) *</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("universityNameEnglishStar")}</label>
             <input
               type="text"
               value={formData.nameEn}
@@ -341,7 +342,7 @@ export default function EditUniversityPage() {
           </div>
 
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-2">University Name (Arabic)</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("universityNameArabicLabel")}</label>
             <input
               type="text"
               dir="rtl"
@@ -352,19 +353,19 @@ export default function EditUniversityPage() {
           </div>
 
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-2">Slug *</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("slugRequiredLabel")}</label>
             <input
               type="text"
               value={formData.slug}
               onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-              placeholder="auto-generated from name"
+              placeholder={t("dashboardSlugPlaceholder")}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
             />
-            <p className="text-xs text-gray-500 mt-1">Leave empty to auto-generate from name</p>
+            <p className="text-xs text-gray-500 mt-1">{t("dashboardSlugHint")}</p>
           </div>
 
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-2">Country *</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("countryRequiredStar")}</label>
             <input
               type="text"
               value={formData.country}
@@ -375,7 +376,7 @@ export default function EditUniversityPage() {
           </div>
 
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-2">City *</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("cityRequiredStar")}</label>
             <input
               type="text"
               value={formData.city}
@@ -386,7 +387,7 @@ export default function EditUniversityPage() {
           </div>
 
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-2">Language *</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("languageRequiredStar")}</label>
             <input
               type="text"
               value={formData.language}
@@ -397,7 +398,7 @@ export default function EditUniversityPage() {
           </div>
 
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-2">Website URL</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("websiteUrlLabel")}</label>
             <input
               type="url"
               value={formData.website}
@@ -408,18 +409,18 @@ export default function EditUniversityPage() {
 
           {/* Logo Upload */}
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-2">Logo</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("dashboardLogoLabel")}</label>
             <div className="space-y-2">
               {logoPreview && (
                 <div className="relative w-32 h-32 border border-gray-300 rounded-lg overflow-hidden">
-                  <Image src={getImageUrl(logoPreview)} alt="Logo preview" fill className="object-contain" unoptimized />
+                  <Image src={getImageUrl(logoPreview)} alt={t("universityLogo")} fill className="object-contain" unoptimized />
                 </div>
               )}
               <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#5260ce] transition-colors">
                 <div className="text-center">
                   <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
                   <p className="text-sm text-gray-600">
-                    {uploading === "logo" ? "Uploading..." : "Click to upload logo"}
+                    {uploading === "logo" ? t("uploading") : t("clickToUploadLogo")}
                   </p>
                 </div>
                 <input
@@ -439,7 +440,7 @@ export default function EditUniversityPage() {
                   value={formData.logoUrl}
                   readOnly
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 text-sm"
-                  placeholder="Logo URL"
+                  placeholder={t("dashboardLogoUrlPlaceholder")}
                 />
               )}
             </div>
@@ -447,18 +448,18 @@ export default function EditUniversityPage() {
 
           {/* Banner Upload */}
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-2">Banner Image</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("dashboardBannerImageLabel")}</label>
             <div className="space-y-2">
               {bannerPreview && (
                 <div className="relative w-full h-48 border border-gray-300 rounded-lg overflow-hidden">
-                  <Image src={getImageUrl(bannerPreview)} alt="Banner preview" fill className="object-cover" unoptimized />
+                  <Image src={getImageUrl(bannerPreview)} alt={t("universityBanner")} fill className="object-cover" unoptimized />
                 </div>
               )}
               <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#5260ce] transition-colors">
                 <div className="text-center">
                   <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
                   <p className="text-sm text-gray-600">
-                    {uploading === "banner" ? "Uploading..." : "Click to upload banner"}
+                    {uploading === "banner" ? t("uploading") : t("clickToUploadBanner")}
                   </p>
                 </div>
                 <input
@@ -478,7 +479,7 @@ export default function EditUniversityPage() {
                   value={formData.bannerUrl}
                   readOnly
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 text-sm"
-                  placeholder="Banner URL"
+                  placeholder={t("dashboardBannerUrlPlaceholder")}
                 />
               )}
             </div>
@@ -486,7 +487,7 @@ export default function EditUniversityPage() {
 
           {/* Statistics */}
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-2">Establishment Year</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("establishmentYear")}</label>
             <input
               type="number"
               value={formData.establishmentYear}
@@ -496,7 +497,7 @@ export default function EditUniversityPage() {
           </div>
 
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-2">World Ranking</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("worldRanking")}</label>
             <input
               type="number"
               value={formData.worldRanking}
@@ -506,7 +507,7 @@ export default function EditUniversityPage() {
           </div>
 
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-2">Local Ranking</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("localRanking")}</label>
             <input
               type="number"
               value={formData.localRanking}
@@ -516,19 +517,19 @@ export default function EditUniversityPage() {
           </div>
 
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-2">Students Number</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("studentsNumber")}</label>
             <input
               type="text"
               value={formData.studentsNumber}
               onChange={(e) => setFormData({ ...formData, studentsNumber: e.target.value })}
-              placeholder="e.g., 1154K"
+              placeholder={t("studentsNumberExamplePlaceholder")}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
             />
           </div>
 
           {/* Tour Images */}
           <div className="md:col-span-2">
-            <label className="block font-montserrat-semibold text-sm mb-2">Tour Images</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("dashboardTourImagesLabel")}</label>
             <div className="space-y-4">
               {tourImagePreviews.length > 0 && (
                 <div className="grid grid-cols-5 gap-4">
@@ -552,7 +553,7 @@ export default function EditUniversityPage() {
                 <div className="text-center">
                   <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
                   <p className="text-sm text-gray-600">
-                    {uploading === "tour" ? "Uploading..." : "Click to upload tour images (multiple)"}
+                    {uploading === "tour" ? t("uploading") : t("dashboardClickUploadTourMultiple")}
                   </p>
                 </div>
                 <input
@@ -571,7 +572,7 @@ export default function EditUniversityPage() {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block font-montserrat-semibold text-sm mb-2">Description (English)</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("dashboardDescriptionEn")}</label>
             <textarea
               value={formData.descriptionEn}
               onChange={(e) => setFormData({ ...formData, descriptionEn: e.target.value })}
@@ -581,7 +582,7 @@ export default function EditUniversityPage() {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block font-montserrat-semibold text-sm mb-2">Description (Arabic)</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("dashboardDescriptionAr")}</label>
             <textarea
               dir="rtl"
               value={formData.descriptionAr}
@@ -592,7 +593,7 @@ export default function EditUniversityPage() {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block font-montserrat-semibold text-sm mb-2">About (English)</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("aboutEnglishLabel")}</label>
             <textarea
               value={formData.aboutEn}
               onChange={(e) => setFormData({ ...formData, aboutEn: e.target.value })}
@@ -602,7 +603,7 @@ export default function EditUniversityPage() {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block font-montserrat-semibold text-sm mb-2">About (Arabic)</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("aboutArabicLabel")}</label>
             <textarea
               dir="rtl"
               value={formData.aboutAr}
@@ -614,7 +615,7 @@ export default function EditUniversityPage() {
 
           {/* Admission Requirements */}
           <div className="md:col-span-2">
-            <label className="block font-montserrat-semibold text-sm mb-2">Admission Requirements</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("admissionRequirementsHeading")}</label>
             <div className="space-y-2">
               {formData.admissionRequirements.map((req, index) => (
                 <div key={index} className="flex items-center gap-2">
@@ -639,11 +640,11 @@ export default function EditUniversityPage() {
                   value={newAdmissionReq}
                   onChange={(e) => setNewAdmissionReq(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addAdmissionRequirement())}
-                  placeholder="Add admission requirement"
+                  placeholder={t("addAdmissionRequirement")}
                   className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
                 />
                 <Button type="button" onClick={addAdmissionRequirement} variant="outline">
-                  Add
+                  {t("add")}
                 </Button>
               </div>
             </div>
@@ -651,7 +652,7 @@ export default function EditUniversityPage() {
 
           {/* Services */}
           <div className="md:col-span-2">
-            <label className="block font-montserrat-semibold text-sm mb-2">Services</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">{t("dashboardUniversityServicesHeading")}</label>
             <div className="space-y-2">
               {formData.services.map((service, index) => (
                 <div key={index} className="flex items-center gap-2">
@@ -676,11 +677,11 @@ export default function EditUniversityPage() {
                   value={newService}
                   onChange={(e) => setNewService(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addService())}
-                  placeholder="Add service"
+                  placeholder={t("addService")}
                   className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
                 />
                 <Button type="button" onClick={addService} variant="outline">
-                  Add
+                  {t("add")}
                 </Button>
               </div>
             </div>
@@ -688,20 +689,20 @@ export default function EditUniversityPage() {
 
           {/* Admission Status */}
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-1.5">Admission Status</label>
+            <label className="block font-montserrat-semibold text-sm mb-1.5">{t("admissionStatusHeading")}</label>
             <select
               value={formData.admissionStatus}
               onChange={(e) => setFormData({ ...formData, admissionStatus: e.target.value as "OPEN" | "CLOSED" })}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
             >
-              <option value="OPEN">🟢 Admission Open</option>
-              <option value="CLOSED">🔴 Admission Closed</option>
+              <option value="OPEN">{t("dashboardAdmissionOpenOption")}</option>
+              <option value="CLOSED">{t("dashboardAdmissionClosedOption")}</option>
             </select>
           </div>
 
           {/* Admission Deadline */}
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-1.5">Admission Deadline (auto-close on this date)</label>
+            <label className="block font-montserrat-semibold text-sm mb-1.5">{t("dashboardAdmissionDeadlineAutoClose")}</label>
             <input
               type="date"
               value={formData.admissionDeadline}
@@ -712,7 +713,7 @@ export default function EditUniversityPage() {
 
           {/* Admission Start Date */}
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-1.5">Admission Start Date (optional)</label>
+            <label className="block font-montserrat-semibold text-sm mb-1.5">{t("dashboardAdmissionStartOptional")}</label>
             <input
               type="date"
               value={formData.admissionStartDate}
@@ -729,7 +730,7 @@ export default function EditUniversityPage() {
                 onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                 className="w-4 h-4 text-[#5260ce] border-gray-300 rounded focus:ring-[#5260ce]"
               />
-              <span className="font-montserrat-semibold text-sm">Active</span>
+              <span className="font-montserrat-semibold text-sm">{t("active")}</span>
             </label>
           </div>
         </div>
@@ -740,11 +741,11 @@ export default function EditUniversityPage() {
             disabled={saving || uploading !== null}
             className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold"
           >
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? t("saving") : t("saveChanges")}
           </Button>
           <Link href="/dashboard/universities">
             <Button type="button" variant="outline">
-              Cancel
+              {t("cancel")}
             </Button>
           </Link>
         </div>

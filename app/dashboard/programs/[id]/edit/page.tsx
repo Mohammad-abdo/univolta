@@ -9,10 +9,13 @@ import { showToast } from "@/lib/toast";
 import { getImageUrl } from "@/lib/image-utils";
 import Link from "next/link";
 import Image from "next/image";
+import { t, getLanguage } from "@/lib/i18n";
+import { pickLocalized } from "@/lib/localized";
 
 interface University {
   id: string;
   name: string;
+  nameI18n?: unknown;
 }
 
 interface Program {
@@ -91,7 +94,7 @@ export default function EditProgramPage() {
       const data = await apiGet<University[]>("/universities");
       setUniversities(data);
     } catch (error: any) {
-      showToast.error("Failed to load universities");
+      showToast.error(t("failedToLoadUniversities"));
     }
   };
 
@@ -130,7 +133,7 @@ export default function EditProgramPage() {
         setProgramImagePreviews(data.programImages.map((img: string) => getImageUrl(img)));
       }
     } catch (error: any) {
-      const errorMsg = error.message || "Failed to load program";
+      const errorMsg = error.message || t("dashboardFailedToLoadProgram");
       showToast.error(errorMsg);
       setError(errorMsg);
     } finally {
@@ -152,7 +155,7 @@ export default function EditProgramPage() {
         setProgramImagePreviews([...programImagePreviews, URL.createObjectURL(file)]);
       }
     } catch (error: any) {
-      showToast.error(error.message || "Failed to upload image");
+      showToast.error(error.message || t("dashboardFailedToUploadImage"));
     } finally {
       setUploading(null);
     }
@@ -169,7 +172,7 @@ export default function EditProgramPage() {
         setProgramImagePreviews((prev) => [...prev, URL.createObjectURL(file)]);
       });
     } catch (error: any) {
-      showToast.error(error.message || "Failed to upload images");
+      showToast.error(error.message || t("dashboardFailedToUploadImages"));
     } finally {
       setUploading(null);
     }
@@ -246,10 +249,10 @@ export default function EditProgramPage() {
         bannerImage,
       });
 
-      showToast.success("Program updated successfully!");
+      showToast.success(t("dashboardProgramUpdated"));
       router.push("/dashboard/programs");
     } catch (error: any) {
-      const errorMsg = error.message || "Failed to update program";
+      const errorMsg = error.message || t("dashboardProgramUpdateFailed");
       showToast.error(errorMsg);
       setError(errorMsg);
     } finally {
@@ -260,7 +263,7 @@ export default function EditProgramPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div>Loading...</div>
+        <div>{t("loading")}</div>
       </div>
     );
   }
@@ -274,7 +277,7 @@ export default function EditProgramPage() {
           </Button>
         </Link>
         <h1 className="text-3xl font-montserrat-bold text-[#121c67]">
-          Edit Program
+          {t("editProgram")}
         </h1>
       </div>
 
@@ -287,11 +290,11 @@ export default function EditProgramPage() {
 
         {/* Basic Information */}
         <div className="space-y-4">
-          <h2 className="text-xl font-montserrat-bold text-[#121c67] border-b pb-2">Basic Information</h2>
+          <h2 className="text-xl font-montserrat-bold text-[#121c67] border-b pb-2">{t("dashboardBasicInformation")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
               <label className="block font-montserrat-semibold text-sm mb-2">
-                University *
+                {t("dashboardUniversityFieldStar")}
               </label>
               <select
                 value={formData.universityId}
@@ -299,10 +302,10 @@ export default function EditProgramPage() {
                 required
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               >
-                <option value="">Select a university</option>
+                <option value="">{t("dashboardSelectUniversityPlaceholder")}</option>
                 {universities.map((university) => (
                   <option key={university.id} value={university.id}>
-                    {university.name}
+                    {pickLocalized(university.nameI18n ?? university.name, getLanguage())}
                   </option>
                 ))}
               </select>
@@ -310,7 +313,7 @@ export default function EditProgramPage() {
 
             <div>
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Program Name (English) *
+                {t("programNameEnglishStar")}
               </label>
               <input
                 type="text"
@@ -323,7 +326,7 @@ export default function EditProgramPage() {
 
             <div>
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Program Name (Arabic)
+                {t("programNameArabicLabel")}
               </label>
               <input
                 type="text"
@@ -336,177 +339,177 @@ export default function EditProgramPage() {
 
             <div>
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Slug *
+                {t("slugRequiredLabel")}
               </label>
               <input
                 type="text"
                 value={formData.slug}
                 onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                placeholder="auto-generated from name"
+                placeholder={t("dashboardSlugPlaceholder")}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               />
-              <p className="text-xs text-gray-500 mt-1">Leave empty to auto-generate from name</p>
+              <p className="text-xs text-gray-500 mt-1">{t("dashboardSlugHint")}</p>
             </div>
 
             <div>
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Degree
+                {t("profileTableDegree")}
               </label>
               <input
                 type="text"
                 value={formData.degree}
                 onChange={(e) => setFormData({ ...formData, degree: e.target.value })}
-                placeholder="e.g., Bachelor's, Master's, PhD"
+                placeholder={t("degreePlaceholderExamples")}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               />
             </div>
 
             <div>
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Duration
+                {t("durationLabel")}
               </label>
               <input
                 type="text"
                 value={formData.duration}
                 onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                placeholder="e.g., 4 years, 2 years, 5 years"
+                placeholder={t("durationPlaceholderExamples")}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               />
             </div>
 
             <div>
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Language
+                {t("language")}
               </label>
               <input
                 type="text"
                 value={formData.language}
                 onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                placeholder="e.g., English, German"
+                placeholder={t("programLanguagePlaceholderExamples")}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               />
             </div>
 
             <div>
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Department
+                {t("departmentLabel")}
               </label>
               <input
                 type="text"
                 value={formData.department}
                 onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                placeholder="e.g., Engineering, Computer Science"
+                placeholder={t("departmentPlaceholderExamples")}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               />
             </div>
 
             <div>
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Start of Study
+                {t("startOfStudyLabel")}
               </label>
               <input
                 type="text"
                 value={formData.startDate}
                 onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                placeholder="e.g., 01/09"
+                placeholder={t("startOfStudyPlaceholder")}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               />
             </div>
 
             <div>
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Study Time
+                {t("studyTimeLabel")}
               </label>
               <select
                 value={formData.classSchedule}
                 onChange={(e) => setFormData({ ...formData, classSchedule: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               >
-                <option value="">Select study time</option>
-                <option value="Morning">Morning</option>
-                <option value="Evening">Evening</option>
+                <option value="">{t("dashboardSelectStudyTime")}</option>
+                <option value="Morning">{t("studyTimeMorning")}</option>
+                <option value="Evening">{t("studyTimeEvening")}</option>
               </select>
             </div>
 
             <div>
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Study Method
+                {t("studyMethodLabel")}
               </label>
               <select
                 value={formData.studyMethod}
                 onChange={(e) => setFormData({ ...formData, studyMethod: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               >
-                <option value="">Select study method</option>
-                <option value="Undefined">Undefined</option>
-                <option value="Online">Online</option>
-                <option value="On-campus">On-campus</option>
-                <option value="Hybrid">Hybrid</option>
+                <option value="">{t("dashboardSelectStudyMethod")}</option>
+                <option value="Undefined">{t("studyMethodUndefined")}</option>
+                <option value="Online">{t("studyMethodOnline")}</option>
+                <option value="On-campus">{t("studyMethodOnCampus")}</option>
+                <option value="Hybrid">{t("studyMethodHybrid")}</option>
               </select>
             </div>
 
             <div>
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Last Application Date
+                {t("lastApplicationDateLabel")}
               </label>
               <input
                 type="text"
                 value={formData.lastApplicationDate}
                 onChange={(e) => setFormData({ ...formData, lastApplicationDate: e.target.value })}
-                placeholder="e.g., 01/06/2025"
+                placeholder={t("lastApplicationDatePlaceholder")}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               />
             </div>
 
             <div>
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Study Year
+                {t("studyYearLabel")}
               </label>
               <input
                 type="number"
                 value={formData.studyYear}
                 onChange={(e) => setFormData({ ...formData, studyYear: e.target.value })}
-                placeholder="e.g., 2005"
+                placeholder={t("studyYearPlaceholder")}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               />
             </div>
 
             <div>
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Tuition
+                {t("tuitionShortLabel")}
               </label>
               <input
                 type="text"
                 value={formData.tuition}
                 onChange={(e) => setFormData({ ...formData, tuition: e.target.value })}
-                placeholder="e.g., $56,000 per year"
+                placeholder={t("tuitionPlaceholderExample")}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               />
             </div>
 
             <div className="md:col-span-2">
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Tuition Notes (English)
+                {t("tuitionNotesEnglishLabel")}
               </label>
               <textarea
                 value={formData.tuitionNotesEn}
                 onChange={(e) => setFormData({ ...formData, tuitionNotesEn: e.target.value })}
                 rows={3}
-                placeholder="Additional information about tuition fees"
+                placeholder={t("tuitionNotesPlaceholderEn")}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               />
             </div>
 
             <div className="md:col-span-2">
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Tuition Notes (Arabic)
+                {t("tuitionNotesArabicLabel")}
               </label>
               <textarea
                 dir="rtl"
                 value={formData.tuitionNotesAr}
                 onChange={(e) => setFormData({ ...formData, tuitionNotesAr: e.target.value })}
                 rows={3}
-                placeholder="ملاحظات الرسوم الدراسية"
+                placeholder={t("dashboardServiceDescriptionPlaceholderAr")}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               />
             </div>
@@ -515,30 +518,30 @@ export default function EditProgramPage() {
 
         {/* About the Program */}
         <div className="space-y-4">
-          <h2 className="text-xl font-montserrat-bold text-[#121c67] border-b pb-2">About the Program</h2>
+          <h2 className="text-xl font-montserrat-bold text-[#121c67] border-b pb-2">{t("dashboardAboutProgramSection")}</h2>
           <div>
             <label className="block font-montserrat-semibold text-sm mb-2">
-              Description (English)
+              {t("dashboardDescriptionEn")}
             </label>
             <textarea
               value={formData.aboutEn}
               onChange={(e) => setFormData({ ...formData, aboutEn: e.target.value })}
               rows={5}
-              placeholder="Describe the program in detail..."
+              placeholder={t("describeProgramDetailPlaceholder")}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
             />
           </div>
 
           <div>
             <label className="block font-montserrat-semibold text-sm mb-2">
-              Description (Arabic)
+              {t("dashboardDescriptionAr")}
             </label>
             <textarea
               dir="rtl"
               value={formData.aboutAr}
               onChange={(e) => setFormData({ ...formData, aboutAr: e.target.value })}
               rows={5}
-              placeholder="اكتب وصف البرنامج..."
+              placeholder={t("dashboardDescribeProgramArPlaceholder")}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
             />
           </div>
@@ -546,19 +549,19 @@ export default function EditProgramPage() {
 
         {/* Core Subjects */}
         <div className="space-y-4">
-          <h2 className="text-xl font-montserrat-bold text-[#121c67] border-b pb-2">Core Subjects</h2>
+          <h2 className="text-xl font-montserrat-bold text-[#121c67] border-b pb-2">{t("dashboardCoreSubjects")}</h2>
           <div className="flex gap-2">
             <input
               type="text"
               value={newCoreSubject}
               onChange={(e) => setNewCoreSubject(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addCoreSubject())}
-              placeholder="Enter core subject"
+              placeholder={t("dashboardEnterCoreSubject")}
               className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
             />
             <Button type="button" onClick={addCoreSubject} variant="outline">
               <Plus className="w-4 h-4 mr-2" />
-              Add
+              {t("add")}
             </Button>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -582,18 +585,18 @@ export default function EditProgramPage() {
 
         {/* Images */}
         <div className="space-y-4">
-          <h2 className="text-xl font-montserrat-bold text-[#121c67] border-b pb-2">Images</h2>
+          <h2 className="text-xl font-montserrat-bold text-[#121c67] border-b pb-2">{t("dashboardImagesSection")}</h2>
           
           {/* Banner Image */}
           <div>
             <label className="block font-montserrat-semibold text-sm mb-2">
-              Banner Image (Hero Image)
+              {t("dashboardBannerHeroLabel")}
             </label>
             {bannerPreview ? (
               <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300">
                 <Image
                   src={bannerPreview}
-                  alt="Banner preview"
+                  alt={t("universityBanner")}
                   fill
                   className="object-cover"
                 />
@@ -611,7 +614,7 @@ export default function EditProgramPage() {
             ) : (
               <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
                 <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                <span className="text-sm text-gray-500">Click to upload banner image</span>
+                <span className="text-sm text-gray-500">{t("dashboardClickUploadBannerImage")}</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -626,7 +629,7 @@ export default function EditProgramPage() {
           {/* Program Images (Tour Gallery) */}
           <div>
             <label className="block font-montserrat-semibold text-sm mb-2">
-              Program Images (Tour Gallery)
+              {t("dashboardProgramImagesGalleryLabel")}
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               {programImagePreviews.map((preview, index) => (
@@ -649,7 +652,7 @@ export default function EditProgramPage() {
             </div>
             <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
               <Upload className="w-8 h-8 text-gray-400 mb-2" />
-              <span className="text-sm text-gray-500">Click to upload or drag multiple images</span>
+              <span className="text-sm text-gray-500">{t("dashboardClickUploadDragMultiple")}</span>
               <input
                 type="file"
                 accept="image/*"
@@ -664,7 +667,7 @@ export default function EditProgramPage() {
 
         {/* Status */}
         <div className="space-y-4">
-          <h2 className="text-xl font-montserrat-bold text-[#121c67] border-b pb-2">Status</h2>
+          <h2 className="text-xl font-montserrat-bold text-[#121c67] border-b pb-2">{t("dashboardStatusSection")}</h2>
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -672,7 +675,7 @@ export default function EditProgramPage() {
               onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
               className="w-4 h-4 text-[#5260ce] border-gray-300 rounded focus:ring-[#5260ce]"
             />
-            <span className="font-montserrat-semibold text-sm">Active</span>
+            <span className="font-montserrat-semibold text-sm">{t("active")}</span>
           </label>
         </div>
 
@@ -682,11 +685,11 @@ export default function EditProgramPage() {
             disabled={saving}
             className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold"
           >
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? t("saving") : t("saveChanges")}
           </Button>
           <Link href="/dashboard/programs">
             <Button type="button" variant="outline">
-              Cancel
+              {t("cancel")}
             </Button>
           </Link>
         </div>
