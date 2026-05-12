@@ -9,18 +9,21 @@ import { notFound } from "next/navigation";
 import { Check, MapPin, DollarSign, Search, Trophy, Globe, Users, GraduationCap, Calendar, BarChart3, ArrowRight, BookOpen, CircleDot } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getLanguage, t, tServer, type Language } from "@/lib/i18n";
+import { tServer, type Language } from "@/lib/i18n";
+import { formatFacultyDepartmentLabel, formatTuitionPeriod } from "@/lib/university-program-display";
 import { cookies } from "next/headers";
 import { getImageUrl, getImageUrlOrFallback } from "@/lib/image-utils";
 import { API_BASE_URL } from "@/lib/constants";
 
 async function fetchUniversity(slug: string) {
   try {
+    const cookieStore = await cookies();
+    const lang = cookieStore.get("language")?.value === "ar" ? "ar" : "en";
     const response = await fetch(
       `${API_BASE_URL}/public/universities/${slug}`,
       {
-        next: { revalidate: 60 },
         cache: "no-store",
+        headers: { "X-Locale": lang, "Accept-Language": lang },
       }
     );
 
@@ -48,11 +51,13 @@ async function fetchUniversity(slug: string) {
 
 async function fetchOtherUniversities(country: string, excludeSlug: string) {
   try {
+    const cookieStore = await cookies();
+    const lang = cookieStore.get("language")?.value === "ar" ? "ar" : "en";
     const response = await fetch(
       `${API_BASE_URL}/public/universities?country=${encodeURIComponent(
         country
       )}&limit=3`,
-      { next: { revalidate: 60 } }
+      { cache: "no-store", headers: { "X-Locale": lang, "Accept-Language": lang } }
     );
 
     if (!response.ok) {
@@ -134,12 +139,12 @@ export default async function UniversityDetailPage({
   // Group programs by department/specialization
   const programsByDepartment: Record<string, any[]> = {};
   university.programs?.forEach((program: any) => {
-    const department =
-      program.department || program.name.split(" ")[0] || t("otherDepartment");
-    if (!programsByDepartment[department]) {
-      programsByDepartment[department] = [];
+    const deptKey =
+      program.department || program.name.split(" ")[0] || "Other";
+    if (!programsByDepartment[deptKey]) {
+      programsByDepartment[deptKey] = [];
     }
-    programsByDepartment[department].push(program);
+    programsByDepartment[deptKey].push(program);
   });
 
   const totalPrograms = university.programs?.length || 0;
@@ -322,7 +327,7 @@ export default async function UniversityDetailPage({
                     <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
                       {t("city")}
                     </p>
-                    <div className={`bg-[rgba(117,211,247,0.1)] border border-[#75d3f7] rounded-lg px-3 py-2 flex gap-2 items-center ${getLanguage() === "ar" ? "flex-row-reverse" : ""}`}>
+                    <div className={`bg-[rgba(117,211,247,0.1)] border border-[#75d3f7] rounded-lg px-3 py-2 flex gap-2 items-center ${lang === "ar" ? "flex-row-reverse" : ""}`}>
                       <MapPin className="w-6 h-6 shrink-0 text-[#5260ce]" />
                       <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
                         {university.city}
@@ -352,7 +357,7 @@ export default async function UniversityDetailPage({
                     <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
                       {t("tuitionFees")}
                     </p>
-                    <div className={`bg-[rgba(117,211,247,0.1)] border border-[#75d3f7] rounded-lg px-3 py-2 flex gap-2 items-center ${getLanguage() === "ar" ? "flex-row-reverse" : ""}`}>
+                    <div className={`bg-[rgba(117,211,247,0.1)] border border-[#75d3f7] rounded-lg px-3 py-2 flex gap-2 items-center ${lang === "ar" ? "flex-row-reverse" : ""}`}>
                       <DollarSign className="w-6 h-6 shrink-0 text-[#5260ce]" />
                       <p className="font-montserrat-regular text-[16px] leading-[1.4] text-[#2e2e2e]">
                         {university.programs?.[0]?.tuition || "$56,000+/year"}
@@ -537,13 +542,16 @@ export default async function UniversityDetailPage({
                 {/* Programs List by Department */}
                 <div className="flex flex-col gap-4 max-h-[500px] overflow-y-auto">
                   {Object.entries(programsByDepartment).map(
-                    ([department, programs]) => (
+                    ([deptKey, programs]) => (
                       <div
-                        key={department}
+                        key={deptKey}
                         className="border-b border-[#e0e6f1] pb-3 last:border-b-0"
                       >
                         <p className="font-montserrat-semibold text-[16px] text-[#121c67] mb-2">
-                          {department} ({programs.length}{" "}
+                          {(deptKey === "Other"
+                            ? t("otherDepartment")
+                            : formatFacultyDepartmentLabel(deptKey, lang))}{" "}
+                          ({programs.length}{" "}
                           {programs.length === 1 ? t("program") : t("programs")})
                         </p>
                         <div className="flex flex-col gap-2">
@@ -558,7 +566,7 @@ export default async function UniversityDetailPage({
                               </span>
                               {p.tuition && (
                                 <span className="font-montserrat-semibold text-[14px] text-[#5260ce]">
-                                  {p.tuition}
+                                  {formatTuitionPeriod(p.tuition, t)}
                                 </span>
                               )}
                             </Link>
@@ -566,7 +574,7 @@ export default async function UniversityDetailPage({
                           {programs.length > 5 && (
                             <Link
                               href={`/universities/${slug}/programs?department=${encodeURIComponent(
-                                department
+                                deptKey
                               )}`}
                               className="text-sm text-[#5260ce] hover:underline mt-1"
                             >
@@ -587,7 +595,7 @@ export default async function UniversityDetailPage({
             <div className="mt-12 md:mt-20">
               <div className="flex items-end gap-4 mb-8">
                 <div>
-                  <p className="text-sm font-montserrat-regular text-[#5260ce] mb-1">Discover More</p>
+                  <p className="text-sm font-montserrat-regular text-[#5260ce] mb-1">{t("discoverMore")}</p>
                   <h2 className="font-montserrat-bold text-2xl md:text-[34px] text-[#121c67] leading-tight section-title-accent pb-1">
                     {t("otherUniversitiesIn")} {university.country}
                   </h2>

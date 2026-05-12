@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { CheckCircle } from "lucide-react";
 import { API_BASE_URL } from "@/lib/constants";
+import { t } from "@/lib/i18n";
 
 interface ProgramRegisterButtonProps {
   programId: string;
@@ -141,7 +142,7 @@ export function ProgramRegisterButton({ programId, universitySlug }: ProgramRegi
         className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-[16px] h-[52px] px-8 rounded-xl shadow-lg"
         disabled
       >
-        Loading...
+        {t("registerLoading")}
       </Button>
     );
   }
@@ -153,8 +154,8 @@ export function ProgramRegisterButton({ programId, universitySlug }: ProgramRegi
         disabled
       >
         <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />
-        <span className="hidden sm:inline">Already Paid</span>
-        <span className="sm:hidden">Paid</span>
+        <span className="hidden sm:inline">{t("registerAlreadyPaid")}</span>
+        <span className="sm:hidden">{t("registerPaidShort")}</span>
       </Button>
     );
   }
@@ -165,7 +166,7 @@ export function ProgramRegisterButton({ programId, universitySlug }: ProgramRegi
       asChild
     >
       <Link href={`/universities/${universitySlug}/register?program=${programId}`}>
-        Register Now
+        {t("registerNow")}
       </Link>
     </Button>
   );

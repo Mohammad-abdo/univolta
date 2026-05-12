@@ -26,13 +26,16 @@ export default function EditUniversityPage() {
     confirmPassword: "",
   });
   const [formData, setFormData] = useState({
-    name: "",
+    nameEn: "",
+    nameAr: "",
     slug: "",
     country: "",
     city: "",
     language: "",
-    description: "",
-    about: "",
+    descriptionEn: "",
+    descriptionAr: "",
+    aboutEn: "",
+    aboutAr: "",
     website: "",
     logoUrl: "",
     bannerUrl: "",
@@ -67,13 +70,16 @@ export default function EditUniversityPage() {
       const data = await apiGet<any>(`/universities/${id}`);
       
       setFormData({
-        name: data.name || "",
+        nameEn: (data.nameI18n?.en ?? data.name) || "",
+        nameAr: data.nameI18n?.ar || "",
         slug: data.slug || "",
         country: data.country || "",
         city: data.city || "",
         language: data.language || "",
-        description: data.description || "",
-        about: data.about || "",
+        descriptionEn: (data.descriptionI18n?.en ?? data.description) || "",
+        descriptionAr: data.descriptionI18n?.ar || "",
+        aboutEn: (data.aboutI18n?.en ?? data.about) || "",
+        aboutAr: data.aboutI18n?.ar || "",
         website: data.website || "",
         logoUrl: data.logoUrl || "",
         bannerUrl: data.bannerUrl || "",
@@ -205,7 +211,7 @@ export default function EditUniversityPage() {
     setSaving(true);
 
     try {
-      const slug = formData.slug || formData.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+      const slug = formData.slug || formData.nameEn.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
       // Convert relative image paths to full URLs for backend validation
       // Backend expects full URLs, but we store relative paths in formData
@@ -224,6 +230,15 @@ export default function EditUniversityPage() {
 
       await apiPut(`/universities/${id}`, {
         ...formData,
+        name: { en: formData.nameEn, ar: formData.nameAr || undefined },
+        description:
+          formData.descriptionEn || formData.descriptionAr
+            ? { en: formData.descriptionEn, ar: formData.descriptionAr || undefined }
+            : undefined,
+        about:
+          formData.aboutEn || formData.aboutAr
+            ? { en: formData.aboutEn, ar: formData.aboutAr || undefined }
+            : undefined,
         slug,
         logoUrl: logoUrl || undefined,
         bannerUrl: bannerUrl || undefined,
@@ -315,12 +330,23 @@ export default function EditUniversityPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block font-montserrat-semibold text-sm mb-2">University Name *</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">University Name (English) *</label>
             <input
               type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              value={formData.nameEn}
+              onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
               required
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
+            />
+          </div>
+
+          <div>
+            <label className="block font-montserrat-semibold text-sm mb-2">University Name (Arabic)</label>
+            <input
+              type="text"
+              dir="rtl"
+              value={formData.nameAr}
+              onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
             />
           </div>
@@ -545,20 +571,42 @@ export default function EditUniversityPage() {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block font-montserrat-semibold text-sm mb-2">Description</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">Description (English)</label>
             <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              value={formData.descriptionEn}
+              onChange={(e) => setFormData({ ...formData, descriptionEn: e.target.value })}
               rows={4}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
             />
           </div>
 
           <div className="md:col-span-2">
-            <label className="block font-montserrat-semibold text-sm mb-2">About</label>
+            <label className="block font-montserrat-semibold text-sm mb-2">Description (Arabic)</label>
             <textarea
-              value={formData.about}
-              onChange={(e) => setFormData({ ...formData, about: e.target.value })}
+              dir="rtl"
+              value={formData.descriptionAr}
+              onChange={(e) => setFormData({ ...formData, descriptionAr: e.target.value })}
+              rows={4}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block font-montserrat-semibold text-sm mb-2">About (English)</label>
+            <textarea
+              value={formData.aboutEn}
+              onChange={(e) => setFormData({ ...formData, aboutEn: e.target.value })}
+              rows={4}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block font-montserrat-semibold text-sm mb-2">About (Arabic)</label>
+            <textarea
+              dir="rtl"
+              value={formData.aboutAr}
+              onChange={(e) => setFormData({ ...formData, aboutAr: e.target.value })}
               rows={4}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
             />

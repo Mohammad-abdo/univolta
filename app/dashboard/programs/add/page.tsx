@@ -23,18 +23,21 @@ export default function AddProgramPage() {
   const [universities, setUniversities] = useState<University[]>([]);
   const [formData, setFormData] = useState({
     universityId: "",
-    name: "",
+    nameEn: "",
+    nameAr: "",
     slug: "",
     degree: "",
     duration: "",
     language: "",
     tuition: "",
-    tuitionNotes: "",
+    tuitionNotesEn: "",
+    tuitionNotesAr: "",
     department: "",
     startDate: "",
     classSchedule: "",
     studyMethod: "",
-    about: "",
+    aboutEn: "",
+    aboutAr: "",
     lastApplicationDate: "",
     studyYear: "",
     coreSubjects: [] as string[],
@@ -127,7 +130,7 @@ export default function AddProgramPage() {
     setLoading(true);
 
     try {
-      const slug = formData.slug || formData.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+      const slug = formData.slug || formData.nameEn.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
       // Convert relative image paths to full URLs for backend validation
       const bannerImage = formData.bannerImage?.trim() 
@@ -142,18 +145,25 @@ export default function AddProgramPage() {
 
       await apiPost("/programs", {
         ...formData,
+        name: { en: formData.nameEn, ar: formData.nameAr || undefined },
+        tuitionNotes:
+          formData.tuitionNotesEn || formData.tuitionNotesAr
+            ? { en: formData.tuitionNotesEn, ar: formData.tuitionNotesAr || undefined }
+            : undefined,
+        about:
+          formData.aboutEn || formData.aboutAr
+            ? { en: formData.aboutEn, ar: formData.aboutAr || undefined }
+            : undefined,
         slug,
         universityId: formData.universityId,
         degree: formData.degree || undefined,
         duration: formData.duration || undefined,
         language: formData.language || undefined,
         tuition: formData.tuition || undefined,
-        tuitionNotes: formData.tuitionNotes || undefined,
         department: formData.department || undefined,
         startDate: formData.startDate || undefined,
         classSchedule: formData.classSchedule || undefined,
         studyMethod: formData.studyMethod || undefined,
-        about: formData.about || undefined,
         lastApplicationDate: formData.lastApplicationDate || undefined,
         studyYear: formData.studyYear ? parseInt(formData.studyYear) : undefined,
         coreSubjects: formData.coreSubjects.length > 0 ? formData.coreSubjects : undefined,
@@ -217,13 +227,26 @@ export default function AddProgramPage() {
 
             <div>
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Program Name *
+                Program Name (English) *
               </label>
               <input
                 type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                value={formData.nameEn}
+                onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
                 required
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
+              />
+            </div>
+
+            <div>
+              <label className="block font-montserrat-semibold text-sm mb-2">
+                Program Name (Arabic)
+              </label>
+              <input
+                type="text"
+                dir="rtl"
+                value={formData.nameAr}
+                onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               />
             </div>
@@ -380,13 +403,27 @@ export default function AddProgramPage() {
 
             <div className="md:col-span-2">
               <label className="block font-montserrat-semibold text-sm mb-2">
-                Tuition Notes
+                Tuition Notes (English)
               </label>
               <textarea
-                value={formData.tuitionNotes}
-                onChange={(e) => setFormData({ ...formData, tuitionNotes: e.target.value })}
+                value={formData.tuitionNotesEn}
+                onChange={(e) => setFormData({ ...formData, tuitionNotesEn: e.target.value })}
                 rows={3}
                 placeholder="Additional information about tuition fees"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block font-montserrat-semibold text-sm mb-2">
+                Tuition Notes (Arabic)
+              </label>
+              <textarea
+                dir="rtl"
+                value={formData.tuitionNotesAr}
+                onChange={(e) => setFormData({ ...formData, tuitionNotesAr: e.target.value })}
+                rows={3}
+                placeholder="ملاحظات الرسوم الدراسية"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
               />
             </div>
@@ -398,13 +435,27 @@ export default function AddProgramPage() {
           <h2 className="text-xl font-montserrat-bold text-[#121c67] border-b pb-2">About the Program</h2>
           <div>
             <label className="block font-montserrat-semibold text-sm mb-2">
-              Description
+              Description (English)
             </label>
             <textarea
-              value={formData.about}
-              onChange={(e) => setFormData({ ...formData, about: e.target.value })}
+              value={formData.aboutEn}
+              onChange={(e) => setFormData({ ...formData, aboutEn: e.target.value })}
               rows={5}
               placeholder="Describe the program in detail..."
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
+            />
+          </div>
+
+          <div>
+            <label className="block font-montserrat-semibold text-sm mb-2">
+              Description (Arabic)
+            </label>
+            <textarea
+              dir="rtl"
+              value={formData.aboutAr}
+              onChange={(e) => setFormData({ ...formData, aboutAr: e.target.value })}
+              rows={5}
+              placeholder="اكتب وصف البرنامج..."
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
             />
           </div>

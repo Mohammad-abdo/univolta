@@ -7,6 +7,7 @@ import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { t, getLanguage, type Language } from "@/lib/i18n";
+import { pickLocalized } from "@/lib/localized";
 import { API_BASE_URL } from "@/lib/constants";
 import Link from "next/link";
 import { CheckCircle2, List, BookOpen, ChevronRight, CalendarDays } from "lucide-react";
@@ -16,19 +17,19 @@ const HERO_PATTERN =
 
 interface TermsItem {
   type: "body" | "list";
-  content?: string;
-  items?: string[];
+  content?: string | { en: string; ar?: string };
+  items?: Array<string | { en: string; ar?: string }>;
 }
 
 interface TermsSection {
   id: string;
-  title: string;
+  title: string | { en: string; ar?: string };
   titleAr?: string;
   data: TermsItem;
 }
 
 interface TermsData {
-  welcomeMessage: string;
+  welcomeMessage: string | { en: string; ar?: string };
   welcomeMessageAr?: string;
   sections: TermsSection[];
   lastUpdated?: string;
@@ -93,10 +94,11 @@ export default function TermsPage() {
   const isRTL = currentLang === "ar";
 
   const getTitle = (s: TermsSection) =>
-    isRTL && s.titleAr ? s.titleAr : s.title;
+    pickLocalized(s.title, currentLang) || (isRTL && s.titleAr ? s.titleAr : (s.title as any));
 
   const getWelcome = () =>
-    isRTL && data.welcomeMessageAr ? data.welcomeMessageAr : data.welcomeMessage;
+    pickLocalized(data.welcomeMessage, currentLang) ||
+    (isRTL && data.welcomeMessageAr ? data.welcomeMessageAr : (data.welcomeMessage as any));
 
   return (
     <div className="min-h-screen bg-[#f7f9fe] pb-16 md:pb-0" dir={isRTL ? "rtl" : "ltr"}>
@@ -209,7 +211,7 @@ export default function TermsPage() {
 
                       {section.data.type === "body" && section.data.content && (
                         <p className="ms-[3.25rem] text-sm md:text-base font-montserrat-regular text-[#374151] leading-relaxed">
-                          {section.data.content}
+                          {pickLocalized(section.data.content, currentLang)}
                         </p>
                       )}
 
@@ -218,7 +220,7 @@ export default function TermsPage() {
                           {section.data.items.map((item, i) => (
                             <li key={i} className="flex items-start gap-3 text-sm md:text-base font-montserrat-regular text-[#374151] leading-relaxed">
                               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#5260ce]" />
-                              <span>{item}</span>
+                              <span>{pickLocalized(item, currentLang)}</span>
                             </li>
                           ))}
                         </ul>

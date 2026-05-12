@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { settingsApi, FooterContent } from "@/lib/admin-api";
+import { pickLocalized } from "@/lib/localized";
 import {
   Save, Plus, Trash2, RefreshCw, CheckCircle, AlertCircle,
   Globe, Link2, Phone, Mail, MapPin, Copyright, Share2,
@@ -56,7 +57,14 @@ export default function FooterManager() {
   const load = useCallback(async () => {
     try {
       const s = await settingsApi.getAll();
-      if (s["footer.content"]) setData({ ...DEFAULT, ...(s["footer.content"] as FooterContent) });
+      if (s["footer.content"]) {
+        const raw = { ...DEFAULT, ...(s["footer.content"] as FooterContent) };
+        const titleEn = raw.titleEn ?? pickLocalized(raw.title, "en");
+        const titleAr = raw.titleAr ?? pickLocalized(raw.title, "ar");
+        const addressEn = raw.addressEn ?? pickLocalized(raw.address, "en");
+        const addressAr = raw.addressAr ?? pickLocalized(raw.address, "ar");
+        setData({ ...raw, titleEn, titleAr, addressEn, addressAr });
+      }
     } catch { /* use defaults */ }
     finally { setLoading(false); }
   }, []);
@@ -66,7 +74,14 @@ export default function FooterManager() {
   const save = async () => {
     setSaving(true);
     try {
-      await settingsApi.set("footer.content", data);
+      const payload: FooterContent = {
+        ...data,
+        title: data.title ?? { en: (data.titleEn ?? "").trim(), ar: (data.titleAr ?? "").trim() || undefined },
+        address:
+          data.address ??
+          { en: (data.addressEn ?? data.address ?? "").trim(), ar: (data.addressAr ?? "").trim() || undefined },
+      };
+      await settingsApi.set("footer.content", payload);
       showToast("success", "Footer saved successfully!");
     } catch (e: any) {
       showToast("error", e.message ?? "Save failed");
@@ -218,7 +233,7 @@ export default function FooterManager() {
                 <div className="w-5 h-5 rounded-lg bg-red-100 text-red-500 flex items-center justify-center"><MapPin size={10} /></div>
                 Address (English)
               </label>
-              <input className={inp} value={data.addressEn ?? data.address ?? ""} onChange={(e) => setField("addressEn", e.target.value)} placeholder="Cairo, Egypt" />
+              <input className={inp} value={data.addressEn ?? ""} onChange={(e) => setField("addressEn", e.target.value)} placeholder="Cairo, Egypt" />
               <p className="mt-1 text-[11px] text-gray-400">Shown when the site language is English.</p>
             </div>
             <div className="sm:col-span-2">

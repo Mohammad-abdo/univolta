@@ -17,13 +17,16 @@ export default function AddUniversityPage() {
   const [uploading, setUploading] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    name: "",
+    nameEn: "",
+    nameAr: "",
     slug: "",
     country: "",
     city: "",
     language: "",
-    description: "",
-    about: "",
+    descriptionEn: "",
+    descriptionAr: "",
+    aboutEn: "",
+    aboutAr: "",
     website: "",
     logoUrl: "",
     bannerUrl: "",
@@ -151,7 +154,7 @@ export default function AddUniversityPage() {
     try {
       const slug =
         formData.slug ||
-        formData.name
+        formData.nameEn
           .toLowerCase()
           .replace(/\s+/g, "-")
           .replace(/[^a-z0-9-]/g, "");
@@ -174,6 +177,15 @@ export default function AddUniversityPage() {
 
       await apiPost("/universities", {
         ...formData,
+        name: { en: formData.nameEn, ar: formData.nameAr || undefined },
+        description:
+          formData.descriptionEn || formData.descriptionAr
+            ? { en: formData.descriptionEn, ar: formData.descriptionAr || undefined }
+            : undefined,
+        about:
+          formData.aboutEn || formData.aboutAr
+            ? { en: formData.aboutEn, ar: formData.aboutAr || undefined }
+            : undefined,
         slug,
         logoUrl,
         bannerUrl,
@@ -234,15 +246,28 @@ export default function AddUniversityPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block font-montserrat-semibold text-sm mb-2">
-              University Name *
+              University Name (English) *
             </label>
             <input
               type="text"
-              value={formData.name}
+              value={formData.nameEn}
               onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
+                setFormData({ ...formData, nameEn: e.target.value })
               }
               required
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
+            />
+          </div>
+
+          <div>
+            <label className="block font-montserrat-semibold text-sm mb-2">
+              University Name (Arabic)
+            </label>
+            <input
+              type="text"
+              dir="rtl"
+              value={formData.nameAr}
+              onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
             />
           </div>
@@ -537,12 +562,12 @@ export default function AddUniversityPage() {
 
           <div className="md:col-span-2">
             <label className="block font-montserrat-semibold text-sm mb-2">
-              Description
+              Description (English)
             </label>
             <textarea
-              value={formData.description}
+              value={formData.descriptionEn}
               onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
+                setFormData({ ...formData, descriptionEn: e.target.value })
               }
               rows={4}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
@@ -551,13 +576,39 @@ export default function AddUniversityPage() {
 
           <div className="md:col-span-2">
             <label className="block font-montserrat-semibold text-sm mb-2">
-              About
+              Description (Arabic)
             </label>
             <textarea
-              value={formData.about}
+              dir="rtl"
+              value={formData.descriptionAr}
               onChange={(e) =>
-                setFormData({ ...formData, about: e.target.value })
+                setFormData({ ...formData, descriptionAr: e.target.value })
               }
+              rows={4}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block font-montserrat-semibold text-sm mb-2">
+              About (English)
+            </label>
+            <textarea
+              value={formData.aboutEn}
+              onChange={(e) => setFormData({ ...formData, aboutEn: e.target.value })}
+              rows={4}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block font-montserrat-semibold text-sm mb-2">
+              About (Arabic)
+            </label>
+            <textarea
+              dir="rtl"
+              value={formData.aboutAr}
+              onChange={(e) => setFormData({ ...formData, aboutAr: e.target.value })}
               rows={4}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#5260ce]"
             />

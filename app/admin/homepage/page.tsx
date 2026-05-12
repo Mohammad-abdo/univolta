@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { type HomeStatsSetting } from "@/lib/site-settings";
+import { pickLocalized } from "@/lib/localized";
 
 type View = "list" | "edit";
 
@@ -32,6 +33,38 @@ const DEFAULT_SLIDES: HeroSlide[] = [
   { id: "s2", image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&q=80", badge: "Top Universities 🎓", titleEn: "World-Class Education", titleAr: "تعليم عالمي المستوى" },
   { id: "s3", image: "https://images.unsplash.com/photo-1606761568499-6d2451b23c66?w=1200&q=80", badge: "Apply Now 🚀",        titleEn: "500+ Programs Available", titleAr: "أكثر من 500 برنامج دراسي" },
 ];
+
+function toLocalizedJson(en: string | undefined, ar: string | undefined): { en: string; ar?: string } {
+  return { en: (en ?? "").trim(), ar: (ar ?? "").trim() || undefined };
+}
+
+function denormalizeSlide(slide: HeroSlide): HeroSlide {
+  const title = pickLocalized(slide.title, "en");
+  const titleAr = pickLocalized(slide.title, "ar");
+  const sub = pickLocalized(slide.sub, "en");
+  const subAr = pickLocalized(slide.sub, "ar");
+  const badge = pickLocalized(slide.badge, "en");
+  return {
+    ...slide,
+    // Backfill legacy fields for the editor UI
+    titleEn: slide.titleEn ?? (title || undefined),
+    titleAr: slide.titleAr ?? (titleAr || undefined),
+    subEn: slide.subEn ?? (sub || undefined),
+    subAr: slide.subAr ?? (subAr || undefined),
+    badge: typeof slide.badge === "string" ? slide.badge : (badge || slide.badge),
+  };
+}
+
+function normalizeSlide(slide: HeroSlide): HeroSlide {
+  const normalized: HeroSlide = { ...slide };
+  // Convert legacy fields to new `{en,ar}` JSON on save
+  normalized.title = slide.title ?? toLocalizedJson(slide.titleEn, slide.titleAr);
+  normalized.sub = slide.sub ?? toLocalizedJson(slide.subEn, slide.subAr);
+  if (slide.badge !== undefined) {
+    normalized.badge = slide.badge;
+  }
+  return normalized;
+}
 
 const EMPTY_SLIDE = (): HeroSlide => ({
   id:      `s${Date.now()}`,
@@ -70,7 +103,7 @@ export default function HomepageManager() {
     try {
       const s = await settingsApi.getAll();
       if (Array.isArray(s["hero.slides"]) && (s["hero.slides"] as HeroSlide[]).length)
-        setSlides(s["hero.slides"] as HeroSlide[]);
+        setSlides((s["hero.slides"] as HeroSlide[]).map(denormalizeSlide));
       if (Array.isArray(s["home.sections"]) && (s["home.sections"] as HomeSectionConfig[]).length)
         setSections(s["home.sections"] as HomeSectionConfig[]);
       if (s["home.stats"]) {
@@ -86,8 +119,9 @@ export default function HomepageManager() {
   const saveAll = async (updatedSlides?: HeroSlide[]) => {
     setSaving(true);
     try {
+      const slidesPayload = (updatedSlides ?? slides).map(normalizeSlide);
       await Promise.all([
-        settingsApi.set("hero.slides",   updatedSlides ?? slides),
+        settingsApi.set("hero.slides",   slidesPayload),
         settingsApi.set("home.sections", sections),
         settingsApi.set("home.stats",    stats),
       ]);
@@ -132,7 +166,7 @@ export default function HomepageManager() {
   };
 
   const openEdit = (slide: HeroSlide) => {
-    setEditSlide({ ...slide });
+    setEditSlide({ ...denormalizeSlide(slide) });
     setIsNew(false);
     setView("edit");
   };
@@ -255,7 +289,7 @@ export default function HomepageManager() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4">
                     {editSlide.badge && (
                       <span className="text-xs font-bold bg-white/20 backdrop-blur-sm border border-white/30 text-white px-2 py-1 rounded-lg w-fit mb-1">
-                        {editSlide.badge}
+                        {pickLocalized(editSlide.badge, "en") || ""}
                       </span>
                     )}
                     {editSlide.titleEn && (
@@ -324,7 +358,7 @@ export default function HomepageManager() {
               <input
                 className={inp}
                 placeholder="e.g. Study in Egypt 🇪🇬"
-                value={editSlide.badge ?? ""}
+                value={pickLocalized(editSlide.badge, "en") || ""}
                 onChange={(e) => setEditSlide((prev) => prev ? { ...prev, badge: e.target.value } : prev)}
               />
               <p className="text-xs text-gray-400 mt-1">Small pill badge shown above the title</p>
@@ -545,7 +579,7 @@ export default function HomepageManager() {
                   <div className="p-4">
                     {slide.badge && (
                       <span className="inline-block text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 px-2 py-0.5 rounded-full mb-1.5">
-                        {slide.badge}
+                        {pickLocalized(slide.badge, "en")}
                       </span>
                     )}
                     <p className="font-bold text-gray-800 text-sm truncate">{slide.titleEn || slide.titleAr || "Untitled slide"}</p>

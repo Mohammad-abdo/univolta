@@ -6,6 +6,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Phone, Mail, MapPin, Send, GraduationCap, Globe, MessageCircle } from "lucide-react";
 import { figmaAssets } from "@/lib/figma-assets";
 import { t, getLanguage, type Language } from "@/lib/i18n";
+import { pickLocalized } from "@/lib/localized";
 import { Button } from "@/components/ui/button";
 import { fetchPublicSiteSettings, type FooterContentSetting } from "@/lib/site-settings";
 import { getImageUrl } from "@/lib/image-utils";
@@ -125,11 +126,17 @@ export function Footer() {
 
   const isRTL = mounted && currentLang === "ar";
   const tl = (key: string) => t(key, currentLang);
-  const footerTitle =
-    isRTL ? footerContent?.titleAr?.trim() : footerContent?.titleEn?.trim();
-  const footerAddress =
-    (isRTL ? footerContent?.addressAr?.trim() : footerContent?.addressEn?.trim()) ||
-    footerContent?.address?.trim();
+  const footerTitle = (() => {
+    const v = pickLocalized(footerContent?.title, currentLang).trim();
+    if (v) return v;
+    return (isRTL ? footerContent?.titleAr?.trim() : footerContent?.titleEn?.trim()) || "";
+  })();
+
+  const footerAddress = (() => {
+    const v = pickLocalized(footerContent?.address, currentLang).trim();
+    if (v) return v;
+    return (isRTL ? footerContent?.addressAr?.trim() : footerContent?.addressEn?.trim()) || "";
+  })();
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();

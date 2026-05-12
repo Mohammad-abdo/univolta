@@ -5,20 +5,28 @@ import { motion } from "motion/react";
 import { Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { t, getLanguage } from "@/lib/i18n";
 import type { HomeVideoSetting } from "@/lib/site-settings";
+import { pickLocalized } from "@/lib/localized";
 
 export function HomeVideoSection({ video }: { video?: HomeVideoSetting }) {
   const lang = getLanguage();
   const title = useMemo(() => {
+    if (video?.title) {
+      const v = pickLocalized(video.title, lang).trim();
+      return v || t("homeVideoBadge");
+    }
     const en = video?.titleEn?.trim();
     const ar = video?.titleAr?.trim();
     return (lang === "ar" ? ar : en) || t("homeVideoBadge");
-  }, [lang, video?.titleEn, video?.titleAr]);
+  }, [lang, video?.title, video?.titleEn, video?.titleAr]);
 
   const sub = useMemo(() => {
+    if (video?.sub) {
+      return pickLocalized(video.sub, lang).trim();
+    }
     const en = video?.subEn?.trim();
     const ar = video?.subAr?.trim();
     return (lang === "ar" ? ar : en) || "";
-  }, [lang, video?.subEn, video?.subAr]);
+  }, [lang, video?.sub, video?.subEn, video?.subAr]);
 
   const url = video?.url?.trim() || "";
   const posterUrl = video?.posterUrl?.trim() || undefined;

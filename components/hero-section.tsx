@@ -12,6 +12,7 @@ import { RotatingText } from "@/components/ui/rotating-text";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import type { HeroSlideSetting } from "@/lib/site-settings";
 import { getImageUrl } from "@/lib/image-utils";
+import { pickLocalized } from "@/lib/localized";
 
 /* Three.js background loaded only on the client */
 const ParticleField = dynamic(
@@ -107,14 +108,25 @@ export function HeroSection({
 
   const rotatingWords = [tl("heroWord1"), tl("heroWord2"), tl("heroWord3")];
   const currentSlideData = slides[activeSlide] as HeroSlideSetting | (typeof SLIDES)[number];
-  const slideTitle =
-    "titleEn" in currentSlideData
-      ? (isRTL ? currentSlideData.titleAr : currentSlideData.titleEn) || tl("studyAbroadMadeEasy")
-      : tl("studyAbroadMadeEasy");
-  const slideSubtitle =
-    "subEn" in currentSlideData
-      ? (isRTL ? currentSlideData.subAr : currentSlideData.subEn) || tl("connectWithTopUniversities")
-      : tl("connectWithTopUniversities");
+  const slideTitle = (() => {
+    if ("title" in currentSlideData && currentSlideData.title) {
+      return pickLocalized(currentSlideData.title, isRTL ? "ar" : "en") || tl("studyAbroadMadeEasy");
+    }
+    if ("titleEn" in currentSlideData) {
+      return (isRTL ? currentSlideData.titleAr : currentSlideData.titleEn) || tl("studyAbroadMadeEasy");
+    }
+    return tl("studyAbroadMadeEasy");
+  })();
+
+  const slideSubtitle = (() => {
+    if ("sub" in currentSlideData && currentSlideData.sub) {
+      return pickLocalized(currentSlideData.sub, isRTL ? "ar" : "en") || tl("connectWithTopUniversities");
+    }
+    if ("subEn" in currentSlideData) {
+      return (isRTL ? currentSlideData.subAr : currentSlideData.subEn) || tl("connectWithTopUniversities");
+    }
+    return tl("connectWithTopUniversities");
+  })();
   const stats = [
     { target: 150, suffix: "+", label: tl("studentsStatLabel")      },
     { target: 50,  suffix: "+", label: tl("universitiesStatLabel")  },
@@ -290,7 +302,7 @@ export function HeroSection({
             <div className="bg-white/90 backdrop-blur-md text-[#5260ce] text-xs font-montserrat-semibold px-3 py-1.5 rounded-full shadow-md border border-[#5260ce]/10 animate-fade-up">
               {"badgeKey" in slides[activeSlide]
                 ? tl((slides[activeSlide] as { badgeKey: string }).badgeKey)
-                : (slides[activeSlide] as HeroSlideSetting).badge || tl("heroSlideBadge1")}
+                : pickLocalized((slides[activeSlide] as HeroSlideSetting).badge, isRTL ? "ar" : "en") || tl("heroSlideBadge1")}
             </div>
           </div>
         </div>

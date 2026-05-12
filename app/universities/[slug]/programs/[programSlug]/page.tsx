@@ -30,12 +30,27 @@ import { ProgramRegisterButton } from "@/components/program-register-button";
 import { tServer } from "@/lib/i18n";
 import { cookies } from "next/headers";
 import type { Language } from "@/lib/i18n";
+import {
+  formatDegreeLabel,
+  formatDurationLabel,
+  formatTuitionPeriod,
+  formatInstructionLanguages,
+  formatFacultyDepartmentLabel,
+  formatStudyMethodLabel,
+  formatClassScheduleLabel,
+  formatCountryLabel,
+  localizeEnglishDatePhrases,
+} from "@/lib/university-program-display";
 import { API_BASE_URL } from "@/lib/constants";
+import { pickLocalizedStringArray } from "@/lib/localized";
 
 async function fetchProgram(slug: string) {
   try {
+    const cookieStore = await cookies();
+    const lang = cookieStore.get("language")?.value === "ar" ? "ar" : "en";
     const response = await fetch(`${API_BASE_URL}/public/programs/${slug}`, {
-      next: { revalidate: 60 },
+      cache: "no-store",
+      headers: { "X-Locale": lang, "Accept-Language": lang },
     });
     if (!response.ok) return null;
     return await response.json();
@@ -46,9 +61,11 @@ async function fetchProgram(slug: string) {
 
 async function fetchUniversityPrograms(universitySlug: string) {
   try {
+    const cookieStore = await cookies();
+    const lang = cookieStore.get("language")?.value === "ar" ? "ar" : "en";
     const response = await fetch(
       `${API_BASE_URL}/public/universities/${universitySlug}/programs`,
-      { next: { revalidate: 60 } }
+      { cache: "no-store", headers: { "X-Locale": lang, "Accept-Language": lang } }
     );
     if (!response.ok) return [];
     const data = await response.json();
@@ -61,12 +78,13 @@ async function fetchUniversityPrograms(universitySlug: string) {
 async function fetchSimilarPrograms(
   programName: string,
   excludeId: string,
-  universitySlug: string
+  universitySlug: string,
+  lang: Language
 ) {
   try {
     const response = await fetch(
       `${API_BASE_URL}/public/universities/${universitySlug}/programs`,
-      { next: { revalidate: 60 } }
+      { cache: "no-store", headers: { "X-Locale": lang, "Accept-Language": lang } }
     );
     if (!response.ok) return [];
     const data = await response.json();
@@ -83,7 +101,8 @@ async function fetchSimilarPrograms(
     if (similar.length < 3) {
       try {
         const allProgramsRes = await fetch(`${API_BASE_URL}/public/universities`, {
-          next: { revalidate: 60 },
+          cache: "no-store",
+          headers: { "X-Locale": lang, "Accept-Language": lang },
         });
         if (allProgramsRes.ok) {
           const allUnis = await allProgramsRes.json();
@@ -145,16 +164,11 @@ export default async function ProgramDetailPage({
   const similarPrograms = await fetchSimilarPrograms(
     program.name,
     program.id,
-    slug || program.university?.slug || ""
+    slug || program.university?.slug || "",
+    lang
   );
 
-  // Parse JSON fields
-  let coreSubjects: string[] = [];
-  try {
-    coreSubjects = Array.isArray(program.coreSubjects)
-      ? program.coreSubjects
-      : JSON.parse(program.coreSubjects || "[]");
-  } catch { coreSubjects = []; }
+  const coreSubjects = pickLocalizedStringArray(program.coreSubjects, lang);
 
   let programImages: string[] = [];
   try {
@@ -172,9 +186,9 @@ export default async function ProgramDetailPage({
 
   const programsByDepartment: Record<string, any[]> = {};
   universityPrograms.forEach((p: any) => {
-    const dept = p.department || "Other";
-    if (!programsByDepartment[dept]) programsByDepartment[dept] = [];
-    programsByDepartment[dept].push(p);
+    const deptRaw = p.department || "Other";
+    if (!programsByDepartment[deptRaw]) programsByDepartment[deptRaw] = [];
+    programsByDepartment[deptRaw].push(p);
   });
 
   const bachelorCount = universityPrograms.filter(
@@ -190,14 +204,46 @@ export default async function ProgramDetailPage({
 
   // Info stat tiles for the specialization card
   const infoStats = [
-    { icon: GraduationCap, label: t("degreeOfStudy"),         value: program.degree || program.studyYear || "N/A" },
-    { icon: Clock,         label: t("studyPeriod"),           value: program.duration || "N/A" },
-    { icon: DollarSign,    label: t("tuitionFeesEstimated"),  value: program.tuition || "N/A" },
-    { icon: BookOpen,      label: t("programName"),           value: program.name },
-    { icon: Globe,         label: t("languageOfInstruction"), value: program.language || "N/A" },
-    { icon: Calendar,      label: t("startOfStudy"),          value: program.startDate || "N/A" },
-    { icon: Clock,         label: t("studyTime"),             value: program.classSchedule || "N/A" },
-    { icon: Layers,        label: t("studyMethod"),           value: program.studyMethod || t("undefined") },
+    {
+      icon: GraduationCap,
+      label: t("degreeOfStudy"),
+      value: program.degree
+        ? formatDegreeLabel(program.degree, t)
+        : program.studyYear != null
+          ? String(program.studyYear)
+          : t("notAvailable"),
+    },
+    {
+      icon: Clock,
+      label: t("studyPeriod"),
+      value: formatDurationLabel(program.duration, t) || t("notAvailable"),
+    },
+    {
+      icon: DollarSign,
+      label: t("tuitionFeesEstimated"),
+      value: formatTuitionPeriod(program.tuition, t) || t("notAvailable"),
+    },
+    { icon: BookOpen, label: t("programName"), value: program.name },
+    {
+      icon: Globe,
+      label: t("languageOfInstruction"),
+      value: formatInstructionLanguages(program.language, t) || t("notAvailable"),
+    },
+    {
+      icon: Calendar,
+      label: t("startOfStudy"),
+      value: localizeEnglishDatePhrases(program.startDate, lang) || t("notAvailable"),
+    },
+    {
+      icon: Clock,
+      label: t("studyTime"),
+      value: formatClassScheduleLabel(program.classSchedule, t) || t("notAvailable"),
+    },
+    {
+      icon: Layers,
+      label: t("studyMethod"),
+      value: formatStudyMethodLabel(program.studyMethod, t) || t("undefined"),
+    },
   ];
 
   const heroBanner =
@@ -241,13 +287,13 @@ export default async function ProgramDetailPage({
             <div className="absolute top-4 md:top-6 left-5 md:left-8 right-5 md:right-8 flex items-start justify-between">
               {/* Breadcrumb */}
               <nav className="hidden md:flex items-center gap-1.5 text-white/60 text-xs font-montserrat-regular animate-fade-up">
-                <Link href="/" className="hover:text-white/90 transition-colors">Home</Link>
+                <Link href="/" className="hover:text-white/90 transition-colors">{t("breadcrumbHome")}</Link>
                 <ChevronRight className="w-3 h-3" />
-                <Link href="/universities" className="hover:text-white/90 transition-colors">Universities</Link>
+                <Link href="/universities" className="hover:text-white/90 transition-colors">{t("breadcrumbUniversities")}</Link>
                 <ChevronRight className="w-3 h-3" />
                 <Link href={`/universities/${slug}`} className="hover:text-white/90 transition-colors">{program.university?.name}</Link>
                 <ChevronRight className="w-3 h-3" />
-                <Link href={`/universities/${slug}/programs`} className="hover:text-white/90 transition-colors">Programs</Link>
+                <Link href={`/universities/${slug}/programs`} className="hover:text-white/90 transition-colors">{t("breadcrumbPrograms")}</Link>
                 <ChevronRight className="w-3 h-3" />
                 <span className="text-white/90 truncate max-w-[200px]">{program.name}</span>
               </nav>
@@ -257,13 +303,13 @@ export default async function ProgramDetailPage({
                 {program.degree && (
                   <Badge className="bg-[#5260ce]/80 text-white text-xs font-montserrat-semibold backdrop-blur-sm border-0 shadow-md px-3 py-1.5">
                     <GraduationCap className="w-3 h-3 mr-1.5" />
-                    {program.degree}
+                    {formatDegreeLabel(program.degree, t)}
                   </Badge>
                 )}
                 {program.language && (
                   <Badge className="bg-white/20 text-white text-xs font-montserrat-semibold backdrop-blur-sm border border-white/30 px-3 py-1.5">
                     <Globe className="w-3 h-3 mr-1.5" />
-                    {program.language}
+                    {formatInstructionLanguages(program.language, t)}
                   </Badge>
                 )}
               </div>
@@ -288,14 +334,15 @@ export default async function ProgramDetailPage({
                 <div className="pb-1 flex-1 min-w-0">
                   <p className="text-white/70 text-xs md:text-sm font-montserrat-regular mb-1 animate-fade-up">
                     {program.university?.name}
-                    {program.university?.country && ` · ${program.university.country}`}
+                    {program.university?.country &&
+                      ` · ${formatCountryLabel(program.university.country, lang)}`}
                   </p>
                   <h1 className="font-montserrat-bold text-xl md:text-[38px] leading-tight text-white drop-shadow-lg line-clamp-2 animate-fade-up-d100">
                     {program.name}
                   </h1>
                   {program.tuition && (
                     <p className="text-[#75d3f7] text-sm md:text-base font-montserrat-semibold mt-1 animate-fade-up-d200">
-                      {program.tuition} / year
+                      {formatTuitionPeriod(program.tuition, t)}
                     </p>
                   )}
                 </div>
@@ -367,7 +414,7 @@ export default async function ProgramDetailPage({
                       >
                         <Image
                           src={getImageUrlOrFallback(img, figmaAssets.heroImage)}
-                          alt={`Tour ${i + 1}`}
+                          alt={t("tourImageAlt").replace("{n}", String(i + 1))}
                           fill
                           className="object-cover transition-transform duration-500 group-hover:scale-110"
                           unoptimized
@@ -536,10 +583,10 @@ export default async function ProgramDetailPage({
 
                 {/* Programs list */}
                 <div className="flex flex-col gap-0.5 max-h-[460px] overflow-y-auto pr-1 scrollbar-thin">
-                  {Object.entries(programsByDepartment).map(([dept, programs]) => (
-                    <div key={dept} className="mb-3">
+                  {Object.entries(programsByDepartment).map(([deptRaw, programs]) => (
+                    <div key={deptRaw} className="mb-3">
                       <p className="font-montserrat-semibold text-xs text-[#8b8c9a] uppercase tracking-wider px-2 mb-1.5">
-                        {dept} · {programs.length}
+                        {(deptRaw === "Other" ? t("otherDepartment") : formatFacultyDepartmentLabel(deptRaw, lang))} · {programs.length}
                       </p>
                       <div className="flex flex-col gap-0.5">
                         {programs.map((p: any) => {
@@ -558,7 +605,7 @@ export default async function ProgramDetailPage({
                                 {p.name}
                               </span>
                               {p.tuition ? (
-                                <span className="font-montserrat-semibold text-xs text-[#5260ce] shrink-0 ml-2">{p.tuition}</span>
+                                <span className="font-montserrat-semibold text-xs text-[#5260ce] shrink-0 ml-2">{formatTuitionPeriod(p.tuition, t)}</span>
                               ) : (
                                 isActive && <ArrowRight className="w-3.5 h-3.5 text-[#5260ce] shrink-0 ml-2" />
                               )}
@@ -574,7 +621,7 @@ export default async function ProgramDetailPage({
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   <Button className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold h-11 rounded-xl shadow-[0_4px_16px_rgba(82,96,206,0.3)] hover:shadow-[0_6px_20px_rgba(82,96,206,0.4)] transition-all group" asChild>
                     <Link href={`/universities/${slug}/programs`} className="flex items-center justify-center gap-2">
-                      View All Programs
+                      {t("viewAllPrograms")}
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                   </Button>
@@ -588,7 +635,7 @@ export default async function ProgramDetailPage({
             <div className="mt-14 md:mt-20">
               <div className="flex items-end gap-4 mb-8">
                 <div>
-                  <p className="text-sm font-montserrat-regular text-[#5260ce] mb-1">Discover More</p>
+                  <p className="text-sm font-montserrat-regular text-[#5260ce] mb-1">{t("discoverMore")}</p>
                   <h2 className="font-montserrat-bold text-2xl md:text-[34px] text-[#121c67] leading-tight section-title-accent pb-1">
                     {t("similarOptionsAtOtherUniversities")}
                   </h2>
@@ -616,7 +663,7 @@ export default async function ProgramDetailPage({
                         {similar.degree && (
                           <div className="absolute top-3 left-3">
                             <Badge className="bg-[#5260ce]/90 text-white text-xs font-montserrat-semibold shadow-sm border-0">
-                              <GraduationCap className="w-3 h-3 mr-1" />{similar.degree}
+                              <GraduationCap className="w-3 h-3 mr-1" />{formatDegreeLabel(similar.degree, t)}
                             </Badge>
                           </div>
                         )}
@@ -654,17 +701,17 @@ export default async function ProgramDetailPage({
                         <div className="flex gap-2 flex-wrap">
                           {similar.duration && (
                             <Badge variant="outline" className="border-[#5260ce]/30 text-[#2e2e2e] bg-[rgba(82,96,206,0.06)] text-xs font-montserrat-regular gap-1 rounded-full">
-                              <Clock className="w-3 h-3 text-[#5260ce]" />{similar.duration}
+                              <Clock className="w-3 h-3 text-[#5260ce]" />{formatDurationLabel(similar.duration, t)}
                             </Badge>
                           )}
                           {similar.language && (
                             <Badge variant="outline" className="border-[#75d3f7] text-[#2e2e2e] bg-[rgba(117,211,247,0.08)] text-xs font-montserrat-regular gap-1 rounded-full">
-                              <Globe className="w-3 h-3 text-[#5260ce]" />{similar.language}
+                              <Globe className="w-3 h-3 text-[#5260ce]" />{formatInstructionLanguages(similar.language, t)}
                             </Badge>
                           )}
                           {similar.tuition && (
                             <Badge className="bg-[rgba(82,96,206,0.1)] text-[#5260ce] text-xs font-montserrat-semibold border-0 rounded-full">
-                              {similar.tuition}
+                              {formatTuitionPeriod(similar.tuition, t)}
                             </Badge>
                           )}
                         </div>

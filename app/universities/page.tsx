@@ -17,6 +17,7 @@ import { Search, MapPin, Globe, GraduationCap, ChevronLeft, ChevronRight, Slider
 import { t } from "@/lib/i18n";
 import { API_BASE_URL } from "@/lib/constants";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import { getLocaleHeaders } from "@/lib/api";
 
 type University = {
   id: string;
@@ -94,7 +95,7 @@ function UniversityCard({ university, index }: { university: University; index: 
             <div className="absolute top-3 left-3">
               <Badge className="bg-[#5260ce]/90 text-white hover:bg-[#5260ce] text-xs font-montserrat-semibold shadow-sm">
                 <Trophy className="w-3 h-3 mr-1" />
-                #{university.worldRanking} World
+                #{university.worldRanking} {t("worldShort")}
               </Badge>
             </div>
           )}
@@ -106,7 +107,7 @@ function UniversityCard({ university, index }: { university: University; index: 
                 <div className="relative w-full h-full">
                   <Image
                     src={getImageUrl(logoSrc)}
-                    alt={`${university.name} logo`}
+                    alt={t("universityLogoAlt").replace("{name}", university.name)}
                     fill
                     className="object-contain p-0.5"
                     unoptimized
@@ -210,8 +211,8 @@ function UniversitiesContent() {
   const fetchFilterOptions = async () => {
     try {
       const [uniRes, specRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/public/universities?limit=100`),
-        fetch(`${API_BASE_URL}/programs/specializations`),
+        fetch(`${API_BASE_URL}/public/universities?limit=100`, { headers: getLocaleHeaders() }),
+        fetch(`${API_BASE_URL}/programs/specializations`, { headers: getLocaleHeaders() }),
       ]);
       if (uniRes.ok) {
         const data = await uniRes.json();
@@ -238,7 +239,7 @@ function UniversitiesContent() {
       if (filters.search) params.append("search", filters.search);
       params.append("page", filters.page.toString());
       params.append("limit", "12");
-      const response = await fetch(`${API_BASE_URL}/public/universities?${params.toString()}`);
+      const response = await fetch(`${API_BASE_URL}/public/universities?${params.toString()}`, { headers: getLocaleHeaders() });
       if (response.ok) {
         const data = await response.json();
         setUniversities(data.data || []);
@@ -290,7 +291,7 @@ function UniversitiesContent() {
             <div className="relative h-[150px] md:h-[320px] rounded-[16px] md:rounded-[28px] overflow-hidden mb-5 md:mb-10 animate-hero-reveal">
               <Image
                 src={figmaAssets.heroImage || figmaAssets.faqHeroBackground}
-                alt="Universities"
+                alt={t("universities")}
                 fill
                 className="object-cover"
                 unoptimized
@@ -300,14 +301,14 @@ function UniversitiesContent() {
               <div className="absolute inset-0 flex flex-col items-start justify-center px-6 md:px-12">
                 <div className="flex items-center gap-2 mb-3 animate-fade-up">
                   <GraduationCap className="w-5 h-5 text-[#75d3f7]" />
-                  <span className="text-white/80 text-sm font-montserrat-regular">Explore the World</span>
+                  <span className="text-white/80 text-sm font-montserrat-regular">{t("universitiesExploreWorldTag")}</span>
                 </div>
                 <h2 className="font-montserrat-bold text-xl md:text-[38px] leading-tight text-white max-w-md animate-fade-up-d100">
                   {t("listOfInternationalUniversities")}
                 </h2>
                 {meta.total > 0 && (
                   <p className="text-white/70 text-sm mt-2 font-montserrat-regular animate-fade-up-d200">
-                    {meta.total} universities available
+                    {t("universitiesAvailableCount").replace("{count}", String(meta.total))}
                   </p>
                 )}
               </div>
@@ -319,7 +320,7 @@ function UniversitiesContent() {
             <div className="bg-white rounded-2xl shadow-[0px_4px_40px_rgba(82,96,206,0.10)] p-4 md:p-6 mb-6 md:mb-10">
               <div className="flex items-center gap-2 mb-3 md:hidden">
                 <SlidersHorizontal className="w-4 h-4 text-[#5260ce]" />
-                <span className="font-montserrat-semibold text-sm text-[#121c67]">Filter Universities</span>
+                <span className="font-montserrat-semibold text-sm text-[#121c67]">{t("universitiesFilterTitle")}</span>
               </div>
               <div className="flex flex-col md:flex-row gap-3 md:gap-4">
                 <select
@@ -366,7 +367,9 @@ function UniversitiesContent() {
           {/* Results count */}
           {!loading && universities.length > 0 && (
             <p className="font-montserrat-regular text-sm text-[#8b8c9a] mb-4">
-              Showing {universities.length} of {meta.total} universities
+              {t("universitiesShowingCount")
+                .replace("{shown}", String(universities.length))
+                .replace("{total}", String(meta.total))}
             </p>
           )}
 
@@ -386,7 +389,7 @@ function UniversitiesContent() {
                     <GraduationCap className="w-10 h-10 text-[#5260ce]/50" />
                   </div>
                   <h3 className="font-montserrat-bold text-xl text-[#121c67] mb-2">{t("noUniversitiesFound")}</h3>
-                  <p className="font-montserrat-regular text-[#65666f] text-sm mb-6">Try adjusting your filters or search term</p>
+                  <p className="font-montserrat-regular text-[#65666f] text-sm mb-6">{t("universitiesTryAdjustingFilters")}</p>
                   <Button
                     onClick={() => {
                       const reset = { country: "", language: "", specialization: "", search: "", page: 1 };
@@ -396,7 +399,7 @@ function UniversitiesContent() {
                     variant="outline"
                     className="border-[#5260ce] text-[#5260ce] hover:bg-[#5260ce]/5 rounded-xl"
                   >
-                    Clear All Filters
+                    {t("universitiesClearAllFilters")}
                   </Button>
                 </div>
               ) : (

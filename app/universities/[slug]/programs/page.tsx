@@ -15,13 +15,21 @@ import { figmaAssets } from "@/lib/figma-assets";
 import { API_BASE_URL } from "@/lib/constants";
 import { getImageUrl, getImageUrlOrFallback } from "@/lib/image-utils";
 import Image from "next/image";
-import { t } from "@/lib/i18n";
+import { t, getLanguage } from "@/lib/i18n";
+import { getLocaleHeaders } from "@/lib/api";
 import {
   Wrench, Monitor, FlaskConical, Palette, Stethoscope, Brain,
   TrendingUp, Scale, Palmtree, Compass, ChevronLeft, ChevronRight,
   GraduationCap, Clock, Globe, DollarSign, ArrowRight, Trophy,
 } from "lucide-react";
 import { ProgramRegisterButton } from "@/components/program-register-button";
+import {
+  formatDegreeLabel,
+  formatDurationLabel,
+  formatTuitionPeriod,
+  formatInstructionLanguages,
+  formatFacultyDepartmentLabel,
+} from "@/lib/university-program-display";
 
 interface Program {
   id: string;
@@ -80,7 +88,7 @@ function ProgramCardSkeleton() {
 
 function ProgramCard({ program, slug, index }: { program: Program; slug: string; index: number }) {
   const bannerSrc = program.bannerImage || program.programImages?.[0];
-  const degreeShort = program.degree?.toLowerCase().includes("master") ? "Master" : "Bachelor";
+  const lang = getLanguage();
 
   return (
     <ScrollReveal direction="up" delay={index * 100} threshold={0.06}>
@@ -103,8 +111,8 @@ function ProgramCard({ program, slug, index }: { program: Program; slug: string;
           {/* Degree badge top-right */}
           {program.degree && (
             <div className="absolute top-3 right-3">
-              <Badge className={`text-xs font-montserrat-semibold border-0 shadow-sm ${degreeShort === "Master" ? "bg-[#5260ce]/90 text-white" : "bg-white/90 text-[#121c67]"}`}>
-                {degreeShort}
+              <Badge className={`text-xs font-montserrat-semibold border-0 shadow-sm ${program.degree.toLowerCase().includes("master") ? "bg-[#5260ce]/90 text-white" : "bg-white/90 text-[#121c67]"}`}>
+                {formatDegreeLabel(program.degree, t)}
               </Badge>
             </div>
           )}
@@ -118,7 +126,9 @@ function ProgramCard({ program, slug, index }: { program: Program; slug: string;
 
           {/* Program name on image */}
           <div className="absolute bottom-0 left-0 right-0 p-4 pt-6">
-            <p className="text-white/60 text-xs font-montserrat-regular mb-0.5">{program.department}</p>
+            <p className="text-white/60 text-xs font-montserrat-regular mb-0.5">
+              {program.department ? formatFacultyDepartmentLabel(program.department, lang) : ""}
+            </p>
             <h3 className="font-montserrat-bold text-base text-white leading-tight line-clamp-2">
               {program.name}
             </h3>
@@ -131,20 +141,23 @@ function ProgramCard({ program, slug, index }: { program: Program; slug: string;
             {program.duration && (
               <div className="flex items-center gap-1.5 bg-[rgba(117,211,247,0.08)] border border-[#75d3f7]/40 rounded-lg px-2.5 py-1.5">
                 <Clock className="w-3.5 h-3.5 text-[#5260ce] shrink-0" />
-                <span className="text-xs text-[#2e2e2e] font-montserrat-regular truncate">{program.duration}</span>
+                <span className="text-xs text-[#2e2e2e] font-montserrat-regular truncate">{formatDurationLabel(program.duration, t)}</span>
               </div>
             )}
             {program.language && (
               <div className="flex items-center gap-1.5 bg-[rgba(82,96,206,0.06)] border border-[#5260ce]/20 rounded-lg px-2.5 py-1.5">
                 <Globe className="w-3.5 h-3.5 text-[#5260ce] shrink-0" />
-                <span className="text-xs text-[#2e2e2e] font-montserrat-regular truncate">{program.language}</span>
+                <span className="text-xs text-[#2e2e2e] font-montserrat-regular truncate">{formatInstructionLanguages(program.language, t)}</span>
               </div>
             )}
             {program.tuition && (
               <div className="col-span-2 flex items-center gap-1.5 bg-[rgba(82,96,206,0.06)] border border-[#5260ce]/20 rounded-lg px-2.5 py-1.5">
                 <DollarSign className="w-3.5 h-3.5 text-[#5260ce] shrink-0" />
                 <span className="text-xs font-montserrat-semibold text-[#5260ce]">
-                  {program.tuition.startsWith("$") ? program.tuition : `$${program.tuition}`}
+                  {formatTuitionPeriod(
+                    program.tuition.startsWith("$") ? program.tuition : `$${program.tuition}`,
+                    t
+                  )}
                 </span>
               </div>
             )}
@@ -205,8 +218,8 @@ function ProgramsContent() {
     try {
       setLoading(true);
       const [uniRes, progRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/public/universities/${slug}`),
-        fetch(`${API_BASE_URL}/public/universities/${slug}/programs`),
+        fetch(`${API_BASE_URL}/public/universities/${slug}`, { headers: getLocaleHeaders() }),
+        fetch(`${API_BASE_URL}/public/universities/${slug}/programs`, { headers: getLocaleHeaders() }),
       ]);
       if (uniRes.ok) {
         const d = await uniRes.json();
@@ -238,6 +251,7 @@ function ProgramsContent() {
   const paginatedPrograms = filteredPrograms.slice(startIndex, startIndex + programsPerPage);
   const bachelorCount = programs.filter(p => { const d = p.degree?.toLowerCase() || ""; return d.includes("bachelor") || d.includes("undergraduate"); }).length;
   const masterCount   = programs.filter(p => { const d = p.degree?.toLowerCase() || ""; return d.includes("master")   || d.includes("graduate"); }).length;
+  const deptLang = getLanguage();
 
   return (
     <div className="min-h-screen bg-[#f9fafe] pb-16 md:pb-0">
@@ -250,7 +264,7 @@ function ProgramsContent() {
             <div className="relative h-[220px] md:h-[340px] rounded-[20px] md:rounded-[28px] overflow-hidden mb-6 md:mb-10 animate-hero-reveal">
               <Image
                 src={getImageUrlOrFallback(university?.bannerUrl, figmaAssets.heroImage)}
-                alt={university?.name || "Programs"}
+                alt={university?.name || t("breadcrumbPrograms")}
                 fill
                 className="object-cover"
                 unoptimized
@@ -261,7 +275,7 @@ function ProgramsContent() {
               {university?.worldRanking && (
                 <div className="absolute top-4 right-4">
                   <Badge className="bg-[#5260ce]/90 text-white text-xs font-montserrat-semibold border-0 backdrop-blur-sm px-3 py-1.5">
-                    <Trophy className="w-3 h-3 mr-1.5" />#{university.worldRanking} World
+                    <Trophy className="w-3 h-3 mr-1.5" />#{university.worldRanking} {t("worldShort")}
                   </Badge>
                 </div>
               )}
@@ -273,9 +287,9 @@ function ProgramsContent() {
                   </div>
                 )}
                 <div className="pb-1">
-                  <p className="text-white/60 text-xs font-montserrat-regular mb-1 animate-fade-up">Academic Programs</p>
+                  <p className="text-white/60 text-xs font-montserrat-regular mb-1 animate-fade-up">{t("programsSubtitleAcademic")}</p>
                   <h1 className="font-montserrat-bold text-xl md:text-[32px] leading-tight text-white drop-shadow-lg animate-fade-up-d100">
-                    {university?.name || "University Programs"}
+                    {university?.name || t("programsTitleFallback")}
                   </h1>
                 </div>
               </div>
@@ -325,11 +339,15 @@ function ProgramsContent() {
                       !selectedFaculty ? "bg-[#5260ce] text-white border-[#5260ce]" : "bg-white text-[#65666f] border-gray-200 hover:border-[#5260ce]/40 hover:text-[#5260ce]"
                     }`}
                   >
-                    All Departments
+                    {t("allDepartmentsFilter")}
                   </button>
                   {faculties.map((f) => {
                     const Icon = f.icon;
                     const isActive = selectedFaculty === f.name;
+                    const chipLabel =
+                      deptLang === "ar"
+                        ? formatFacultyDepartmentLabel(f.name, deptLang).replace(/^كلية\s+/u, "")
+                        : f.name.replace(/^Faculty of /i, "");
                     return (
                       <button
                         key={f.name}
@@ -339,7 +357,7 @@ function ProgramsContent() {
                         }`}
                       >
                         <Icon className="w-3.5 h-3.5" />
-                        <span className="line-clamp-1">{f.name.replace("Faculty of ", "")}</span>
+                        <span className="line-clamp-1">{chipLabel}</span>
                       </button>
                     );
                   })}
@@ -351,7 +369,9 @@ function ProgramsContent() {
           {/* Results count */}
           {!loading && filteredPrograms.length > 0 && (
             <p className="font-montserrat-regular text-sm text-[#8b8c9a] mb-4">
-              Showing {paginatedPrograms.length} of {filteredPrograms.length} programs
+              {t("programsShowing")
+                .replace("{shown}", String(paginatedPrograms.length))
+                .replace("{total}", String(filteredPrograms.length))}
             </p>
           )}
 
@@ -375,7 +395,7 @@ function ProgramsContent() {
                     onClick={() => { setSelectedFaculty(""); setCurrentPage(1); }}
                     className="mt-4 text-sm text-[#5260ce] underline font-montserrat-semibold"
                   >
-                    Clear filters
+                    {t("clearFilters")}
                   </button>
                 </div>
               ) : (

@@ -1,9 +1,14 @@
 import { API_BASE_URL } from "./constants";
+import type { LocalizedJson } from "./localized";
 
 export interface HeroSlideSetting {
   id: string;
   image: string;
-  badge?: string;
+  /** New format (preferred): `{ en, ar }` */
+  badge?: LocalizedJson | string;
+  title?: LocalizedJson | string;
+  sub?: LocalizedJson | string;
+  /** Legacy format (backward compatible) */
   titleEn?: string;
   titleAr?: string;
   subEn?: string;
@@ -25,21 +30,28 @@ export interface HomeStatsSetting {
 }
 
 export interface FooterContentSetting {
-  titleEn?: string;
-  titleAr?: string;
+  /** New format (preferred): `{ en, ar }` */
+  title?: LocalizedJson | string;
   phone?: string;
   email?: string;
-  addressEn?: string;
-  addressAr?: string;
-  address?: string;
+  address?: LocalizedJson | string;
   copyright?: string;
   quickLinks?: Array<{ label: string; href: string }>;
   socialLinks?: Array<{ platform: string; href: string }>;
+  /** Legacy format (backward compatible) */
+  titleEn?: string;
+  titleAr?: string;
+  addressEn?: string;
+  addressAr?: string;
 }
 
 export interface HomeVideoSetting {
   url?: string;
   posterUrl?: string;
+  /** New format (preferred): `{ en, ar }` */
+  title?: LocalizedJson | string;
+  sub?: LocalizedJson | string;
+  /** Legacy format (backward compatible) */
   titleEn?: string;
   titleAr?: string;
   subEn?: string;

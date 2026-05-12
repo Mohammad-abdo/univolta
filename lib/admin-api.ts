@@ -86,7 +86,11 @@ export interface HeroSlide {
   id:        string;
   image:     string;
   badgeKey?: string;
-  badge?:    string;
+  /** New format (preferred): `{ en, ar }` */
+  badge?:    { en: string; ar?: string } | string;
+  title?:    { en: string; ar?: string } | string;
+  sub?:      { en: string; ar?: string } | string;
+  /** Legacy format (backward compatible) */
   titleEn?:  string;
   titleAr?:  string;
   subEn?:    string;
@@ -101,16 +105,19 @@ export interface HomeSectionConfig {
 }
 
 export interface FooterContent {
-  titleEn?:   string;
-  titleAr?:   string;
+  /** New format (preferred): `{ en, ar }` */
+  title?:     { en: string; ar?: string } | string;
   phone?:     string;
   email?:     string;
-  addressEn?: string;
-  addressAr?: string;
-  address?:   string;
+  address?:   { en: string; ar?: string } | string;
   copyright?: string;
   quickLinks?: Array<{ label: string; href: string }>;
   socialLinks?: Array<{ platform: string; href: string }>;
+  /** Legacy format (backward compatible) */
+  titleEn?:   string;
+  titleAr?:   string;
+  addressEn?: string;
+  addressAr?: string;
 }
 
 export const settingsApi = {

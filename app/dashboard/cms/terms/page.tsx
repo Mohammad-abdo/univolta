@@ -5,35 +5,34 @@ import { API_BASE_URL } from "@/lib/constants";
 import { showToast } from "@/lib/toast";
 import { Plus, Trash2, GripVertical, Save, RotateCcw, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { pickLocalized } from "@/lib/localized";
 
 interface TermsItem {
   type: "body" | "list";
-  content?: string;
-  items?: string[];
+  content?: string | { en: string; ar?: string };
+  items?: Array<string | { en: string; ar?: string }>;
 }
 
 interface TermsSection {
   id: string;
-  title: string;
+  title: string | { en: string; ar?: string };
   titleAr?: string;
   data: TermsItem;
 }
 
 interface TermsData {
-  welcomeMessage: string;
+  welcomeMessage: string | { en: string; ar?: string };
   welcomeMessageAr?: string;
   sections: TermsSection[];
   lastUpdated?: string;
 }
 
 const DEFAULT_DATA: TermsData = {
-  welcomeMessage:
-    "Welcome to UniVolta. By accessing and using our website, you agree to comply with the following terms and conditions. Please read them carefully.",
-  welcomeMessageAr: "مرحباً بك في UniVolta. من خلال الوصول إلى موقعنا واستخدامه، فإنك توافق على الامتثال للشروط والأحكام التالية.",
+  welcomeMessage: { en: "Welcome to UniVolta. By accessing and using our website, you agree to comply with the following terms and conditions. Please read them carefully.", ar: "مرحباً بك في UniVolta. من خلال الوصول إلى موقعنا واستخدامه، فإنك توافق على الامتثال للشروط والأحكام التالية." },
   sections: [
-    { id: "1", title: "1. About the Platform", titleAr: "١. عن المنصة", data: { type: "body", content: "UniVolta is an online platform that facilitates student applications to international universities." } },
-    { id: "2", title: "2. Acceptance of Terms", titleAr: "٢. قبول الشروط", data: { type: "body", content: "By using this platform, you acknowledge that you have read, understood, and agreed to these terms." } },
-    { id: "3", title: "3. User Account", titleAr: "٣. حساب المستخدم", data: { type: "list", items: ["You must provide accurate and complete information.", "You are responsible for maintaining the confidentiality of your credentials.", "UniVolta reserves the right to suspend accounts that violate policies."] } },
+    { id: "1", title: { en: "1. About the Platform", ar: "١. عن المنصة" }, data: { type: "body", content: { en: "UniVolta is an online platform that facilitates student applications to international universities.", ar: "UniVolta منصة إلكترونية تُسهّل تقديم طلبات الطلاب إلى الجامعات الدولية." } } },
+    { id: "2", title: { en: "2. Acceptance of Terms", ar: "٢. قبول الشروط" }, data: { type: "body", content: { en: "By using this platform, you acknowledge that you have read, understood, and agreed to these terms.", ar: "باستخدامك لهذه المنصة، فإنك تقر بأنك قرأت وفهمت ووافقت على هذه الشروط." } } },
+    { id: "3", title: { en: "3. User Account", ar: "٣. حساب المستخدم" }, data: { type: "list", items: [{ en: "You must provide accurate and complete information.", ar: "يجب تقديم معلومات دقيقة وكاملة." }, { en: "You are responsible for maintaining the confidentiality of your credentials.", ar: "أنت مسؤول عن الحفاظ على سرية بيانات تسجيل الدخول." }, { en: "UniVolta reserves the right to suspend accounts that violate policies.", ar: "تحتفظ UniVolta بحق تعليق الحسابات التي تخالف السياسات." }] } },
   ],
 };
 
@@ -51,7 +50,9 @@ export default function TermsEditorPage() {
       .then((r) => r.json())
       .then((settings) => {
         if (settings["terms.sections"]) {
-          setData(settings["terms.sections"] as TermsData);
+          const raw = settings["terms.sections"] as TermsData;
+          // Backward compatible: if legacy `welcomeMessageAr/titleAr` exist, keep them but prefer `{en,ar}` when present.
+          setData(raw);
         }
       })
       .catch(() => {})
@@ -84,7 +85,7 @@ export default function TermsEditorPage() {
     const id = Date.now().toString();
     setData((d) => ({
       ...d,
-      sections: [...d.sections, { id, title: "", titleAr: "", data: { type: "body", content: "" } }],
+      sections: [...d.sections, { id, title: { en: "", ar: "" }, data: { type: "body", content: { en: "", ar: "" } } }],
     }));
   };
 
@@ -110,12 +111,12 @@ export default function TermsEditorPage() {
       ...d,
       sections: d.sections.map((s) =>
         s.id === id
-          ? { ...s, data: { ...s.data, items: [...(s.data.items ?? []), ""] } }
+          ? { ...s, data: { ...s.data, items: [...(s.data.items ?? []), { en: "", ar: "" }] } }
           : s
       ),
     }));
 
-  const updateListItem = (sectionId: string, idx: number, val: string) =>
+  const updateListItem = (sectionId: string, idx: number, val: { en: string; ar?: string }) =>
     setData((d) => ({
       ...d,
       sections: d.sections.map((s) =>
@@ -192,11 +193,18 @@ export default function TermsEditorPage() {
           rows={3}
           dir={activeTab === "ar" ? "rtl" : "ltr"}
           className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#5260ce] focus:outline-none focus:ring-2 focus:ring-[#5260ce]/20 resize-none"
-          value={activeTab === "en" ? data.welcomeMessage : (data.welcomeMessageAr ?? "")}
+          value={
+            activeTab === "en"
+              ? pickLocalized(data.welcomeMessage, "en")
+              : pickLocalized(data.welcomeMessage, "ar")
+          }
           onChange={(e) =>
             setData((d) => ({
               ...d,
-              [activeTab === "en" ? "welcomeMessage" : "welcomeMessageAr"]: e.target.value,
+              welcomeMessage: {
+                en: activeTab === "en" ? e.target.value : pickLocalized(d.welcomeMessage, "en"),
+                ar: activeTab === "ar" ? e.target.value : pickLocalized(d.welcomeMessage, "ar"),
+              },
             }))
           }
         />
@@ -224,10 +232,13 @@ export default function TermsEditorPage() {
                 dir={activeTab === "ar" ? "rtl" : "ltr"}
                 className="flex-1 bg-transparent text-sm font-montserrat-semibold text-[#121c67] focus:outline-none placeholder:text-gray-400"
                 placeholder={activeTab === "en" ? "Section title…" : "عنوان القسم…"}
-                value={activeTab === "en" ? section.title : (section.titleAr ?? "")}
+                value={activeTab === "en" ? pickLocalized(section.title, "en") : pickLocalized(section.title, "ar")}
                 onChange={(e) =>
                   updateSection(section.id, {
-                    [activeTab === "en" ? "title" : "titleAr"]: e.target.value,
+                    title: {
+                      en: activeTab === "en" ? e.target.value : pickLocalized(section.title, "en"),
+                      ar: activeTab === "ar" ? e.target.value : pickLocalized(section.title, "ar"),
+                    },
                   })
                 }
               />
@@ -245,7 +256,13 @@ export default function TermsEditorPage() {
                 {(["body", "list"] as const).map((type) => (
                   <button
                     key={type}
-                    onClick={() => updateSectionData(section.id, { type, content: type === "body" ? "" : undefined, items: type === "list" ? [""] : undefined })}
+                    onClick={() =>
+                      updateSectionData(section.id, {
+                        type,
+                        content: type === "body" ? { en: "", ar: "" } : undefined,
+                        items: type === "list" ? [{ en: "", ar: "" }] : undefined,
+                      })
+                    }
                     className={`rounded-md px-3 py-1 font-montserrat-semibold transition-all ${section.data.type === type ? "bg-white text-[#5260ce] shadow-sm" : "text-gray-400"}`}
                   >
                     {type === "body" ? "Paragraph" : "Bullet List"}
@@ -259,8 +276,15 @@ export default function TermsEditorPage() {
                   dir={activeTab === "ar" ? "rtl" : "ltr"}
                   className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#5260ce] focus:outline-none focus:ring-2 focus:ring-[#5260ce]/20 resize-none"
                   placeholder={activeTab === "en" ? "Section content…" : "محتوى القسم…"}
-                  value={section.data.content ?? ""}
-                  onChange={(e) => updateSectionData(section.id, { content: e.target.value })}
+                  value={activeTab === "en" ? pickLocalized(section.data.content, "en") : pickLocalized(section.data.content, "ar")}
+                  onChange={(e) =>
+                    updateSectionData(section.id, {
+                      content: {
+                        en: activeTab === "en" ? e.target.value : pickLocalized(section.data.content, "en"),
+                        ar: activeTab === "ar" ? e.target.value : pickLocalized(section.data.content, "ar"),
+                      },
+                    })
+                  }
                 />
               ) : (
                 <div className="space-y-2">
@@ -271,8 +295,12 @@ export default function TermsEditorPage() {
                         dir={activeTab === "ar" ? "rtl" : "ltr"}
                         className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#5260ce] focus:outline-none focus:ring-2 focus:ring-[#5260ce]/20"
                         placeholder={activeTab === "en" ? `Item ${i + 1}…` : `البند ${i + 1}…`}
-                        value={item}
-                        onChange={(e) => updateListItem(section.id, i, e.target.value)}
+                        value={activeTab === "en" ? pickLocalized(item, "en") : pickLocalized(item, "ar")}
+                        onChange={(e) => {
+                          const en = activeTab === "en" ? e.target.value : pickLocalized(item, "en");
+                          const ar = activeTab === "ar" ? e.target.value : pickLocalized(item, "ar");
+                          updateListItem(section.id, i, { en, ar });
+                        }}
                       />
                       <button
                         onClick={() => removeListItem(section.id, i)}
