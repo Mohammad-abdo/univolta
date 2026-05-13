@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { Phone, Mail, MapPin, Send, GraduationCap, Globe, MessageCircle } from "lucide-react";
 import { figmaAssets } from "@/lib/figma-assets";
@@ -12,6 +11,8 @@ import { fetchPublicSiteSettings, type FooterContentSetting } from "@/lib/site-s
 import { getImageUrl } from "@/lib/image-utils";
 import { CreditBar } from "@/components/credit-bar";
 import { buildSocialLinkRows, footerSocialHoverClass } from "@/lib/social-links";
+import { LocaleLink } from "@/components/locale-link";
+import { stripLocalePrefixFromPathForCompare } from "@/lib/locale-path";
 
 /** Normalize href for matching (pathname only, no trailing slash except root). */
 function normalizeFooterHref(href: string): string {
@@ -29,7 +30,7 @@ function normalizeFooterHref(href: string): string {
   const noQuery = noHash.split("?")[0] ?? noHash;
   let path = noQuery.replace(/\/$/, "") || "/";
   if (!path.startsWith("/")) path = `/${path}`;
-  return path;
+  return stripLocalePrefixFromPathForCompare(path);
 }
 
 /**
@@ -293,9 +294,9 @@ export function Footer() {
             <ul className="space-y-3">
               {quickLinks.map((link, index) => (
                 <li key={`${normalizeFooterHref(link.href)}-${index}`}>
-                  <Link href={link.href} className="footer-link">
+                  <LocaleLink href={link.href} className="footer-link">
                     {link.label}
-                  </Link>
+                  </LocaleLink>
                 </li>
               ))}
             </ul>
@@ -309,9 +310,9 @@ export function Footer() {
             <ul className="space-y-3">
               {footerSpecializations.map((row) => (
                 <li key={row.href}>
-                  <Link href={row.href} className="footer-link">
+                  <LocaleLink href={row.href} className="footer-link">
                     {row.label}
-                  </Link>
+                  </LocaleLink>
                 </li>
               ))}
             </ul>
@@ -350,7 +351,7 @@ export function Footer() {
           <p className="text-white/40 text-xs font-montserrat-regular">
             {tl("poweredBy")}{" "}
             <span className="text-[#75d3f7] font-montserrat-bold">
-              <Link href="https://www.qeematech.net/" target="_blank" rel="noopener noreferrer">Qeematech</Link>
+              <LocaleLink href="https://www.qeematech.net/" target="_blank" rel="noopener noreferrer">Qeematech</LocaleLink>
             </span>
           </p>
         </div>

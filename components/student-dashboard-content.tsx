@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/constants";
-import Link from "next/link";
+import { LocaleLink } from "@/components/locale-link";
 import Image from "next/image";
 import { FileText, CheckCircle, Clock, XCircle, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -117,7 +117,7 @@ export function StudentDashboardContent() {
             <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
             <p className="text-[#65666f] font-montserrat-regular text-sm">No applications yet</p>
             <Button className="mt-4 bg-[#5260ce] hover:bg-[#4350b0] text-white rounded-xl" asChild>
-              <Link href="/universities">Browse Universities</Link>
+              <LocaleLink href="/universities">Browse Universities</LocaleLink>
             </Button>
           </div>
         ) : (
@@ -173,10 +173,10 @@ export function StudentDashboardContent() {
                           className="border-[#5260ce]/30 text-[#5260ce] hover:bg-[#5260ce] hover:text-white rounded-lg text-xs h-8 px-3 transition-colors"
                           asChild
                         >
-                          <Link href={`/my-applications/${app.id}`} className="flex items-center gap-1">
+                          <LocaleLink href={`/my-applications/${app.id}`} className="flex items-center gap-1">
                             <Eye className="w-3.5 h-3.5" />
                             View Details
-                          </Link>
+                          </LocaleLink>
                         </Button>
                       </td>
                     </tr>

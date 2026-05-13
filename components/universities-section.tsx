@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import Link from "next/link";
+import { LocaleLink } from "@/components/locale-link";
 import { figmaAssets } from "@/lib/figma-assets";
 import { API_BASE_URL } from "@/lib/constants";
 import { getImageUrl } from "@/lib/image-utils";
@@ -98,7 +98,7 @@ function UniversityCard({
             unoptimized
           />
           {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[rgba(18,28,103,0.75)] via-[rgba(18,28,103,0.25)] to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[rgba(18,28,103,0.48)] via-[rgba(18,28,103,0.12)] to-transparent" />
 
           {/* Country flag badge – top-right */}
           <div className="absolute top-3 right-3">
@@ -219,13 +219,13 @@ function UniversityCard({
             className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm h-11 rounded-xl transition-all duration-300 hover:shadow-[0_8px_24px_rgba(82,96,206,0.35)] group/btn"
             asChild
           >
-            <Link
+            <LocaleLink
               href={`/universities/${university.slug}`}
               className={`flex items-center justify-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
             >
               {t("viewDetails")}
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover/btn:translate-x-1" />
-            </Link>
+            </LocaleLink>
           </Button>
         </CardFooter>
       </Card>
@@ -366,10 +366,10 @@ export function UniversitiesSection() {
             className="border-2 border-[#5260ce] text-[#5260ce] hover:bg-[#5260ce] hover:text-white font-montserrat-semibold text-base h-12 px-8 rounded-xl transition-all duration-300 gap-2 group"
             asChild
           >
-            <Link href="/universities">
+            <LocaleLink href="/universities">
               {t("viewAll")}
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 duration-200" />
-            </Link>
+            </LocaleLink>
           </Button>
         </ScrollReveal>
       </div>

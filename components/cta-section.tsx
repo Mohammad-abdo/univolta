@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { LocaleLink } from "@/components/locale-link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
@@ -70,10 +70,10 @@ export function CtaSection() {
               asChild
               className="bg-white text-[#121c67] hover:bg-[#f0f4ff] font-montserrat-bold text-base h-[52px] px-8 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 transition-all duration-300"
             >
-              <Link href="/universities" className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+              <LocaleLink href="/universities" className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
                 {tl("ctaButton")}
                 <ArrowRight className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
-              </Link>
+              </LocaleLink>
             </Button>
 
             <Button
@@ -81,10 +81,10 @@ export function CtaSection() {
               variant="outline"
               className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white hover:border-white/60 font-montserrat-semibold text-base h-[52px] px-8 rounded-xl backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 [&_svg]:text-white"
             >
-              <Link href="/contact" className={`flex items-center justify-center gap-2 min-w-0 ${isRTL ? "flex-row-reverse" : ""}`}>
+              <LocaleLink href="/contact" className={`flex items-center justify-center gap-2 min-w-0 ${isRTL ? "flex-row-reverse" : ""}`}>
                 <MessageCircle className="w-4 h-4 shrink-0" aria-hidden />
                 <span className="text-white">{tl("ctaButtonSecondary")}</span>
-              </Link>
+              </LocaleLink>
             </Button>
           </div>
         </ScrollReveal>

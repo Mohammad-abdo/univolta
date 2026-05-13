@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { LocaleLink } from "@/components/locale-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
@@ -60,7 +60,7 @@ export function ProgramsSection() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 mb-10">
           {PROGRAMS.map(({ key, icon: Icon, iconBg, iconColor, hover }, i) => (
             <ScrollReveal key={key} direction="up" delay={i * 60}>
-              <Link href={`/universities?specialization=${encodeURIComponent(key.replace("program", ""))}`}>
+              <LocaleLink href={`/universities?specialization=${encodeURIComponent(key.replace("program", ""))}`}>
                 <div className={`group h-full bg-white rounded-2xl border border-gray-100 ${hover} p-5 md:p-6 flex flex-col items-center text-center shadow-sm hover:shadow-[0_8px_40px_rgba(82,96,206,0.12)] transition-all duration-300 hover:-translate-y-1 cursor-pointer`}>
                   <div className={`w-14 h-14 rounded-2xl ${iconBg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
                     <Icon className={`w-7 h-7 ${iconColor}`} />
@@ -69,7 +69,7 @@ export function ProgramsSection() {
                     {tl(key)}
                   </p>
                 </div>
-              </Link>
+              </LocaleLink>
             </ScrollReveal>
           ))}
         </div>
@@ -80,10 +80,10 @@ export function ProgramsSection() {
               asChild
               className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold px-8 py-3 h-auto rounded-xl shadow-[0_4px_24px_rgba(82,96,206,0.3)] hover:shadow-[0_8px_32px_rgba(82,96,206,0.4)] hover:-translate-y-0.5 transition-all duration-300"
             >
-              <Link href="/universities" className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+              <LocaleLink href="/universities" className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
                 {tl("programsViewAll")}
                 <ArrowRight className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
-              </Link>
+              </LocaleLink>
             </Button>
           </div>
         </ScrollReveal>

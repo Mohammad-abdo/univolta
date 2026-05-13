@@ -1,13 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Home, GraduationCap, HelpCircle, Mail } from "lucide-react";
 import { t, getLanguage, type Language } from "@/lib/i18n";
+import { LocaleLink } from "@/components/locale-link";
+import { pathnameWithoutLocalePrefix } from "@/lib/locale-path";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const pathSansLocale = pathnameWithoutLocalePrefix(pathname ?? "/");
+  const normalizedPathname = pathSansLocale;
   const [currentLang, setCurrentLang] = useState<Language>(getLanguage());
   const isRTL = currentLang === "ar";
 
@@ -22,10 +25,10 @@ export function MobileBottomNav() {
   // Don't show on dashboard or auth pages
   if (
     pathname?.startsWith("/dashboard") ||
-    pathname?.startsWith("/login") ||
-    pathname?.startsWith("/signup") ||
-    pathname?.startsWith("/forgot-password") ||
-    pathname?.startsWith("/reset-password")
+    pathSansLocale.startsWith("/login") ||
+    pathSansLocale.startsWith("/signup") ||
+    pathSansLocale.startsWith("/forgot-password") ||
+    pathSansLocale.startsWith("/reset-password")
   ) {
     return null;
   }
@@ -33,7 +36,7 @@ export function MobileBottomNav() {
   const navItems = [
     { href: "/",             label: t("home"),         icon: Home },
     { href: "/universities", label: t("universities"),  icon: GraduationCap },
-    { href: "/faq",          label: t("faq"),           icon: HelpCircle },
+    { href: "/faq",          label: t("mobileNavFaqShort"), icon: HelpCircle },
     { href: "/contact",      label: t("contact"),       icon: Mail },
   ];
 
@@ -42,9 +45,9 @@ export function MobileBottomNav() {
       <div className={`flex items-center justify-around h-[62px] px-2 ${isRTL ? "flex-row-reverse" : ""}`}>
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          const isActive = normalizedPathname === item.href;
           return (
-            <Link
+            <LocaleLink
               key={item.href}
               href={item.href}
               className={`relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all duration-200 ${
@@ -57,10 +60,12 @@ export function MobileBottomNav() {
               <div className={`transition-all duration-200 ${isActive ? "scale-110 -translate-y-0.5" : ""}`}>
                 <Icon className="w-5 h-5" />
               </div>
-              <span className={`text-[10px] font-montserrat-${isActive ? "semibold" : "regular"}`}>
+              <span
+                className={`text-center whitespace-nowrap text-[10px] font-montserrat-${isActive ? "semibold" : "regular"}`}
+              >
                 {item.label}
               </span>
-            </Link>
+            </LocaleLink>
           );
         })}
       </div>

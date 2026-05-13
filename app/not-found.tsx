@@ -42,7 +42,7 @@ export default function NotFound() {
                 asChild
                 className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold px-8 h-12 rounded-xl shadow-[0_4px_16px_rgba(82,96,206,0.3)] hover:shadow-[0_6px_24px_rgba(82,96,206,0.4)] transition-all"
               >
-                <Link href="/" className="flex items-center gap-2">
+                <Link href="/en" className="flex items-center gap-2">
                   <Home className="w-4 h-4" />
                   Go Home
                 </Link>
@@ -52,7 +52,7 @@ export default function NotFound() {
                 variant="outline"
                 className="font-montserrat-semibold px-8 h-12 rounded-xl border-2 border-[#5260ce]/30 text-[#5260ce] hover:bg-[#5260ce]/5 hover:border-[#5260ce] transition-all"
               >
-                <Link href="/universities" className="flex items-center gap-2">
+                <Link href="/en/universities" className="flex items-center gap-2">
                   <Search className="w-4 h-4" />
                   Browse Universities
                 </Link>

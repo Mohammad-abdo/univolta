@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { CheckCircle } from "lucide-react";
 import { API_BASE_URL } from "@/lib/constants";
 import { t } from "@/lib/i18n";
@@ -15,6 +16,8 @@ interface ProgramRegisterButtonProps {
 export function ProgramRegisterButton({ programId, universitySlug }: ProgramRegisterButtonProps) {
   const [hasApplied, setHasApplied] = useState(false);
   const [loading, setLoading] = useState(true);
+  const params = useParams();
+  const locale = typeof params?.locale === "string" ? params.locale : "en";
 
   useEffect(() => {
     checkApplicationStatus();
@@ -165,7 +168,7 @@ export function ProgramRegisterButton({ programId, universitySlug }: ProgramRegi
       className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm md:text-[16px] h-[44px] md:h-[52px] px-4 md:px-8 rounded-xl shadow-lg"
       asChild
     >
-      <Link href={`/universities/${universitySlug}/register?program=${programId}`}>
+      <Link href={`/${locale}/universities/${universitySlug}/register?program=${programId}`}>
         {t("registerNow")}
       </Link>
     </Button>

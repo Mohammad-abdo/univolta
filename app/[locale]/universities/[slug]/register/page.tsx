@@ -1,0 +1,1482 @@
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import {
+  Check,
+  Upload,
+  X,
+  User,
+  Star,
+  FileText,
+  Shield,
+  ArrowLeft,
+  CreditCard,
+  AlertCircle,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  apiPost,
+  apiPostPublic,
+  apiPut,
+  apiPutPublic,
+  apiUploadDocument,
+  apiUploadDocumentPublic,
+  apiProcessPayment,
+  apiProcessPaymentPublic,
+} from "@/lib/api";
+import { API_BASE_URL } from "@/lib/constants";
+import { getDirection, getLanguage, t } from "@/lib/i18n";
+import { toAppLocale, withLocalePath } from "@/lib/locale-path";
+import { readAdvisorRefFromCookie, clearAdvisorRefCookie } from "@/lib/advisor-ref-cookie";
+import { pickLocalized } from "@/lib/localized";
+import { LocaleLink } from "@/components/locale-link";
+import {
+  currentMonthMin,
+  expiryYYYYMMToMMYY,
+  formatCardNumberForInput,
+  isCardholderNameValid,
+  isCvvValidForPan,
+  maxMonthMax,
+  paymentDigitsOnly,
+  validateExpiryMonthValue,
+} from "@/lib/payment-validation";
+
+const egyptianCities = [
+  { en: "Cairo", ar: "القاهرة" },
+  { en: "Alexandria", ar: "الإسكندرية" },
+  { en: "Giza", ar: "الجيزة" },
+  { en: "Shubra El Kheima", ar: "شبرا الخيمة" },
+  { en: "Port Said", ar: "بورسعيد" },
+  { en: "Suez", ar: "السويس" },
+  { en: "Mansoura", ar: "المنصورة" },
+  { en: "Tanta", ar: "طنطا" },
+  { en: "Asyut", ar: "أسيوط" },
+  { en: "Ismailia", ar: "الإسماعيلية" },
+  { en: "Fayyum", ar: "الفيوم" },
+  { en: "Zagazig", ar: "الزقازيق" },
+  { en: "Aswan", ar: "أسوان" },
+  { en: "Damietta", ar: "دمياط" },
+  { en: "Damanhur", ar: "دمنهور" },
+  { en: "Minya", ar: "المنيا" },
+  { en: "Beni Suef", ar: "بني سويف" },
+  { en: "Qena", ar: "قنا" },
+  { en: "Sohag", ar: "سوهاج" },
+  { en: "Hurghada", ar: "الغردقة" },
+  { en: "6th of October", ar: "السادس من أكتوبر" },
+  { en: "Shibin El Kom", ar: "شبين الكوم" },
+  { en: "Banha", ar: "بنها" },
+  { en: "Kafr El Sheikh", ar: "كفر الشيخ" },
+  { en: "Arish", ar: "العريش" },
+  { en: "Mallawi", ar: "ملوي" },
+  { en: "Qalyub", ar: "قليوب" },
+  { en: "Obour", ar: "العبور" },
+  { en: "New Cairo", ar: "القاهرة الجديدة" },
+  { en: "New Administrative Capital", ar: "العاصمة الإدارية الجديدة" },
+  { en: "Luxor", ar: "الأقصر" },
+  { en: "Marsa Matruh", ar: "مرسى مطروح" },
+  { en: "Sharm El Sheikh", ar: "شرم الشيخ" },
+  { en: "El Mahalla El Kubra", ar: "المحلة الكبرى" },
+  { en: "Kafr El Dawwar", ar: "كفر الدوار" },
+];
+
+const countryOptions = [
+  { code: "EG", dialCode: "+20", en: "Egypt", ar: "مصر" },
+  { code: "SA", dialCode: "+966", en: "Saudi Arabia", ar: "السعودية" },
+  { code: "AE", dialCode: "+971", en: "United Arab Emirates", ar: "الإمارات" },
+  { code: "QA", dialCode: "+974", en: "Qatar", ar: "قطر" },
+  { code: "KW", dialCode: "+965", en: "Kuwait", ar: "الكويت" },
+  { code: "BH", dialCode: "+973", en: "Bahrain", ar: "البحرين" },
+  { code: "OM", dialCode: "+968", en: "Oman", ar: "عُمان" },
+  { code: "JO", dialCode: "+962", en: "Jordan", ar: "الأردن" },
+  { code: "LB", dialCode: "+961", en: "Lebanon", ar: "لبنان" },
+  { code: "IQ", dialCode: "+964", en: "Iraq", ar: "العراق" },
+  { code: "MA", dialCode: "+212", en: "Morocco", ar: "المغرب" },
+  { code: "DZ", dialCode: "+213", en: "Algeria", ar: "الجزائر" },
+  { code: "TN", dialCode: "+216", en: "Tunisia", ar: "تونس" },
+  { code: "LY", dialCode: "+218", en: "Libya", ar: "ليبيا" },
+  { code: "SD", dialCode: "+249", en: "Sudan", ar: "السودان" },
+  { code: "TR", dialCode: "+90", en: "Turkey", ar: "تركيا" },
+  { code: "DE", dialCode: "+49", en: "Germany", ar: "ألمانيا" },
+  { code: "FR", dialCode: "+33", en: "France", ar: "فرنسا" },
+  { code: "GB", dialCode: "+44", en: "United Kingdom", ar: "المملكة المتحدة" },
+  { code: "US", dialCode: "+1", en: "United States", ar: "الولايات المتحدة" },
+  { code: "CA", dialCode: "+1", en: "Canada", ar: "كندا" },
+];
+
+/** When true, `POST /applications` sends Bearer token so the app is linked to the current user (no auto signup). */
+function hasAccessToken(): boolean {
+  if (typeof window === "undefined") return false;
+  return !!localStorage.getItem("accessToken");
+}
+
+type PublicService = {
+  id: string;
+  title: string;
+  titleAr?: string | null;
+  description?: string;
+  descriptionAr?: string | null;
+  price: string;
+};
+
+// Steps will be defined inside component to use translations
+
+export default function UniversityRegisterPage() {
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const slug = params?.slug as string;
+  const locale = toAppLocale(params?.locale as string | undefined);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState<string | null>(null);
+  const [applicationId, setApplicationId] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [paymentFieldErrors, setPaymentFieldErrors] = useState<
+    Partial<
+      Record<"cardNumber" | "cardholderName" | "expiryDate" | "cvv" | "paypalEmail", string>
+    >
+  >({});
+  const [appFee, setAppFee] = useState(100);
+  /** Previously shown after step 1 when backend created a student account; kept for compatibility. */
+  const [accountEmailNotice, setAccountEmailNotice] = useState("");
+  const [availableServices, setAvailableServices] = useState<PublicService[]>(
+    []
+  );
+
+  // Form data
+  const [formData, setFormData] = useState({
+    // Step 1: Student Data
+    fullName: "",
+    email: "",
+    personalAddress: "",
+    country: "",
+    dateOfBirth: "",
+    academicQualification: "",
+    identityNumber: "",
+    phone: "",
+    // Step 2: Additional Services
+    selectedServiceIds: [] as string[],
+    universityCity: "",
+    additionalNotes: "",
+    // Step 3: Documents
+    documents: {} as Record<string, { file: File; url: string }>,
+    feedback: "",
+    // Step 4: Payment
+    paymentMethod: "credit_card" as "credit_card" | "paypal",
+    cardNumber: "",
+    cardholderName: "",
+    expiryDate: "",
+    cvv: "",
+    paypalEmail: "",
+  });
+
+  const [university, setUniversity] = useState<any>(null);
+  const [program, setProgram] = useState<any>(null);
+  const lang = getLanguage();
+  const isRTL = lang === "ar";
+
+  const [phoneCountryCode, setPhoneCountryCode] = useState("+20");
+  const [phoneNationalNumber, setPhoneNationalNumber] = useState("");
+  const [phoneCodeManuallySet, setPhoneCodeManuallySet] = useState(false);
+
+  const dialCodeByCountryName = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const c of countryOptions) {
+      map.set(c.en.toLowerCase(), c.dialCode);
+      map.set(c.ar.toLowerCase(), c.dialCode);
+    }
+    return map;
+  }, []);
+
+  // Keep formData.phone as E.164-like string.
+  useEffect(() => {
+    const digits = phoneNationalNumber.replace(/[^\d]/g, "");
+    const code = phoneCountryCode.startsWith("+") ? phoneCountryCode : `+${phoneCountryCode}`;
+    const next = digits ? `${code}${digits}` : "";
+    setFormData((prev) => (prev.phone === next ? prev : { ...prev, phone: next }));
+  }, [phoneCountryCode, phoneNationalNumber]);
+
+  const selectedServices = useMemo(
+    () =>
+      availableServices.filter((service) =>
+        formData.selectedServiceIds.includes(service.id)
+      ),
+    [availableServices, formData.selectedServiceIds]
+  );
+
+  const additionalFee = useMemo(
+    () =>
+      selectedServices.reduce((sum, service) => {
+        const numeric = Number.parseFloat(service.price || "0");
+        return sum + (Number.isNaN(numeric) ? 0 : numeric);
+      }, 0),
+    [selectedServices]
+  );
+
+  const totalAmount = useMemo(() => appFee + additionalFee, [appFee, additionalFee]);
+
+  const summaryUniversityName = useMemo(() => {
+    const picked = pickLocalized(university?.name, lang).trim();
+    if (picked) return picked;
+    if (typeof university?.name === "string" && university.name.trim()) return university.name.trim();
+    return t("notAvailable");
+  }, [university, lang]);
+
+  const summaryProgramName = useMemo(() => {
+    const picked = pickLocalized(program?.name, lang).trim();
+    if (picked) return picked;
+    if (typeof program?.name === "string" && program.name.trim()) return program.name.trim();
+    return t("notAvailable");
+  }, [program, lang]);
+
+  const formatMoney = (value: number) => {
+    const rounded = Math.round(value * 100) / 100;
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+  };
+
+  // Fetch university and program data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const servicesRes = await fetch(`${API_BASE_URL}/public/services`);
+        if (servicesRes.ok) {
+          const servicesData = await servicesRes.json();
+          if (Array.isArray(servicesData)) {
+            setAvailableServices(servicesData as PublicService[]);
+          }
+        }
+
+        try {
+          const settingsRes = await fetch(`${API_BASE_URL}/settings`);
+          if (settingsRes.ok) {
+            const settingsData = await settingsRes.json();
+            if (settingsData && settingsData["site.applicationFee"] !== undefined) {
+              setAppFee(Number(settingsData["site.applicationFee"]) || 100);
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching site settings:", err);
+        }
+
+        const uniRes = await fetch(
+          `${API_BASE_URL}/public/universities/${slug}`
+        );
+        if (uniRes.ok) {
+          const uniData = await uniRes.json();
+          setUniversity(uniData);
+
+          const programId = searchParams?.get("program");
+          if (programId && uniData.programs) {
+            // Find program in the university's programs list
+            const foundProgram = Array.isArray(uniData.programs)
+              ? uniData.programs.find(
+                  (p: any) => p.id === programId || p.slug === programId
+                )
+              : null;
+            if (foundProgram) {
+              setProgram(foundProgram);
+            } else {
+              // Fallback: try fetching from programs list endpoint
+              const progListRes = await fetch(
+                `${API_BASE_URL}/public/universities/${slug}/programs`
+              );
+              if (progListRes.ok) {
+                const progList = await progListRes.json();
+                const foundProgram2 = Array.isArray(progList)
+                  ? progList.find(
+                      (p: any) => p.id === programId || p.slug === programId
+                    )
+                  : null;
+                if (foundProgram2) {
+                  setProgram(foundProgram2);
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    if (slug) {
+      fetchData();
+    }
+  }, [slug, searchParams]);
+
+  // Validate current step before allowing progression
+  const validateCurrentStep = (): boolean => {
+    if (currentStep === 1) {
+      // Validate required fields
+      if (!formData.fullName?.trim()) {
+        setError(t("fullNameRequired"));
+        return false;
+      }
+      if (!formData.email?.trim()) {
+        setError(t("emailRequired"));
+        return false;
+      }
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        setError(t("validEmailRequired"));
+        return false;
+      }
+      if (!formData.country?.trim()) {
+        setError(t("countryRequired"));
+        return false;
+      }
+      // Validate university and program are selected
+      if (!university?.id) {
+        setError(t("universityRequired"));
+        return false;
+      }
+      if (!program?.id) {
+        setError(t("programRequired"));
+        return false;
+      }
+      return true;
+    } else if (currentStep === 2) {
+      // Step 2 doesn't require validation - all fields are optional
+      return true;
+    } else if (currentStep === 3) {
+      // Check if at least one required document is uploaded
+      const requiredDocs = ["high_school_card", "language_proof", "passport"];
+      const hasRequiredDoc = requiredDocs.some(doc => formData.documents[doc]);
+      if (!hasRequiredDoc) {
+        setError(t("documentRequired"));
+        return false;
+      }
+      return true;
+    }
+    return true;
+  };
+
+  const buildCreditCardFieldErrors = (): Partial<
+    Record<"cardNumber" | "cardholderName" | "expiryDate" | "cvv", string>
+  > => {
+    const errs: Partial<Record<"cardNumber" | "cardholderName" | "expiryDate" | "cvv", string>> = {};
+    const pan = paymentDigitsOnly(formData.cardNumber);
+    if (!pan) errs.cardNumber = t("cardNumberRequired");
+    else if (!/^\d{13,19}$/.test(pan)) errs.cardNumber = t("cardNumberInvalid");
+
+    const name = formData.cardholderName.trim();
+    if (!name) errs.cardholderName = t("cardholderNameRequired");
+    else if (!isCardholderNameValid(formData.cardholderName)) errs.cardholderName = t("cardholderNameInvalid");
+
+    const exp = formData.expiryDate.trim();
+    if (!exp) errs.expiryDate = t("expiryDateRequired");
+    else {
+      const st = validateExpiryMonthValue(exp);
+      if (st === "past") errs.expiryDate = t("expiryDateExpired");
+      else if (st === "future_cap") errs.expiryDate = t("expiryTooFar");
+      else if (st !== "ok") errs.expiryDate = t("expiryDateInvalid");
+    }
+
+    const cvvRaw = formData.cvv ?? "";
+    if (!cvvRaw.trim()) errs.cvv = t("cvvRequired");
+    else {
+      const cvvD = paymentDigitsOnly(cvvRaw);
+      if (!/^\d+$/.test(cvvD) || cvvD.length < 3 || cvvD.length > 4) {
+        errs.cvv = t("cvvInvalid");
+      } else if (
+        /^\d{13,19}$/.test(pan) &&
+        !isCvvValidForPan(pan, cvvRaw)
+      ) {
+        errs.cvv = t("cvvInvalid");
+      }
+    }
+
+    return errs;
+  };
+
+  const toggleServiceSelection = (serviceId: string) => {
+    setFormData((prev) => {
+      const exists = prev.selectedServiceIds.includes(serviceId);
+      return {
+        ...prev,
+        selectedServiceIds: exists
+          ? prev.selectedServiceIds.filter((id) => id !== serviceId)
+          : [...prev.selectedServiceIds, serviceId],
+      };
+    });
+  };
+
+  const handleNext = async () => {
+    // Validate current step
+    if (!validateCurrentStep()) {
+      return;
+    }
+
+    if (currentStep === 1) {
+      // Create application (authenticated → linked to current user; anonymous → may create/link account on server)
+      setLoading(true);
+      try {
+        const advisorRef = readAdvisorRefFromCookie();
+        const payload: Record<string, unknown> = {
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          personalAddress: formData.personalAddress,
+          dateOfBirth: formData.dateOfBirth,
+          academicQualification: formData.academicQualification,
+          identityNumber: formData.identityNumber,
+          country: formData.country,
+          universityId: university?.id,
+          programId: program?.id,
+          applicationFee: appFee, // Default application fee
+        };
+        if (advisorRef) {
+          payload.advisorRef = advisorRef;
+        }
+
+        const authed = hasAccessToken();
+        const response = (authed
+          ? await apiPost<{ id: string; newStudentAccountCreated?: boolean }>("/applications", payload)
+          : await apiPostPublic<{ id: string; newStudentAccountCreated?: boolean }>(
+              "/applications",
+              payload
+            )) as { id: string; newStudentAccountCreated?: boolean };
+
+        setApplicationId(response.id);
+        clearAdvisorRefCookie();
+        setAccountEmailNotice(
+          !authed && response.newStudentAccountCreated ? t("applicationCredentialsEmailSent") : ""
+        );
+        setCurrentStep(2);
+        setError("");
+      } catch (error: any) {
+        setError(error.message || t("failedToCreateApplication"));
+      } finally {
+        setLoading(false);
+      }
+    } else if (currentStep === 2) {
+      // Update application with services
+      if (applicationId) {
+        setLoading(true);
+        setError("");
+        try {
+          const selectedServiceNames = selectedServices.map((service) =>
+            isRTL ? service.titleAr || service.title : service.title
+          );
+          const composedAdditionalNotes = [
+            formData.additionalNotes?.trim() || "",
+            formData.universityCity
+              ? `Preferred city: ${formData.universityCity}`
+              : "",
+          ]
+            .filter(Boolean)
+            .join("\n");
+
+          const updatePayload = {
+            additionalServices:
+              selectedServiceNames.length > 0 ? selectedServiceNames : undefined,
+            additionalNotes: composedAdditionalNotes || undefined,
+            additionalFee,
+            totalFee: totalAmount,
+          };
+          if (hasAccessToken()) {
+            await apiPut(`/applications/${applicationId}`, updatePayload);
+          } else {
+            await apiPutPublic(`/applications/${applicationId}`, updatePayload);
+          }
+          setCurrentStep(3);
+          setError("");
+        } catch (error: any) {
+          console.error("Error updating application:", error);
+          if (error.error) {
+            setError(error.error);
+          } else if (error.message) {
+            setError(error.message);
+          } else {
+            setError(t("failedToUpdateServices"));
+          }
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setError(t("applicationIdMissing"));
+        return;
+      }
+    } else if (currentStep === 3) {
+      // Documents are uploaded on selection, just move to next step
+      setCurrentStep(4);
+      setError("");
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      const nextStep = currentStep - 1;
+      setCurrentStep(nextStep);
+      setError("");
+      if (nextStep === 1) {
+        setAccountEmailNotice("");
+      }
+    }
+  };
+
+  const handleDocumentUpload = async (type: string, file: File) => {
+    if (!applicationId) {
+      setError(t("completeStepOneFirst"));
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setError(t("invalidFileType"));
+      return;
+    }
+
+    // Validate file size (20MB limit)
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    if (file.size > maxSize) {
+      setError(t("fileTooLarge20Mb"));
+      return;
+    }
+
+    setUploading(type);
+    setError("");
+    try {
+      const result = hasAccessToken()
+        ? await apiUploadDocument(applicationId, file, type)
+        : await apiUploadDocumentPublic(applicationId, file, type);
+      if (result?.id) {
+        setFormData({
+          ...formData,
+          documents: {
+            ...formData.documents,
+            [type]: { file, url: URL.createObjectURL(file) },
+          },
+        });
+        setError(""); // Clear any previous errors
+      } else {
+        throw new Error(t("invalidServerResponse"));
+      }
+    } catch (error: any) {
+      console.error("Error uploading document:", error);
+      if (error.message) {
+        setError(error.message);
+      } else {
+        setError(t("failedToUploadDocument"));
+      }
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!applicationId) {
+      setError(t("applicationIdMissing"));
+      return;
+    }
+
+    // Validate payment method
+    if (!formData.paymentMethod) {
+      setError(t("paymentMethodRequired"));
+      return;
+    }
+
+    setPaymentFieldErrors({});
+
+    if (formData.paymentMethod === "credit_card") {
+      const fieldErrs = buildCreditCardFieldErrors();
+      if (Object.keys(fieldErrs).length > 0) {
+        setPaymentFieldErrors(fieldErrs);
+        setError(Object.values(fieldErrs)[0] ?? t("paymentMethodRequired"));
+        return;
+      }
+    }
+
+    if (formData.paymentMethod === "paypal") {
+      const pe: Partial<Record<"paypalEmail", string>> = {};
+      if (!formData.paypalEmail?.trim()) {
+        pe.paypalEmail = t("paypalEmailRequired");
+      } else {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.paypalEmail.trim())) {
+          pe.paypalEmail = t("validPaypalEmailRequired");
+        }
+      }
+      if (Object.keys(pe).length > 0) {
+        setPaymentFieldErrors(pe);
+        setError(pe.paypalEmail ?? t("paypalEmailRequired"));
+        return;
+      }
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      const paymentPayload = {
+        paymentMethod: formData.paymentMethod,
+        amount: totalAmount,
+        ...(formData.paymentMethod === "credit_card" && {
+          cardNumber: paymentDigitsOnly(formData.cardNumber),
+          cardholderName: formData.cardholderName.trim(),
+          expiryDate:
+            expiryYYYYMMToMMYY(formData.expiryDate.trim()) ?? formData.expiryDate.trim(),
+          cvv: paymentDigitsOnly(formData.cvv),
+        }),
+        ...(formData.paymentMethod === "paypal" && {
+          paypalEmail: formData.paypalEmail.trim(),
+        }),
+      };
+      if (hasAccessToken()) {
+        await apiProcessPayment(applicationId, paymentPayload);
+      } else {
+        await apiProcessPaymentPublic(applicationId, paymentPayload);
+      }
+
+      router.push(withLocalePath(locale, `/applications/success?id=${applicationId}`));
+    } catch (error: any) {
+      console.error("Error processing payment:", error);
+      if (error.error) {
+        setError(error.error);
+      } else if (error.message) {
+        setError(error.message);
+      } else {
+        setError(t("paymentFailedTryAgain"));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f9fafe] pb-16 md:pb-0" dir={getDirection()}>
+      <Navbar />
+      <main className="pt-0 md:pt-[100px] pb-4 md:pb-20">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-5">
+          {/* Hero Banner */}
+          <div className="relative h-[200px] md:h-[320px] rounded-[20px] md:rounded-[28px] overflow-hidden mb-6 md:mb-10 animate-hero-reveal">
+            <Image
+              src="/80871096_078_230602_3d_studies_14_poster 1.png"
+              alt="University registration"
+              fill
+              className="object-cover"
+              unoptimized
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#121c67]/55 via-[#5260ce]/32 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/28 via-transparent to-transparent" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+              <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-xs mb-3 px-3 py-1">
+                {t("secureApplication")}
+              </Badge>
+              <h2 className="font-montserrat-bold text-xl md:text-[38px] leading-tight text-white drop-shadow-lg animate-fade-up">
+                {t("universityRegistrationTitle")}
+              </h2>
+              <p className="text-white/70 text-sm md:text-base mt-2 font-montserrat-regular animate-fade-up-d100">
+                {t("completeApplicationIn4Steps")}
+              </p>
+            </div>
+          </div>
+
+          {/* Admission Closed Warning */}
+          {university && university.admissionStatus === "CLOSED" && (
+            <div className="mb-6 bg-red-50 border border-red-300 rounded-2xl p-5 flex items-start gap-4">
+              <span className="mt-0.5 w-5 h-5 rounded-full bg-red-500 shrink-0 animate-pulse" />
+              <div>
+                <p className="font-montserrat-bold text-red-700 text-base mb-1">{t("admissionClosed")}</p>
+                <p className="text-sm text-red-600">
+                  {t("applicationsTo")} <strong>{university.name}</strong> {t("currentlyClosed")}. {t("cannotSubmitNow")} {t("checkBackOrExploreOthers")}
+                </p>
+                <LocaleLink
+                  href="/universities"
+                  className="inline-block mt-3 text-sm text-white bg-red-500 hover:bg-red-600 px-4 py-1.5 rounded-lg font-montserrat-semibold transition-colors"
+                >
+                  {t("browseOtherUniversities")}
+                </LocaleLink>
+              </div>
+            </div>
+          )}
+
+          {/* Main Container */}
+          <div className={`bg-white/70 backdrop-blur-sm rounded-[20px] md:rounded-[28px] border border-gray-100 shadow-sm ${university?.admissionStatus === "CLOSED" ? "pointer-events-none opacity-50 select-none" : ""}`}>
+            <div className="grid lg:grid-cols-4 gap-4 md:gap-8">
+              {/* Left Sidebar */}
+              <div className="lg:col-span-1">
+                <div className="bg-[#5260ce] rounded-xl p-4 md:p-6 text-white lg:sticky lg:top-[120px] shadow-lg">
+                  <h3 className="font-montserrat-bold text-sm md:text-[16px] leading-normal mb-2 text-white line-clamp-2">
+                    {t("enrolInProgram")}{" "}
+                    {summaryProgramName} {t("majorAt")} {summaryUniversityName}
+                  </h3>
+                  <p className="text-xs md:text-[13px] mb-4 text-white/90 font-montserrat-regular">
+                    {t("youHave4Steps")}
+                  </p>
+
+                  {/* Progress Lines */}
+                  <div className="flex gap-1 mb-6">
+                    {(() => {
+                      const steps = [
+                        { id: 1 },
+                        { id: 2 },
+                        { id: 3 },
+                        { id: 4 },
+                      ];
+                      return steps.map((step, index) => {
+                      const isStepCompleted = currentStep > step.id;
+                      const isStepActive = currentStep === step.id;
+                      return (
+                        <div
+                          key={step.id}
+                          className={`h-1 flex-1 rounded-full transition-all ${
+                            isStepCompleted || isStepActive
+                              ? "bg-white"
+                              : "bg-white/30"
+                          }`}
+                        />
+                      );
+                    });
+                    })()}
+                  </div>
+
+                  <div className="space-y-2">
+                    {(() => {
+                      const steps = [
+                        {
+                          id: 1,
+                          title: t("studentData"),
+                          key: "student",
+                          description: t("studentDataDesc"),
+                          icon: User,
+                        },
+                        {
+                          id: 2,
+                          title: t("additionalServices"),
+                          key: "services",
+                          description: t("additionalServicesDesc"),
+                          icon: Star,
+                        },
+                        {
+                          id: 3,
+                          title: t("uploadDocuments"),
+                          key: "documents",
+                          description: t("uploadDocumentsDesc"),
+                          icon: FileText,
+                        },
+                        {
+                          id: 4,
+                          title: t("payment"),
+                          key: "payment",
+                          description: t("paymentDesc"),
+                          icon: Shield,
+                        },
+                      ];
+                      return steps.map((step) => {
+                      const IconComponent = step.icon;
+                      const isCompleted = currentStep > step.id;
+                      const isActive = currentStep === step.id;
+                      const canNavigate = isActive || isCompleted;
+
+                      return (
+                        <div
+                          key={step.id}
+                          onClick={() => {
+                            // Only allow navigation to completed steps or current step
+                            if (canNavigate) {
+                              setCurrentStep(step.id);
+                              setError("");
+                            }
+                          }}
+                          className={`flex items-start gap-2 md:gap-3 p-2 md:p-3 rounded-lg transition-all ${
+                            isActive
+                              ? "bg-white text-[#5260ce] shadow-md"
+                              : isCompleted
+                              ? "bg-white/15 text-white cursor-pointer hover:bg-white/20"
+                              : "bg-transparent text-white/60 cursor-not-allowed opacity-60"
+                          }`}
+                        >
+                          <div
+                            className={`shrink-0 mt-0.5 ${
+                              isActive
+                                ? "text-[#5260ce]"
+                                : isCompleted
+                                ? "text-white"
+                                : "text-white/70"
+                            }`}
+                          >
+                            {isCompleted ? (
+                              <Check className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2.5} />
+                            ) : (
+                              <IconComponent
+                                className="w-4 h-4 md:w-5 md:h-5"
+                                strokeWidth={2}
+                              />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span
+                              className={`font-montserrat-semibold block mb-1 text-xs md:text-[13px] leading-[1.4] ${
+                                isActive ? "text-[#5260ce]" : "text-white"
+                              }`}
+                            >
+                              {step.title}
+                            </span>
+                            <span
+                              className={`text-[10px] md:text-[11px] leading-[1.4] ${
+                                isActive ? "text-gray-600" : "text-white/75"
+                              }`}
+                            >
+                              {step.description}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    });
+                    })()}
+                  </div>
+                  <div className="mt-4 md:mt-6 flex justify-center">
+                    <Image
+                      src="/copywriting-icon.png"
+                      alt=""
+                      width={100}
+                      height={100}
+                      className="opacity-90 md:w-[140px] md:h-[140px]"
+                      unoptimized
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Content */}
+              <div className="lg:col-span-3">
+                <div className="bg-white rounded-2xl p-5 md:p-8 shadow-sm border border-gray-100">
+                  {error && (
+                    <div className="mb-4 p-3 md:p-4 bg-red-50 border-l-4 border-red-500 rounded-lg flex items-start gap-2 md:gap-3">
+                      <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-red-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-montserrat-semibold text-sm md:text-base text-red-800 mb-1">
+                          {t("error")}
+                        </p>
+                        <p className="text-red-700 text-xs md:text-sm">{error}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentStep >= 2 && accountEmailNotice && (
+                    <div className="mb-4 p-3 md:p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-lg flex items-start gap-2 md:gap-3">
+                      <Check className="w-4 h-4 md:w-5 md:h-5 text-emerald-600 shrink-0 mt-0.5" />
+                      <p className="text-emerald-900 text-xs md:text-sm font-montserrat-regular leading-relaxed">
+                        {accountEmailNotice}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Step 1: Student Data */}
+                  {currentStep === 1 && (
+                    <div className="animate-card-enter">
+                      <p className="font-montserrat-regular text-xs md:text-sm text-[#5260ce] mb-1 uppercase tracking-wider">
+                        {t("stepOf", lang).replace("{step}", "1").replace("{total}", "4")}
+                      </p>
+                      <h3 className="font-montserrat-bold text-xl md:text-[26px] text-[#121c67] mb-2 flex items-center gap-2 section-title-accent pb-1">
+                        <User className="w-5 h-5 md:w-6 md:h-6 text-[#5260ce]" />
+                        {t("studentData")}
+                      </h3>
+                      <p className="text-sm text-[#65666f] mb-5 font-montserrat-regular">
+                        {t("studentDataHelp")}
+                      </p>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {[
+                          { label: t("fullName"),               key: "fullName",              type: "text",  required: true },
+                          { label: t("email"),                  key: "email",                 type: "email", required: true },
+                          { label: t("personalAddress"),        key: "personalAddress",       type: "text",  required: false },
+                          { label: t("country"),                key: "country",               type: "select_country",  required: true },
+                          { label: t("dateOfBirth"),            key: "dateOfBirth",           type: "date",  required: false },
+                          { label: t("academicQualification"),  key: "academicQualification", type: "text",  required: false },
+                          { label: t("idPassportNumber"),       key: "identityNumber",        type: "text",  required: false },
+                          { label: t("phone"),                  key: "phone",                 type: "phone_e164",   required: false },
+                        ].map(({ label, key, type, required }) => (
+                          <div key={key}>
+                            <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">
+                              {label} {required && <span className="text-red-500">*</span>}
+                            </label>
+                            {type === "select_country" ? (
+                              <select
+                                value={formData.country}
+                                onChange={(e) => {
+                                  const country = e.target.value;
+                                  setFormData((prev) => ({ ...prev, country }));
+                                  if (!phoneCodeManuallySet) {
+                                    const dial = dialCodeByCountryName.get(country.toLowerCase());
+                                    if (dial) setPhoneCountryCode(dial);
+                                  }
+                                }}
+                                required={required}
+                                className="input-enhanced"
+                              >
+                                <option value="">{isRTL ? "اختر الدولة" : "Select country"}</option>
+                                {countryOptions.map((c) => (
+                                  <option key={c.code} value={isRTL ? c.ar : c.en}>
+                                    {isRTL ? c.ar : c.en}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : type === "phone_e164" ? (
+                              <div className="flex gap-2 items-stretch">
+                                <select
+                                  value={phoneCountryCode}
+                                  onChange={(e) => {
+                                    setPhoneCountryCode(e.target.value);
+                                    setPhoneCodeManuallySet(true);
+                                  }}
+                                  className="flex-none w-[104px] sm:w-[120px] border-[1.5px] border-[#e0e6f1] rounded-xl px-3 py-3 bg-white text-sm font-montserrat-regular text-[#2e2e2e] outline-none focus:border-[#5260ce] focus:shadow-[0_0_0_3px_rgba(82,96,206,0.12)]"
+                                >
+                                  {countryOptions
+                                    .map((c) => c.dialCode)
+                                    .filter((v, i, arr) => arr.indexOf(v) === i)
+                                    .map((dial) => (
+                                      <option key={dial} value={dial}>
+                                        {dial}
+                                      </option>
+                                    ))}
+                                </select>
+                                <input
+                                  type="tel"
+                                  value={phoneNationalNumber}
+                                  onChange={(e) => setPhoneNationalNumber(e.target.value)}
+                                  placeholder={isRTL ? "رقم الهاتف" : "Phone number"}
+                                  className="input-enhanced flex-1 min-w-0"
+                                />
+                              </div>
+                            ) : (
+                              <input
+                                type={type}
+                                value={(formData as any)[key]}
+                                onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                                required={required}
+                                className="input-enhanced"
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 2: Additional Services */}
+                  {currentStep === 2 && (
+                    <div className="animate-card-enter">
+                      <p className="font-montserrat-regular text-xs md:text-sm text-[#5260ce] mb-1 uppercase tracking-wider">
+                        {t("stepOf", lang).replace("{step}", "2").replace("{total}", "4")}
+                      </p>
+                      <h3 className="font-montserrat-bold text-xl md:text-[26px] text-[#121c67] mb-2 flex items-center gap-2 section-title-accent pb-1">
+                        <Star className="w-5 h-5 md:w-6 md:h-6 text-[#5260ce]" />
+                        {t("additionalServices")}
+                      </h3>
+                      <p className="text-sm text-[#65666f] mb-5 font-montserrat-regular">
+                        {t("additionalServicesPageDesc")}
+                      </p>
+                      <div className="space-y-5">
+                        <div>
+                          <label className="block font-montserrat-semibold text-sm mb-3">
+                            {t("additionalServices")}
+                          </label>
+                          {availableServices.length === 0 ? (
+                            <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">
+                              {isRTL
+                                ? "لا توجد خدمات إضافية متاحة حالياً."
+                                : "No additional services are available right now."}
+                            </div>
+                          ) : (
+                            <>
+                              <div className="grid md:grid-cols-2 gap-3">
+                                {availableServices.map((service) => {
+                                  const selected = formData.selectedServiceIds.includes(
+                                    service.id
+                                  );
+                                  const title =
+                                    isRTL && service.titleAr
+                                      ? service.titleAr
+                                      : service.title;
+                                  const description =
+                                    isRTL && service.descriptionAr
+                                      ? service.descriptionAr
+                                      : service.description || "";
+
+                                  return (
+                                    <label
+                                      key={service.id}
+                                      className={`flex items-start gap-3 cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 ${
+                                        selected
+                                          ? "border-[#5260ce] bg-[rgba(82,96,206,0.05)]"
+                                          : "border-gray-200 hover:border-[#5260ce]/40"
+                                      }`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={selected}
+                                        onChange={() =>
+                                          toggleServiceSelection(service.id)
+                                        }
+                                        className="w-4 h-4 mt-0.5 text-[#5260ce] shrink-0"
+                                      />
+                                      <div className="min-w-0">
+                                        <p className="font-montserrat-semibold text-sm text-[#121c67] break-words">
+                                          {title}
+                                        </p>
+                                        <p className="text-xs text-[#5260ce] mt-0.5">
+                                          ${service.price}
+                                        </p>
+                                        {description && (
+                                          <p className="text-xs text-[#65666f] mt-1 line-clamp-2">
+                                            {description}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                              <p className="mt-2 text-xs text-[#5260ce] font-montserrat-medium">
+                                {isRTL
+                                  ? `تم اختيار ${formData.selectedServiceIds.length} خدمة - إجمالي إضافي: $${formatMoney(additionalFee)}`
+                                  : `${formData.selectedServiceIds.length} service(s) selected - Additional total: $${formatMoney(additionalFee)}`}
+                              </p>
+                            </>
+                          )}
+                        </div>
+                        <div>
+                          <label className="block font-montserrat-semibold text-sm mb-2">
+                            {t("requiredCity")}
+                          </label>
+                          <select
+                            value={formData.universityCity}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                universityCity: e.target.value,
+                              })
+                            }
+                            className="input-enhanced"
+                          >
+                            <option value="">{t("selectRequiredCity")}</option>
+                            {egyptianCities.map((city) => (
+                              <option key={city.en} value={city.en}>
+                                {isRTL ? city.ar : city.en}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block font-montserrat-semibold text-sm mb-2">
+                            {t("additionalNotes")}
+                          </label>
+                          <textarea
+                            value={formData.additionalNotes}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                additionalNotes: e.target.value,
+                              })
+                            }
+                            placeholder={t("writeNotesHere")}
+                            rows={4}
+                            className="input-enhanced"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 3: Upload Documents */}
+                  {currentStep === 3 && (
+                    <div className="animate-card-enter">
+                      <p className="font-montserrat-regular text-xs md:text-sm text-[#5260ce] mb-1 uppercase tracking-wider">
+                        {t("stepOf", lang).replace("{step}", "3").replace("{total}", "4")}
+                      </p>
+                      <h3 className="font-montserrat-bold text-xl md:text-[26px] text-[#121c67] mb-2 flex items-center gap-2 section-title-accent pb-1">
+                        <FileText className="w-5 h-5 md:w-6 md:h-6 text-[#5260ce]" />
+                        {t("uploadDocuments")}
+                      </h3>
+                      <p className="text-sm text-[#65666f] mb-5 font-montserrat-regular">
+                        {t("uploadDocumentsPageDesc")}
+                      </p>
+                      <div className="space-y-4 md:space-y-6">
+                        {[
+                          {
+                            type: "high_school_card",
+                            label: t("highSchoolCertificate"),
+                          },
+                          {
+                            type: "language_proof",
+                            label: t("languageCertificate"),
+                          },
+                          { type: "passport", label: t("passport") },
+                          {
+                            type: "other",
+                            label: t("otherDocumentsOptional"),
+                          },
+                        ].map(({ type, label }) => (
+                          <div key={type}>
+                            <label className="block font-montserrat-semibold text-sm mb-2">
+                              {label}
+                            </label>
+                            {formData.documents[type] ? (
+                              <div className="flex items-center gap-3 p-4 border border-green-200 rounded-xl bg-green-50">
+                                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                                  <Check className="w-4 h-4 text-green-600" />
+                                </div>
+                                <span className="flex-1 text-sm font-montserrat-regular text-green-800 truncate">
+                                  {formData.documents[type].file.name}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newDocs = { ...formData.documents };
+                                    delete newDocs[type];
+                                    setFormData({ ...formData, documents: newDocs });
+                                  }}
+                                  className="text-gray-400 hover:text-red-500 transition-colors"
+                                >
+                                  <X className="w-5 h-5" />
+                                </button>
+                              </div>
+                            ) : (
+                              <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-[#5260ce]/30 rounded-xl cursor-pointer hover:border-[#5260ce] hover:bg-[rgba(82,96,206,0.03)] transition-all bg-[#f9fafe]">
+                                {uploading === type ? (
+                                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5260ce]" />
+                                ) : (
+                                  <>
+                                    <Upload className="w-7 h-7 text-[#5260ce]/60 mb-2" />
+                                    <p className="text-xs text-[#65666f] font-montserrat-regular text-center px-3">{t("clickOrDragUpload")}</p>
+                                  </>
+                                )}
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  disabled={uploading === type}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleDocumentUpload(type, file);
+                                  }}
+                                />
+                              </label>
+                            )}
+                          </div>
+                        ))}
+                        <div>
+                          <label className="block font-montserrat-semibold text-sm mb-2">
+                            {t("haveFeedback")}
+                          </label>
+                          <textarea
+                            value={formData.feedback}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                feedback: e.target.value,
+                              })
+                            }
+                            placeholder={t("feedbackPlaceholder")}
+                            rows={4}
+                            className="input-enhanced"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 4: Payment */}
+                  {currentStep === 4 && (
+                    <div className="animate-card-enter">
+                      <p className="font-montserrat-regular text-xs md:text-sm text-[#5260ce] mb-1 uppercase tracking-wider">
+                        {t("stepOf", lang).replace("{step}", "4").replace("{total}", "4")}
+                      </p>
+                      <h3 className="font-montserrat-bold text-xl md:text-[26px] text-[#121c67] mb-2 flex items-center gap-2 section-title-accent pb-1">
+                        <Shield className="w-5 h-5 md:w-6 md:h-6 text-[#5260ce]" />
+                        {t("securePayment")}
+                      </h3>
+                      <p className="text-sm text-[#65666f] mb-5 font-montserrat-regular">
+                        {t("securePaymentDesc")}
+                      </p>
+
+                      {/* Application Summary — RTL-safe rows (label vs value never overlap) */}
+                      <div className="bg-gradient-to-br from-[#f0f4ff] to-[#e8eaf6] rounded-2xl p-5 md:p-6 mb-5 border border-[#5260ce]/10">
+                        <h4 className="font-montserrat-semibold text-sm md:text-base text-[#5260ce] mb-3 md:mb-4">
+                          {t("applicationSummary")}
+                        </h4>
+                        <dl className="space-y-0 text-xs md:text-sm">
+                          <div className="flex flex-col gap-1 border-b border-gray-200/70 py-3 first:pt-0 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+                            <dt className="shrink-0 font-montserrat-regular text-gray-600">
+                              {t("universityName")}
+                            </dt>
+                            <dd
+                              className="min-w-0 max-w-full break-words text-start font-montserrat-semibold text-gray-900 sm:max-w-[min(100%,20rem)] sm:text-end"
+                              dir="auto"
+                            >
+                              {summaryUniversityName}
+                            </dd>
+                          </div>
+                          <div className="flex flex-col gap-1 border-b border-gray-200/70 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+                            <dt className="shrink-0 font-montserrat-regular text-gray-600">
+                              {t("programName")}
+                            </dt>
+                            <dd
+                              className="min-w-0 max-w-full break-words text-start font-montserrat-semibold text-gray-900 sm:max-w-[min(100%,20rem)] sm:text-end"
+                              dir="auto"
+                            >
+                              {summaryProgramName}
+                            </dd>
+                          </div>
+                          <div className="flex flex-col gap-1 border-b border-gray-200/70 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+                            <dt className="shrink-0 font-montserrat-regular text-gray-600">
+                              {t("applicationFee")}
+                            </dt>
+                            <dd
+                              className="whitespace-nowrap font-montserrat-semibold text-gray-900 sm:text-end"
+                              dir="ltr"
+                            >
+                              {"$" + formatMoney(appFee)}
+                            </dd>
+                          </div>
+                          <div className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+                            <dt className="shrink-0 font-montserrat-regular text-gray-600">
+                              {t("additionalFees")}
+                            </dt>
+                            <dd
+                              className="whitespace-nowrap font-montserrat-semibold text-gray-900 sm:text-end"
+                              dir="ltr"
+                            >
+                              {"$" + formatMoney(additionalFee)}
+                            </dd>
+                          </div>
+                        </dl>
+                        <div className="mt-2 flex flex-col gap-1 border-t border-gray-300 pt-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+                          <span className="shrink-0 font-montserrat-semibold text-[#5260ce]">
+                            {t("total")}
+                          </span>
+                          <span className="font-montserrat-semibold text-[#5260ce] sm:text-end" dir="ltr">
+                            {"$" + formatMoney(totalAmount)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Payment Options */}
+                      <div className="mb-6">
+                        <label className="block font-montserrat-semibold text-sm mb-3">
+                          {t("paymentOptions")}
+                        </label>
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
+                          <label className="flex items-center gap-2 cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-[#5260ce] transition-colors flex-1">
+                            <input
+                              type="radio"
+                              name="paymentMethod"
+                              value="credit_card"
+                              checked={formData.paymentMethod === "credit_card"}
+                              onChange={(e) => {
+                                setPaymentFieldErrors({});
+                                setError("");
+                                setFormData({
+                                  ...formData,
+                                  paymentMethod: e.target.value as "credit_card" | "paypal",
+                                });
+                              }}
+                              className="w-4 h-4 text-[#5260ce]"
+                            />
+                            <CreditCard className="w-5 h-5 text-[#5260ce]" />
+                            <span className="font-montserrat-regular">
+                              {t("creditCard")}
+                            </span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-[#5260ce] transition-colors flex-1">
+                            <input
+                              type="radio"
+                              name="paymentMethod"
+                              value="paypal"
+                              checked={formData.paymentMethod === "paypal"}
+                              onChange={(e) => {
+                                setPaymentFieldErrors({});
+                                setError("");
+                                setFormData({
+                                  ...formData,
+                                  paymentMethod: e.target.value as "credit_card" | "paypal",
+                                });
+                              }}
+                              className="w-4 h-4 text-[#5260ce]"
+                            />
+                            <div className="w-5 h-5 bg-[#0070ba] rounded flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">
+                                PP
+                              </span>
+                            </div>
+                            <span className="font-montserrat-regular">
+                              {t("paypal")}
+                            </span>
+                          </label>
+                        </div>
+
+                        {formData.paymentMethod === "credit_card" && (
+                          <div className="bg-[#f9fafe] rounded-xl p-4 border border-gray-100 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="md:col-span-2">
+                                <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">
+                                  {t("cardNumber")}
+                                </label>
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  autoComplete="cc-number"
+                                  name="cc-number"
+                                  value={formData.cardNumber}
+                                  onChange={(e) => {
+                                    setPaymentFieldErrors((p) => ({ ...p, cardNumber: undefined }));
+                                    setFormData({
+                                      ...formData,
+                                      cardNumber: formatCardNumberForInput(e.target.value),
+                                    });
+                                  }}
+                                  placeholder="1234 5678 9012 3456"
+                                  maxLength={23}
+                                  className={`input-enhanced ${paymentFieldErrors.cardNumber ? "ring-2 ring-red-500/60" : ""}`}
+                                />
+                                {paymentFieldErrors.cardNumber ? (
+                                  <p className="text-xs text-red-600 mt-1 font-montserrat-regular">
+                                    {paymentFieldErrors.cardNumber}
+                                  </p>
+                                ) : null}
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">
+                                  {t("cardholderName")}
+                                </label>
+                                <input
+                                  type="text"
+                                  autoComplete="cc-name"
+                                  name="cc-name"
+                                  value={formData.cardholderName}
+                                  onChange={(e) => {
+                                    setPaymentFieldErrors((p) => ({ ...p, cardholderName: undefined }));
+                                    setFormData({ ...formData, cardholderName: e.target.value });
+                                  }}
+                                  placeholder={t("cardholderNamePlaceholder")}
+                                  maxLength={120}
+                                  className={`input-enhanced ${paymentFieldErrors.cardholderName ? "ring-2 ring-red-500/60" : ""}`}
+                                />
+                                {paymentFieldErrors.cardholderName ? (
+                                  <p className="text-xs text-red-600 mt-1 font-montserrat-regular">
+                                    {paymentFieldErrors.cardholderName}
+                                  </p>
+                                ) : null}
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:col-span-2">
+                                <div>
+                                  <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">
+                                    {t("expiry")}
+                                  </label>
+                                  <input
+                                    type="month"
+                                    autoComplete="cc-exp"
+                                    name="cc-exp"
+                                    min={currentMonthMin()}
+                                    max={maxMonthMax(20)}
+                                    value={formData.expiryDate}
+                                    onChange={(e) => {
+                                      setPaymentFieldErrors((p) => ({ ...p, expiryDate: undefined }));
+                                      setFormData({ ...formData, expiryDate: e.target.value });
+                                    }}
+                                    className={`input-enhanced w-full min-h-[44px] [color-scheme:light] ${paymentFieldErrors.expiryDate ? "ring-2 ring-red-500/60" : ""}`}
+                                  />
+                                  {paymentFieldErrors.expiryDate ? (
+                                    <p className="text-xs text-red-600 mt-1 font-montserrat-regular">
+                                      {paymentFieldErrors.expiryDate}
+                                    </p>
+                                  ) : (
+                                    <p className="text-xs text-[#65666f] mt-1 font-montserrat-regular">
+                                      {t("expiryPickMonthHint")}
+                                    </p>
+                                  )}
+                                </div>
+                                <div>
+                                  <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">
+                                    {t("cvv")}
+                                  </label>
+                                  <input
+                                    type="password"
+                                    inputMode="numeric"
+                                    autoComplete="cc-csc"
+                                    name="cc-csc"
+                                    value={formData.cvv}
+                                    onChange={(e) => {
+                                      setPaymentFieldErrors((p) => ({ ...p, cvv: undefined }));
+                                      const v = paymentDigitsOnly(e.target.value).slice(0, 4);
+                                      setFormData({ ...formData, cvv: v });
+                                    }}
+                                    placeholder="•••"
+                                    maxLength={4}
+                                    className={`input-enhanced tracking-widest ${paymentFieldErrors.cvv ? "ring-2 ring-red-500/60" : ""}`}
+                                  />
+                                  {paymentFieldErrors.cvv ? (
+                                    <p className="text-xs text-red-600 mt-1 font-montserrat-regular">
+                                      {paymentFieldErrors.cvv}
+                                    </p>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {formData.paymentMethod === "paypal" && (
+                          <div className="bg-[#f9fafe] rounded-xl p-4 border border-gray-100">
+                            <label className="block font-montserrat-semibold text-sm mb-1.5 text-[#121c67]">{t("paypalEmail")}</label>
+                            <input
+                              type="email"
+                              autoComplete="email"
+                              value={formData.paypalEmail}
+                              onChange={(e) => {
+                                setPaymentFieldErrors((p) => ({ ...p, paypalEmail: undefined }));
+                                setFormData({ ...formData, paypalEmail: e.target.value });
+                              }}
+                              placeholder="your@paypal.com"
+                              className={`input-enhanced ${paymentFieldErrors.paypalEmail ? "ring-2 ring-red-500/60" : ""}`}
+                            />
+                            {paymentFieldErrors.paypalEmail ? (
+                              <p className="text-xs text-red-600 mt-1 font-montserrat-regular">
+                                {paymentFieldErrors.paypalEmail}
+                              </p>
+                            ) : null}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Navigation Buttons */}
+                  <div className="flex justify-between gap-3 mt-8 pt-6 border-t border-gray-100">
+                    {currentStep > 1 ? (
+                      <Button type="button" onClick={handlePrevious} variant="outline" className="border-[#5260ce] text-[#5260ce] hover:bg-[#5260ce] hover:text-white px-6 h-11 rounded-xl font-montserrat-semibold transition-all">
+                        {isRTL ? `→ ${t("previous")}` : `← ${t("previous")}`}
+                      </Button>
+                    ) : <div />}
+                    {currentStep < 4 ? (
+                      <Button type="button" onClick={handleNext} disabled={loading} className="bg-[#5260ce] hover:bg-[#4350b0] text-white px-8 h-11 rounded-xl font-montserrat-semibold shadow-[0_4px_16px_rgba(82,96,206,0.3)] hover:shadow-[0_6px_20px_rgba(82,96,206,0.4)] transition-all ml-auto">
+                        {loading ? (
+                          <span className="flex items-center gap-2"><span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />{t("processing")}</span>
+                        ) : (isRTL ? `${t("continue")} ←` : `${t("continue")} →`)}
+                      </Button>
+                    ) : (
+                      <Button type="button" onClick={handlePayment} disabled={loading} className="bg-gradient-to-r from-[#5260ce] to-[#4350b0] text-white px-8 h-11 rounded-xl font-montserrat-semibold shadow-[0_4px_16px_rgba(82,96,206,0.3)] transition-all ml-auto">
+                        {loading ? (
+                          <span className="flex items-center gap-2"><span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />{t("processing")}</span>
+                        ) : `🔒 ${t("confirmOrder")}`}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
+      <MobileBottomNav />
+    </div>
+  );
+}

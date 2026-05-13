@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
 import {
   Bell, Search, ChevronDown, LogOut, FileText, Globe,
@@ -12,6 +11,8 @@ import { figmaAssets } from "@/lib/figma-assets";
 import { API_BASE_URL } from "@/lib/constants";
 import { getImageUrl } from "@/lib/image-utils";
 import { t, getLanguage } from "@/lib/i18n";
+import { LocaleLink } from "@/components/locale-link";
+import { toAppLocale, withLocalePath } from "@/lib/locale-path";
 
 export interface StudentUser {
   id?: string;
@@ -72,6 +73,7 @@ function NotifIcon({ type }: { type: string }) {
 export function StudentHeader({ user, onLogout, activePage }: Props) {
   const router = useRouter();
   const lang = getLanguage();
+  const appLocale = toAppLocale(lang);
   const isRTL = lang === "ar";
 
   const [search,     setSearch]     = useState("");
@@ -165,20 +167,20 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
       <div className="max-w-[1280px] mx-auto h-full px-4 md:px-8 flex items-center gap-3">
 
         {/* Logo */}
-        <Link href="/" className="shrink-0 flex items-center">
+        <LocaleLink href="/" className="shrink-0 flex items-center">
           <div className="relative w-28 h-8">
             <Image src={figmaAssets.logo} alt="Univolta" fill className="object-contain object-left" unoptimized />
           </div>
-        </Link>
+        </LocaleLink>
 
         {/* Back to Website pill */}
-        <Link
+        <LocaleLink
           href="/"
           className="hidden md:flex items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#5260ce] px-3 py-1.5 rounded-lg hover:bg-[#F0F4FF] transition-colors shrink-0 border border-gray-100"
         >
           <Globe className="w-3.5 h-3.5" />
           {t("studentWebsite")}
-        </Link>
+        </LocaleLink>
 
         <div className="hidden md:block h-5 w-px bg-gray-100 shrink-0" />
 
@@ -191,8 +193,12 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter")
-                  router.push(search.trim() ? `/universities?search=${encodeURIComponent(search)}` : "/universities");
+                if (e.key === "Enter") {
+                  const target = search.trim()
+                    ? `/universities?search=${encodeURIComponent(search)}`
+                    : "/universities";
+                  router.push(withLocalePath(appLocale, target));
+                }
               }}
               placeholder={t("studentSearchUniversitiesPlaceholder")}
               suppressHydrationWarning
@@ -205,9 +211,9 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
         <div className="flex items-center gap-1 ml-auto shrink-0">
 
           {/* Mobile home icon */}
-          <Link href="/" className="md:hidden p-2 rounded-xl hover:bg-[#F0F4FF] transition-colors text-[#6B7280]" title={t("studentWebsite")}>
+          <LocaleLink href="/" className="md:hidden p-2 rounded-xl hover:bg-[#F0F4FF] transition-colors text-[#6B7280]" title={t("studentWebsite")}>
             <Home className="w-5 h-5" />
-          </Link>
+          </LocaleLink>
 
           {/* ── Bell + Notification dropdown ────────────────────────── */}
           <div ref={bellRef} className="relative">
@@ -259,7 +265,7 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
                     </div>
                   ) : (
                     notifs.map((n) => (
-                      <Link
+                      <LocaleLink
                         key={n.id}
                         href={n.link || "/profile"}
                         onClick={() => setBellOpen(false)}
@@ -294,7 +300,7 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
                             <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                      </Link>
+                      </LocaleLink>
                     ))
                   )}
                 </div>
@@ -302,9 +308,9 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
                 {/* Footer */}
                 {notifs.length > 0 && (
                   <div className="px-4 py-2.5 border-t border-gray-100 bg-[#F9FAFE]">
-                    <Link href="/my-applications" onClick={() => setBellOpen(false)} className="text-xs text-[#5260ce] hover:underline">
+                    <LocaleLink href="/my-applications" onClick={() => setBellOpen(false)} className="text-xs text-[#5260ce] hover:underline">
                       {t("notifViewAllApplications")}
-                    </Link>
+                    </LocaleLink>
                   </div>
                 )}
               </div>
@@ -349,26 +355,26 @@ export function StudentHeader({ user, onLogout, activePage }: Props) {
                 </div>
 
                 {/* Nav links */}
-                <Link href="/profile" onClick={() => setMenuOpen(false)}
+                <LocaleLink href="/profile" onClick={() => setMenuOpen(false)}
                   className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${activePage === "dashboard" ? "text-[#5260ce] font-semibold bg-[#F0F4FF]" : "text-[#374151] hover:bg-gray-50"}`}>
                   <Home className="w-4 h-4 text-[#5260ce]" />
                   My Dashboard
-                </Link>
-                <Link href="/my-applications" onClick={() => setMenuOpen(false)}
+                </LocaleLink>
+                <LocaleLink href="/my-applications" onClick={() => setMenuOpen(false)}
                   className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${activePage === "applications" ? "text-[#5260ce] font-semibold bg-[#F0F4FF]" : "text-[#374151] hover:bg-gray-50"}`}>
                   <FileText className="w-4 h-4 text-[#5260ce]" />
                   My Applications
-                </Link>
-                <Link href="/profile/settings" onClick={() => setMenuOpen(false)}
+                </LocaleLink>
+                <LocaleLink href="/profile/settings" onClick={() => setMenuOpen(false)}
                   className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${activePage === "settings" ? "text-[#5260ce] font-semibold bg-[#F0F4FF]" : "text-[#374151] hover:bg-gray-50"}`}>
                   <Settings className="w-4 h-4 text-[#5260ce]" />
                   Profile Settings
-                </Link>
-                <Link href="/" onClick={() => setMenuOpen(false)}
+                </LocaleLink>
+                <LocaleLink href="/" onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#374151] hover:bg-gray-50 transition-colors">
                   <Globe className="w-4 h-4 text-[#5260ce]" />
                   Back to Website
-                </Link>
+                </LocaleLink>
 
                 <div className="border-t border-gray-100" />
                 <button onClick={() => { setMenuOpen(false); onLogout(); }}

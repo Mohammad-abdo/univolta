@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { LocaleLink } from "@/components/locale-link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
@@ -74,20 +74,20 @@ export function EgyptBusinessSection() {
               className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold h-12 px-8 rounded-xl shadow-[0_4px_20px_rgba(82,96,206,0.35)] group"
               asChild
             >
-              <Link
+              <LocaleLink
                 href="/universities?country=Egypt"
                 className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}
               >
                 {tl("businessModelCta")}
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
-              </Link>
+              </LocaleLink>
             </Button>
             <Button
               variant="outline"
               className="border-[#5260ce] text-[#5260ce] hover:bg-[#5260ce]/5 font-montserrat-semibold h-12 px-8 rounded-xl"
               asChild
             >
-              <Link href="/contact">{tl("contact")}</Link>
+              <LocaleLink href="/contact">{tl("contact")}</LocaleLink>
             </Button>
           </div>
         </ScrollReveal>

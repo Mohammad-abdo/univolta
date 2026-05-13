@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { LocaleLink } from "@/components/locale-link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
@@ -103,10 +103,10 @@ function ContactCard({ isRTL }: { isRTL: boolean }) {
           asChild
           className="bg-white text-[#5260ce] hover:bg-gray-100 font-montserrat-semibold h-[44px] px-7 rounded-xl transition-all hover:-translate-y-0.5"
         >
-          <Link href="/contact" className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+          <LocaleLink href="/contact" className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
             <MessageCircle className="w-4 h-4" />
             {t("contact")}
-          </Link>
+          </LocaleLink>
         </Button>
       </div>
     </ScrollReveal>
@@ -236,7 +236,7 @@ export function FAQSection() {
                     asChild
                     className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold h-[44px] rounded-xl transition-all hover:-translate-y-0.5 shadow-[0_4px_16px_rgba(82,96,206,0.3)]"
                   >
-                    <Link href="/universities">{t("browseUniversitiesButton")}</Link>
+                    <LocaleLink href="/universities">{t("browseUniversitiesButton")}</LocaleLink>
                   </Button>
                 </div>
               </div>

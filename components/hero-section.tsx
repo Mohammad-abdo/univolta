@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { figmaAssets } from "@/lib/figma-assets";
 import { Search } from "lucide-react";
 import { t, getLanguage, type Language } from "@/lib/i18n";
@@ -13,6 +13,7 @@ import { AnimatedCounter } from "@/components/ui/animated-counter";
 import type { HeroSlideSetting } from "@/lib/site-settings";
 import { getImageUrl } from "@/lib/image-utils";
 import { pickLocalized } from "@/lib/localized";
+import { withLocaleHref } from "@/lib/locale-path";
 
 /* Three.js background loaded only on the client */
 const ParticleField = dynamic(
@@ -47,6 +48,7 @@ export function HeroSection({
   const [prevSlide,    setPrevSlide]    = useState<number | null>(null);
   const [paused,       setPaused]       = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const slides = ready ? (slidesOverride && slidesOverride.length > 0 ? slidesOverride : SLIDES) : [];
 
   /* isRTL is false until mounted → server HTML == initial client HTML */
@@ -83,8 +85,8 @@ export function HeroSection({
   // While settings are still loading, render a stable placeholder (no default images).
   if (!ready) {
     const gradient = isRTL
-      ? "linear-gradient(to left,  white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)"
-      : "linear-gradient(to right, white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)";
+      ? "linear-gradient(to left,  white 0%, rgba(255, 255, 255, 0.36) 38%, rgba(255, 255, 255, 0.1) 72%, rgba(255,255,255,0) 100%)"
+      : "linear-gradient(to right, white 0%, rgba(255, 255, 255, 0.36) 38%, rgba(255,255,255,0.08) 72%, rgba(255,255,255,0) 100%)";
     return (
       <section
         className="relative min-h-[560px] overflow-hidden pt-20 lg:h-[793px] lg:min-h-0 lg:pt-0"
@@ -139,8 +141,8 @@ export function HeroSection({
    *   RTL → text RIGHT, image LEFT  (decorative panel scaleX-flipped)
    */
   const gradient = isRTL
-    ? "linear-gradient(to left,  white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)"
-    : "linear-gradient(to right, white 0%, rgba(255,255,255,0.92) 45%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.05) 100%)";
+    ? "linear-gradient(to left,  white 0%, rgba(255,255,255,0.62) 38%, rgba(255,255,255,0.08) 72%, rgba(255,255,255,0) 100%)"
+    : "linear-gradient(to right, white 0%, rgba(255,255,255,0.62) 38%, rgba(255,255,255,0.08) 72%, rgba(255,255,255,0) 100%)";
   return (
     <section
       className="relative min-h-[560px] overflow-hidden pt-20 lg:h-[793px] lg:min-h-0 lg:pt-0"
@@ -169,7 +171,7 @@ export function HeroSection({
             />
             {/* White gradient on the text side, transparent on the image-panel side */}
             <div className="absolute inset-0" style={{ background: gradient }} />
-            <div className="absolute inset-0 bg-gradient-to-t from-white/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-white/30 to-transparent" />
           </div>
         );
       })}
@@ -350,11 +352,10 @@ export function HeroSection({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key !== "Enter") return;
-                    router.push(
-                      searchQuery.trim()
-                        ? `/universities?search=${encodeURIComponent(searchQuery)}`
-                        : "/universities"
-                    );
+                    const target = searchQuery.trim()
+                      ? `/universities?search=${encodeURIComponent(searchQuery)}`
+                      : "/universities";
+                    router.push(withLocaleHref(target, pathname));
                   }}
                   className="flex-1 font-montserrat-light text-sm md:text-base text-[#8b8c9a] placeholder:text-[#8b8c9a] focus:outline-none bg-transparent"
                   dir={isRTL ? "rtl" : "ltr"}
@@ -362,13 +363,12 @@ export function HeroSection({
               </div>
               <Button
                 suppressHydrationWarning
-                onClick={() =>
-                  router.push(
-                    searchQuery.trim()
-                      ? `/universities?search=${encodeURIComponent(searchQuery)}`
-                      : "/universities"
-                  )
-                }
+                onClick={() => {
+                  const target = searchQuery.trim()
+                    ? `/universities?search=${encodeURIComponent(searchQuery)}`
+                    : "/universities";
+                  router.push(withLocaleHref(target, pathname));
+                }}
                 className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-sm md:text-base h-[48px] md:h-[52px] w-full sm:w-auto sm:min-w-[124px] rounded-lg md:rounded-xl shrink-0 transition-all duration-300 hover:shadow-[0_8px_24px_rgba(82,96,206,0.4)] hover:-translate-y-0.5"
               >
                 {tl("search")}
@@ -393,7 +393,7 @@ export function HeroSection({
                       tag.type === "search"
                         ? `search=${encodeURIComponent(tag.value)}`
                         : `specialization=${encodeURIComponent(tag.value)}`;
-                    router.push(`/universities?${param}`);
+                    router.push(withLocaleHref(`/universities?${param}`, pathname));
                   }}
                   className="px-2 py-1 text-sm md:text-base font-montserrat-light text-[#040404] bg-[#e0e6f1] rounded-[50px] hover:bg-[#5260ce] hover:text-white transition-all duration-200"
                 >

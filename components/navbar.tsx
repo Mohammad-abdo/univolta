@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown, User, LogOut, Home, GraduationCap, HelpCircle, Mail, FileText, Info } from "lucide-react";
@@ -15,6 +14,8 @@ import {
   type Language,
   t,
 } from "@/lib/i18n";
+import { LocaleLink } from "@/components/locale-link";
+import { stripLocalePrefixFromPathForCompare, toAppLocale, withLocalePath } from "@/lib/locale-path";
 import { API_BASE_URL } from "@/lib/constants";
 import { AlertNotification } from "@/components/alerts/alert-notification";
 import { fetchPublicSiteSettings } from "@/lib/site-settings";
@@ -95,7 +96,7 @@ export function Navbar() {
     localStorage.removeItem("refreshToken");
     setIsAuthenticated(false);
     setUserName(null);
-    router.push("/");
+    router.push(withLocalePath(toAppLocale(currentLang), "/"));
     window.location.reload();
   };
 
@@ -114,13 +115,13 @@ export function Navbar() {
       ? "https://flagcdn.com/w40/sa.png"
       : "https://flagcdn.com/w40/gb.png";
 
+  const normalizedPathname = stripLocalePrefixFromPathForCompare(pathname ?? "/");
   const navItems = [
-    { href: "/", label: tl("home", "Home"), active: pathname === "/" },
-    { href: "/universities", label: tl("universities", "Universities"), active: pathname === "/universities" },
-  
-    { href: "/about", label: tl("aboutNavLink", "About"), active: pathname === "/about" },
-    { href: "/faq", label: tl("faq", "FAQ"), active: pathname === "/faq" },
-    { href: "/contact", label: tl("contact", "Contact"), active: pathname === "/contact" },
+    { href: "/", label: tl("home", "Home"), active: normalizedPathname === "/" },
+    { href: "/universities", label: tl("universities", "Universities"), active: normalizedPathname === "/universities" },
+    { href: "/about", label: tl("aboutNavLink", "About"), active: normalizedPathname === "/about" },
+    { href: "/faq", label: tl("faq", "FAQ"), active: normalizedPathname === "/faq" },
+    { href: "/contact", label: tl("contact", "Contact"), active: normalizedPathname === "/contact" },
   ];
 
 
@@ -152,11 +153,11 @@ export function Navbar() {
           </button>
 
           {/* Center — Logo */}
-          <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center">
+          <LocaleLink href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center">
             <div className="relative h-8 w-24">
               <Image src={siteLogoUrl} alt="UniVolta" fill className="object-contain object-center" unoptimized priority />
             </div>
-          </Link>
+          </LocaleLink>
 
           {/* Right — user or login */}
           {isAuthenticated ? (
@@ -175,7 +176,7 @@ export function Navbar() {
               className="bg-[#5260ce] hover:bg-[#4350b0] text-white font-montserrat-semibold text-xs h-9 px-4 rounded-xl shadow-[0_4px_14px_rgba(82,96,206,0.3)]"
               asChild
             >
-              <Link href="/login">{mounted ? t("login") : "Login"}</Link>
+              <LocaleLink href="/login">{mounted ? t("login") : "Login"}</LocaleLink>
             </Button>
           )}
         </div>
@@ -195,16 +196,16 @@ export function Navbar() {
       }`}>
 
         {/* Logo */}
-        <Link href="/" className="flex items-center shrink-0 group">
+        <LocaleLink href="/" className="flex items-center shrink-0 group">
           <div className="relative w-[50px] h-[30px] md:w-[78px] md:h-[48px] transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_2px_8px_rgba(82,96,206,0.3)]">
             <Image src={siteLogoUrl} alt="UniVolta Logo" fill className="object-contain" unoptimized priority />
           </div>
-        </Link>
+        </LocaleLink>
 
         {/* Desktop Menu - Centered */}
         <div className={`hidden lg:flex items-center justify-center gap-1 flex-1 absolute ${isRTL ? "right-1/2 translate-x-1/2" : "left-1/2 -translate-x-1/2"}`}>
           {navItems.map((item) => (
-            <Link
+            <LocaleLink
               key={item.href}
               href={item.href}
               className={`relative px-4 py-2 rounded-xl font-montserrat-${item.active ? "bold" : "regular"} text-[15px] leading-none transition-all duration-200 group ${
@@ -217,7 +218,7 @@ export function Navbar() {
               {item.active && (
                 <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-[2px] rounded-full bg-[#5260ce]" />
               )}
-            </Link>
+            </LocaleLink>
           ))}
         </div>
 
@@ -290,13 +291,13 @@ export function Navbar() {
                     <p className="text-xs text-[#8b8c9a] font-montserrat-regular">Signed in as</p>
                     <p className="text-sm font-montserrat-semibold text-[#121c67] truncate">{userName}</p>
                   </div>
-                  <Link href="/my-applications" className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 text-sm text-[#2e2e2e] transition-colors" onClick={() => setUserMenuOpen(false)}>
+                  <LocaleLink href="/my-applications" className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 text-sm text-[#2e2e2e] transition-colors" onClick={() => setUserMenuOpen(false)}>
                     {tl("myApplications", "My Applications")}
-                  </Link>
-                  <Link href="/profile" className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 text-sm text-[#2e2e2e] transition-colors" onClick={() => setUserMenuOpen(false)}>
+                  </LocaleLink>
+                  <LocaleLink href="/profile" className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 text-sm text-[#2e2e2e] transition-colors" onClick={() => setUserMenuOpen(false)}>
                     <User className="w-4 h-4 text-[#5260ce]" />
                     {tl("myDashboard", "My Dashboard")}
-                  </Link>
+                  </LocaleLink>
                   <div className="border-t border-gray-100">
                     <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-2 text-red-600 text-sm transition-colors">
                       <LogOut className="w-4 h-4" />
@@ -312,7 +313,7 @@ export function Navbar() {
                 className="nav-cta-shine text-white font-montserrat-semibold text-sm h-[40px] px-5 rounded-xl relative overflow-hidden shadow-[0_4px_14px_rgba(82,96,206,0.35)] hover:shadow-[0_6px_20px_rgba(82,96,206,0.5)] hover:-translate-y-0.5 transition-all duration-200"
                 asChild
               >
-                <Link href="/login">{mounted ? t("login") : "Login"}</Link>
+                <LocaleLink href="/login">{mounted ? t("login") : "Login"}</LocaleLink>
               </Button>
             </div>
           )}
@@ -339,11 +340,11 @@ export function Navbar() {
 
           {/* ── Drawer header: logo + close ── */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-[#f6f8ff] to-white shrink-0">
-            <Link href="/" onClick={() => setIsOpen(false)} className="flex items-center">
+            <LocaleLink href="/" onClick={() => setIsOpen(false)} className="flex items-center">
               <div className="relative h-8 w-28">
                 <Image src={siteLogoUrl} alt="UniVolta" fill className="object-contain object-left" unoptimized priority />
               </div>
-            </Link>
+            </LocaleLink>
             <button
               onClick={() => setIsOpen(false)}
               className="p-2 rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-colors"
@@ -364,9 +365,9 @@ export function Navbar() {
               { href: "/faq",          label: tl("faq", "FAQ"),                    Icon: HelpCircle },
               { href: "/contact",      label: tl("contact", "Contact"),             Icon: Mail },
             ].map(({ href, label, Icon }) => {
-              const active = pathname === href;
+              const active = normalizedPathname === href;
               return (
-                <Link
+                <LocaleLink
                   key={href}
                   href={href}
                   onClick={() => setIsOpen(false)}
@@ -381,7 +382,7 @@ export function Navbar() {
                   </span>
                   <span className="text-[15px] leading-tight">{label}</span>
                   {active && <span className="ms-auto w-1.5 h-1.5 rounded-full bg-[#5260ce]" />}
-                </Link>
+                </LocaleLink>
               );
             })}
 
@@ -440,7 +441,7 @@ export function Navbar() {
                     <p className="text-xs text-gray-400">Signed in</p>
                   </div>
                 </div>
-                <Link
+                <LocaleLink
                   href="/my-applications"
                   className="flex items-center gap-3 py-3 px-4 rounded-2xl text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100 transition-all"
                   onClick={() => setIsOpen(false)}
@@ -449,8 +450,8 @@ export function Navbar() {
                     <FileText className="w-[18px] h-[18px] text-[#5260ce]" />
                   </span>
                   <span className="text-[15px]">{tl("myApplications", "My Applications")}</span>
-                </Link>
-                <Link
+                </LocaleLink>
+                <LocaleLink
                   href="/profile"
                   className="flex items-center gap-3 py-3 px-4 rounded-2xl text-[#2e2e2e] font-montserrat-regular hover:bg-gray-50 active:bg-gray-100 transition-all"
                   onClick={() => setIsOpen(false)}
@@ -459,7 +460,7 @@ export function Navbar() {
                     <User className="w-[18px] h-[18px] text-[#5260ce]" />
                   </span>
                   <span className="text-[15px]">{tl("profile", "Profile")}</span>
-                </Link>
+                </LocaleLink>
                 <button
                   onClick={() => { handleLogout(); setIsOpen(false); }}
                   className="w-full flex items-center gap-3 py-3 px-4 rounded-2xl text-red-600 font-montserrat-regular hover:bg-red-50 active:bg-red-100 transition-all"
@@ -476,10 +477,10 @@ export function Navbar() {
                   className="w-full bg-[#5260ce] hover:bg-[#4350b0] text-white text-base h-12 font-montserrat-semibold rounded-2xl shadow-[0_4px_16px_rgba(82,96,206,0.3)] active:scale-[0.98] transition-all"
                   asChild
                 >
-                  <Link href="/login" onClick={() => setIsOpen(false)}>
+                  <LocaleLink href="/login" onClick={() => setIsOpen(false)}>
                     <User className="w-4 h-4 mr-2" />
                     {mounted ? t("login") : "Login"}
-                  </Link>
+                  </LocaleLink>
                 </Button>
               </div>
             )}

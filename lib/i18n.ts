@@ -1,4 +1,5 @@
 // Internationalization support
+import { pathnameWithoutLocalePrefix, withLocalePath, toAppLocale } from "./locale-path";
 
 export type Language = "en" | "ar";
 
@@ -59,7 +60,10 @@ export function setLanguage(lang: Language): void {
   }
   const maxAge = 60 * 60 * 24 * 365;
   document.cookie = `language=${lang}; path=/; max-age=${maxAge}; SameSite=Lax`;
-  window.location.reload();
+  const { pathname, search, hash } = window.location;
+  const pathWithoutLocale = pathnameWithoutLocalePrefix(pathname);
+  const nextPath = withLocalePath(toAppLocale(lang), pathWithoutLocale);
+  window.location.assign(`${nextPath}${search}${hash}`);
 }
 
 /** Keep cookie aligned with current language (fixes SSR vs client mismatch). */
@@ -122,6 +126,8 @@ const translations: Record<Language, Record<string, string>> = {
     home: "Home",
     universities: "Universities",
     faq: "FAQ",
+    /** Short label for mobile bottom nav (avoids wrapping long Arabic "الأسئلة الشائعة") */
+    mobileNavFaqShort: "FAQ",
     contact: "Contact Us",
     login: "Login",
     signUp: "Sign Up",
@@ -725,6 +731,11 @@ const translations: Record<Language, Record<string, string>> = {
     frequentlyAskedQuestions: "Frequently Asked Questions",
     // Contact Page
     reachOutToUs: "Reach Out to Us",
+    contactGetInTouchBadge: "Get in Touch",
+    contactHeroSubtitle: "We're here to help with your academic journey",
+    contactFormTitle: "Send us a message",
+    contactHeroAlt: "Students celebrating graduation",
+    contactCtaIllustrationAlt: "Illustration of students exploring university options",
     contactOurSupport: "Contact our support team, we are here to help you 🤝",
     contactDescription: "We're here to answer your questions and assist you every step of the way. Feel free to contact us at any time!",
     office: "Office",
@@ -963,6 +974,12 @@ const translations: Record<Language, Record<string, string>> = {
     cvvRequired: "CVV is required",
     paypalEmailRequired: "PayPal email is required",
     validPaypalEmailRequired: "Please enter a valid PayPal email address",
+    cardNumberInvalid: "Enter a valid card number (13–19 digits only).",
+    cardholderNameInvalid: "Please enter the name as on the card (letters, 2–120 characters).",
+    expiryDateInvalid: "Please select a valid expiry month and year.",
+    expiryDateExpired: "This card appears expired. Choose a future month.",
+    expiryTooFar: "Expiry date is too far in the future.",
+    cvvInvalid: "Enter a valid CVV (3 digits, or 4 for American Express).",
     // Register Page
     enrolInProgram: "Enrol in the",
     majorAt: "major at",
@@ -1008,6 +1025,8 @@ const translations: Record<Language, Record<string, string>> = {
     paypal: "PayPal",
     cardNumber: "Card Number",
     cardholderName: "Cardholder Name",
+    cardholderNamePlaceholder: "Name as printed on card",
+    expiryPickMonthHint: "Pick expiry month and year from the calendar.",
     expiry: "Expiry",
     paypalEmail: "PayPal Email",
     continue: "Continue",
@@ -1515,6 +1534,8 @@ const translations: Record<Language, Record<string, string>> = {
     home: "الرئيسية",
     universities: "الجامعات",
     faq: "الأسئلة الشائعة",
+    /** شارة التنقل السفلي — أقصر من «الأسئلة الشائعة» لتجنب كسر التصميم */
+    mobileNavFaqShort: "الاستفسارات",
     contact: "اتصل بنا",
     login: "تسجيل الدخول",
     signUp: "إنشاء حساب",
@@ -1559,7 +1580,7 @@ const translations: Record<Language, Record<string, string>> = {
     authContinue: "متابعة",
     authResend: "إعادة الإرسال",
     authReturnToLogin: "العودة لتسجيل الدخول",
-    authEmailPlaceholderExample: "you@example.com",
+    authEmailPlaceholderExample: "أدخل البريد الإلكتروني",
     authInvalidResetToken: "رمز إعادة التعيين غير صالح أو مفقود",
     authPasswordsNoMatch: "كلمتا المرور غير متطابقتين",
     authPasswordMinLength: "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
@@ -2168,6 +2189,11 @@ const translations: Record<Language, Record<string, string>> = {
     faq7Answer: "عادة ما تستغرق عملية التقديم الكاملة 3-6 أشهر من الاستفسار الأولي حتى استلام قرار القبول، حسب الجامعة والبرنامج.",
     // Contact Page
     reachOutToUs: "تواصل معنا",
+    contactGetInTouchBadge: "تواصل معنا",
+    contactHeroSubtitle: "نحن هنا لمساعدتك في رحلتك الأكاديمية",
+    contactFormTitle: "أرسل لنا رسالة",
+    contactHeroAlt: "طلاب يحتفلون بالتخرج",
+    contactCtaIllustrationAlt: "رسم توضيحي لطلاب يستكشفون خيارات الجامعة",
     contactOurSupport: "تواصل مع فريق الدعم لدينا، نحن هنا لمساعدتك 🤝",
     contactDescription: "نحن هنا للإجابة على أسئلتك ومساعدتك في كل خطوة على الطريق. لا تتردد في الاتصال بنا في أي وقت!",
     office: "المكتب",
@@ -2352,6 +2378,12 @@ const translations: Record<Language, Record<string, string>> = {
     cvvRequired: "CVV مطلوب",
     paypalEmailRequired: "بريد PayPal مطلوب",
     validPaypalEmailRequired: "يرجى إدخال بريد PayPal صحيح",
+    cardNumberInvalid: "أدخل رقماً صحيحاً للبطاقة (13–19 رقماً فقط).",
+    cardholderNameInvalid: "يرجى إدخال الاسم كما على البطاقة (حروف، 2–120 حرفاً).",
+    expiryDateInvalid: "يرجى اختيار شهر وسنة انتهاء صحيحين.",
+    expiryDateExpired: "البطاقة منتهية. اختر شهراً قادماً.",
+    expiryTooFar: "تاريخ الانتهاء بعيد جداً في المستقبل.",
+    cvvInvalid: "أدخل رمز أمان صحيح (3 أرقام، أو 4 لبطاقة أمريكان إكسبريس).",
     // Register Page
     enrolInProgram: "التسجيل في",
     majorAt: "تخصص في",
@@ -2397,6 +2429,8 @@ const translations: Record<Language, Record<string, string>> = {
     paypal: "باي بال",
     cardNumber: "رقم البطاقة",
     cardholderName: "اسم حامل البطاقة",
+    cardholderNamePlaceholder: "الاسم كما يظهر على البطاقة",
+    expiryPickMonthHint: "اختر شهر وسنة الانتهاء من التقويم.",
     expiry: "تاريخ الانتهاء",
     paypalEmail: "بريد باي بال",
     continue: "متابعة",
